@@ -20,11 +20,15 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+# Resolve script location so APP_DIR can be auto-detected reliably.
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+DEFAULT_APP_DIR="$(cd -- "$SCRIPT_DIR/.." >/dev/null 2>&1 && pwd)"
+
 # ── Configurable variables ────────────────────────────────────────────────────
-APP_DIR="/home/ubuntu/cravecart-backend"
-VENV_DIR="$APP_DIR/.venv"
+APP_DIR="${APP_DIR:-$DEFAULT_APP_DIR}"
 APP_USER="ubuntu"
-DOMAIN="api.cravecart.app"    # ← replace with your domain BEFORE running
+VENV_DIR="${VENV_DIR:-/home/$APP_USER/.genv}"
+DOMAIN="api.sarweshero.me"    # ← replace with your domain BEFORE running
 
 echo "╔══════════════════════════════════════════╗"
 echo "║  CraveCart EC2 Setup — Ubuntu 24.04      ║"
@@ -77,6 +81,13 @@ echo "[6/9] Setting up Python virtualenv..."
 if [ ! -d "$VENV_DIR" ]; then
   sudo -u "$APP_USER" python3.12 -m venv "$VENV_DIR"
 fi
+
+if [ ! -f "$APP_DIR/requirements.txt" ]; then
+  echo "ERROR: requirements.txt not found at '$APP_DIR/requirements.txt'"
+  echo "Hint: run this script from the repository's deploy directory or set APP_DIR explicitly."
+  exit 1
+fi
+
 sudo -u "$APP_USER" "$VENV_DIR/bin/pip" install --upgrade pip wheel
 sudo -u "$APP_USER" "$VENV_DIR/bin/pip" install -r "$APP_DIR/requirements.txt"
 
