@@ -14,8 +14,9 @@
 set -euo pipefail
 IFS=$'\n\t'
 
-APP_DIR="/home/ubuntu/cravecart-backend"
-VENV_DIR="$APP_DIR/.venv"
+APP_DIR="/home/ubuntu/Projects/CraveCart-Mini-PRJ/cravecart-backend"
+APP_USER="ubuntu"
+VENV_DIR="${VENV_DIR:-/home/$APP_USER/.genv}"
 
 echo "🚀 CraveCart Deploy — $(date '+%Y-%m-%d %H:%M:%S')"
 echo "─────────────────────────────────────────────"

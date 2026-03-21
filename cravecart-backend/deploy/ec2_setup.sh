@@ -25,7 +25,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 DEFAULT_APP_DIR="$(cd -- "$SCRIPT_DIR/.." >/dev/null 2>&1 && pwd)"
 
 # ── Configurable variables ────────────────────────────────────────────────────
-APP_DIR="${APP_DIR:-$DEFAULT_APP_DIR}"
+APP_DIR="/home/ubuntu/Projects/CraveCart-Mini-PRJ/cravecart-backend"
 APP_USER="ubuntu"
 VENV_DIR="${VENV_DIR:-/home/$APP_USER/.genv}"
 DOMAIN="api.sarweshero.me"    # ← replace with your domain BEFORE running
