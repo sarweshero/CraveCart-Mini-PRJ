@@ -1,0 +1,56 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+
+  "name": "cravecart-customer",
+  "framework": "nextjs",
+
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "devCommand": "npm run dev",
+  "outputDirectory": ".next",
+
+  "regions": ["bom1"],
+
+  "env": {
+    "NEXT_PUBLIC_API_MODE": "live",
+    "NEXT_PUBLIC_API_URL": "@cravecart_api_url",
+    "NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID": "@google_oauth_client_id",
+    "NEXT_PUBLIC_APP_URL": "@customer_app_url"
+  },
+
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Frame-Options",       "value": "DENY" },
+        { "key": "X-Content-Type-Options","value": "nosniff" },
+        { "key": "Referrer-Policy",       "value": "strict-origin-when-cross-origin" },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=(self), payment=()"
+        }
+      ]
+    },
+    {
+      "source": "/_next/static/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    }
+  ],
+
+  "redirects": [
+    {
+      "source": "/index",
+      "destination": "/",
+      "permanent": true
+    }
+  ],
+
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://api.cravecart.app/api/:path*"
+    }
+  ]
+}

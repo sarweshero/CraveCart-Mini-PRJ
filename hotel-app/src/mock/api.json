@@ -1,0 +1,290 @@
+{
+  "auth": {
+    "login": {
+      "POST /api/hotel/auth/login": {
+        "token": "hotel_mock_token_xyz789",
+        "refresh_token": "hotel_mock_refresh_xyz789",
+        "expires_in": 2592000,
+        "hotel": {
+          "id": "rest_01",
+          "owner_name": "Murugan Swaminathan",
+          "email": "admin@muruganidli.com",
+          "restaurant_name": "Murugan Idli Shop",
+          "avatar": "https://api.dicebear.com/7.x/initials/svg?seed=MS",
+          "is_profile_complete": true,
+          "role": "hotel_admin"
+        }
+      }
+    }
+  },
+
+  "dashboard": {
+    "GET /api/hotel/dashboard/stats": {
+      "today": {
+        "orders": 48,
+        "revenue": 12480,
+        "avg_order_value": 260,
+        "new_reviews": 6
+      },
+      "this_week": {
+        "orders": 312,
+        "revenue": 81120,
+        "avg_order_value": 260,
+        "reviews": 34
+      },
+      "this_month": {
+        "orders": 1247,
+        "revenue": 324220,
+        "avg_order_value": 260,
+        "reviews": 142
+      },
+      "rating_overview": {
+        "average": 4.7,
+        "total": 2847,
+        "breakdown": {
+          "5": 1823,
+          "4": 712,
+          "3": 198,
+          "2": 79,
+          "1": 35
+        }
+      },
+      "recent_orders": [
+        {
+          "id": "ord_hotel_01",
+          "customer_name": "Arjun Kumar",
+          "items": ["Soft Idli x2", "Filter Coffee x2"],
+          "total": 179,
+          "status": "preparing",
+          "placed_at": "2025-03-21T09:30:00Z"
+        },
+        {
+          "id": "ord_hotel_02",
+          "customer_name": "Priya Sharma",
+          "items": ["Ghee Roast Dosa x1", "Masala Chai x1"],
+          "total": 100,
+          "status": "confirmed",
+          "placed_at": "2025-03-21T09:28:00Z"
+        },
+        {
+          "id": "ord_hotel_03",
+          "customer_name": "Ravi Krishnan",
+          "items": ["Mini Meals x2"],
+          "total": 260,
+          "status": "placed",
+          "placed_at": "2025-03-21T09:25:00Z"
+        },
+        {
+          "id": "ord_hotel_04",
+          "customer_name": "Meena Devi",
+          "items": ["Filter Coffee x3", "Soft Idli x1"],
+          "total": 150,
+          "status": "out_for_delivery",
+          "placed_at": "2025-03-21T09:10:00Z"
+        }
+      ]
+    }
+  },
+
+  "orders": {
+    "GET /api/hotel/orders": {
+      "count": 48,
+      "results": [
+        {
+          "id": "ord_hotel_01",
+          "customer": {
+            "name": "Arjun Kumar",
+            "phone": "+91 98765 43210",
+            "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=arjun"
+          },
+          "items": [
+            { "name": "Soft Idli (2 pieces)", "quantity": 2, "price": 45 },
+            { "name": "Filter Coffee", "quantity": 2, "price": 35 }
+          ],
+          "subtotal": 160,
+          "total": 179,
+          "status": "preparing",
+          "placed_at": "2025-03-21T09:30:00Z",
+          "delivery_address": "42, Sai Nagar, Coimbatore - 641011"
+        },
+        {
+          "id": "ord_hotel_02",
+          "customer": {
+            "name": "Priya Sharma",
+            "phone": "+91 87654 32109",
+            "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=priya"
+          },
+          "items": [
+            { "name": "Ghee Roast Dosa", "quantity": 1, "price": 75 },
+            { "name": "Masala Chai", "quantity": 1, "price": 25 }
+          ],
+          "subtotal": 100,
+          "total": 140,
+          "status": "confirmed",
+          "placed_at": "2025-03-21T09:28:00Z",
+          "delivery_address": "15, RS Puram, Coimbatore - 641002"
+        },
+        {
+          "id": "ord_hotel_05",
+          "customer": {
+            "name": "Suresh Babu",
+            "phone": "+91 77654 32109",
+            "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=suresh"
+          },
+          "items": [
+            { "name": "Mini Meals (Vegetarian)", "quantity": 1, "price": 130 }
+          ],
+          "subtotal": 130,
+          "total": 170,
+          "status": "delivered",
+          "placed_at": "2025-03-21T07:00:00Z",
+          "delivery_address": "78, Gandhipuram, Coimbatore - 641012"
+        }
+      ]
+    }
+  },
+
+  "reviews": {
+    "GET /api/hotel/reviews": {
+      "count": 142,
+      "results": [
+        {
+          "id": "rev_hotel_01",
+          "order_id": "ord_hotel_delivered_01",
+          "customer": {
+            "name": "Arjun Kumar",
+            "email": "arjun.kumar@gmail.com",
+            "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=arjun"
+          },
+          "rating": 5,
+          "comment": "Absolutely loved the idlis! Super soft and the sambar was perfect. The filter coffee was divine. Will definitely order again.",
+          "created_at": "2025-03-18T09:30:00Z",
+          "ai_response": {
+            "id": "ai_01",
+            "text": "Dear Arjun, thank you so much for your heartwarming review! We're thrilled to know that our soft idlis and sambar hit the right spot for you. Our chefs have been crafting these recipes for over 75 years, and it's incredibly rewarding to hear that the tradition is bringing joy to your mornings. The filter coffee you loved is brewed from Coorg estate beans that we source directly — your appreciation truly means the world to us. We look forward to being a part of your breakfast table again very soon! 🙏☕",
+            "generated_at": "2025-03-18T09:31:00Z",
+            "email_sent": true,
+            "template_used": "tmpl_01"
+          }
+        },
+        {
+          "id": "rev_hotel_02",
+          "order_id": "ord_hotel_delivered_02",
+          "customer": {
+            "name": "Kavitha Rajan",
+            "email": "kavitha.r@gmail.com",
+            "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=kavitha"
+          },
+          "rating": 4,
+          "comment": "Good food overall. Dosa was crispy but the chutney was a bit watery today. Hope to see improvement.",
+          "created_at": "2025-03-17T14:00:00Z",
+          "ai_response": {
+            "id": "ai_02",
+            "text": "Dear Kavitha, thank you for your honest feedback! We're glad the dosa met your expectations, and we sincerely apologize that the chutney wasn't up to our usual standard today. We take every comment seriously — I've already passed your note to our kitchen team. We promise to do better on your next visit. Thank you for being a loyal customer! 🙏",
+            "generated_at": "2025-03-17T14:02:00Z",
+            "email_sent": true,
+            "template_used": "tmpl_01"
+          }
+        },
+        {
+          "id": "rev_hotel_03",
+          "order_id": "ord_hotel_delivered_03",
+          "customer": {
+            "name": "Vikram Nair",
+            "email": "vikram.nair@gmail.com",
+            "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=vikram"
+          },
+          "rating": 2,
+          "comment": "Delivery was very late, food arrived cold. The idlis were not soft at all. Very disappointed.",
+          "created_at": "2025-03-16T19:30:00Z",
+          "ai_response": {
+            "id": "ai_03",
+            "text": "Dear Vikram, we are deeply sorry for your experience! A late delivery resulting in cold food is absolutely unacceptable, and we take full responsibility. Our idlis are made fresh to order, and we understand how disappointing it must have been. We are investigating the delivery delay with our logistics partner. As a token of our apology, please expect a special discount code in this email for your next order. Your trust means everything to us, and we will do better. 🙏",
+            "generated_at": "2025-03-16T19:32:00Z",
+            "email_sent": true,
+            "template_used": "tmpl_02"
+          }
+        },
+        {
+          "id": "rev_hotel_04",
+          "order_id": "ord_hotel_delivered_04",
+          "customer": {
+            "name": "Deepa Menon",
+            "email": "deepa.menon@gmail.com",
+            "avatar": "https://api.dicebear.com/7.x/avataaars/svg?seed=deepa"
+          },
+          "rating": 5,
+          "comment": "Best idlis in Coimbatore! My family orders every Sunday. Never disappointed.",
+          "created_at": "2025-03-15T10:00:00Z",
+          "ai_response": null
+        }
+      ]
+    }
+  },
+
+  "ai_templates": {
+    "GET /api/hotel/ai-templates": [
+      {
+        "id": "tmpl_01",
+        "name": "Warm & Gratitude",
+        "description": "Friendly, warm responses focusing on gratitude and heritage",
+        "tone": "warm",
+        "is_active": true,
+        "prompt_instructions": "Respond warmly, mention our 75-year heritage, express genuine gratitude, mention specific food items from the review, end with an invitation to return.",
+        "example_response": "Dear {customer_name}, thank you so much for your heartwarming review...",
+        "usage_count": 892,
+        "created_at": "2025-01-10T09:00:00Z"
+      },
+      {
+        "id": "tmpl_02",
+        "name": "Apology & Recovery",
+        "description": "For negative reviews — empathetic, solution-oriented responses",
+        "tone": "apologetic",
+        "is_active": false,
+        "prompt_instructions": "Acknowledge the issue with full responsibility, apologize sincerely, explain corrective action, offer a resolution or discount, invite them back with assurance of improvement.",
+        "example_response": "Dear {customer_name}, we are deeply sorry for your experience...",
+        "usage_count": 47,
+        "created_at": "2025-01-10T09:00:00Z"
+      },
+      {
+        "id": "tmpl_03",
+        "name": "Professional & Brief",
+        "description": "Concise, professional acknowledgement for all review types",
+        "tone": "professional",
+        "is_active": false,
+        "prompt_instructions": "Keep response under 80 words. Acknowledge the rating, thank the customer, one specific sentence addressing their feedback, close professionally.",
+        "example_response": "Thank you for your {rating}-star review, {customer_name}...",
+        "usage_count": 203,
+        "created_at": "2025-02-01T09:00:00Z"
+      }
+    ]
+  },
+
+  "menu": {
+    "GET /api/hotel/menu": {
+      "categories": [
+        {
+          "id": "cat_01",
+          "name": "Idli & Dosa",
+          "icon": "🥞",
+          "items_count": 4,
+          "available_count": 3
+        },
+        {
+          "id": "cat_02",
+          "name": "Rice & Curries",
+          "icon": "🍛",
+          "items_count": 2,
+          "available_count": 2
+        },
+        {
+          "id": "cat_03",
+          "name": "Beverages",
+          "icon": "☕",
+          "items_count": 2,
+          "available_count": 2
+        }
+      ]
+    }
+  }
+}

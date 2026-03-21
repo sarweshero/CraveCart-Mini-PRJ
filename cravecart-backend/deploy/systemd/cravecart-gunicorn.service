@@ -1,0 +1,41 @@
+[Unit]
+Description=CraveCart Gunicorn API Server
+Documentation=https://docs.gunicorn.org
+After=network.target
+Requires=cravecart-gunicorn.socket
+
+[Service]
+Type=notify
+
+# Run as ubuntu user / www-data group
+User=ubuntu
+Group=www-data
+
+# App directory
+WorkingDirectory=/home/ubuntu/cravecart-backend
+
+# Activate virtualenv and run gunicorn
+ExecStart=/home/ubuntu/cravecart-backend/.venv/bin/gunicorn \
+          config.wsgi:application \
+          --config gunicorn.conf.py
+
+# Load environment from .env file
+EnvironmentFile=/home/ubuntu/cravecart-backend/.env
+
+# Graceful reload on HUP signal (zero-downtime deploy)
+ExecReload=/bin/kill -s HUP $MAINPID
+
+# Clean up PID on stop
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+
+# Auto-restart on failure
+Restart=on-failure
+RestartSec=5s
+
+# Resource limits
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

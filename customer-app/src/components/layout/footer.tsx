@@ -1,0 +1,82 @@
+import Link from "next/link";
+import { UtensilsCrossed, Github, Twitter, Instagram } from "lucide-react";
+
+export function Footer() {
+  return (
+    <footer className="border-t border-[#1E1B16] bg-[#0C0B09] py-12 px-4 sm:px-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+          <div className="col-span-2 md:col-span-1">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-[#E8A830] flex items-center justify-center">
+                <UtensilsCrossed size={15} className="text-[#0C0B09]" strokeWidth={2.5} />
+              </div>
+              <span className="text-[#F5EDD8] font-display font-semibold text-lg" style={{ fontFamily: "var(--font-fraunces)" }}>
+                Crave<span className="text-[#E8A830]">Cart</span>
+              </span>
+            </div>
+            <p className="text-[#9E9080] text-sm leading-relaxed max-w-xs">
+              Food delivered with care. Every review answered with AI-powered intelligence.
+            </p>
+          </div>
+
+          {[
+            {
+              title: "Company",
+              links: [
+                { label: "About Us", href: "#" },
+                { label: "Careers", href: "#" },
+                { label: "Blog", href: "#" },
+                { label: "Press", href: "#" },
+              ],
+            },
+            {
+              title: "For Customers",
+              links: [
+                { label: "Browse Restaurants", href: "/restaurants" },
+                { label: "My Orders", href: "/orders" },
+                { label: "My Profile", href: "/profile" },
+                { label: "Help Center", href: "#" },
+              ],
+            },
+            {
+              title: "Legal",
+              links: [
+                { label: "Terms of Service", href: "#" },
+                { label: "Privacy Policy", href: "#" },
+                { label: "Refund Policy", href: "#" },
+                { label: "Cookie Policy", href: "#" },
+              ],
+            },
+          ].map(({ title, links }) => (
+            <div key={title}>
+              <h4 className="text-[#F5EDD8] font-semibold text-sm mb-3">{title}</h4>
+              <ul className="space-y-2">
+                {links.map(({ label, href }) => (
+                  <li key={label}>
+                    <Link href={href} className="text-[#9E9080] text-sm hover:text-[#BFB49A] transition-colors">
+                      {label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="border-t border-[#1E1B16] pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-[#9E9080] text-xs">
+            © {new Date().getFullYear()} CraveCart. All rights reserved.
+          </p>
+          <div className="flex items-center gap-3">
+            {[Github, Twitter, Instagram].map((Icon, i) => (
+              <a key={i} href="#" className="w-8 h-8 rounded-lg bg-[#161410] border border-[#2A2620] flex items-center justify-center text-[#9E9080] hover:text-[#E8A830] hover:border-[#E8A830]/30 transition-all">
+                <Icon size={14} />
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}

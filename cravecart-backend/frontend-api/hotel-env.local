@@ -1,0 +1,6 @@
+# ── Hotel App (.env.local) ─────────────────────────────────
+# Copy this file to cravecart/hotel-app/.env.local
+
+# Switch from mock to live backend
+NEXT_PUBLIC_API_MODE=live
+NEXT_PUBLIC_API_URL=http://localhost:8000

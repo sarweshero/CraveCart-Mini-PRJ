@@ -1,0 +1,12 @@
+[Unit]
+Description=CraveCart Gunicorn Unix Socket
+
+[Socket]
+# Socket path must match gunicorn.conf.py bind value
+ListenStream=/run/gunicorn/cravecart.sock
+SocketUser=www-data
+SocketGroup=www-data
+SocketMode=0660
+
+[Install]
+WantedBy=sockets.target

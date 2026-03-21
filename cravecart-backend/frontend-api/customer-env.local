@@ -1,0 +1,9 @@
+# ── Customer App (.env.local) ──────────────────────────────
+# Copy this file to cravecart/customer-app/.env.local
+
+# Switch from mock to live backend
+NEXT_PUBLIC_API_MODE=live
+NEXT_PUBLIC_API_URL=http://localhost:8000
+
+# Google OAuth client ID (same as backend .env)
+NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID=your-google-oauth-client-id

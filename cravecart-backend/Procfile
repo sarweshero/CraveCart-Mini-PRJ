@@ -1,0 +1,19 @@
+# NOTE: This Procfile is NOT used on AWS EC2.
+# On EC2, processes are managed by systemd unit files located in:
+#   deploy/systemd/
+#
+# Use these commands to manage services:
+#   sudo systemctl start|stop|restart|status cravecart-gunicorn
+#   sudo systemctl start|stop|restart|status cravecart-celery-worker
+#   sudo systemctl start|stop|restart|status cravecart-celery-beat
+#
+# View logs:
+#   sudo journalctl -u cravecart-gunicorn -f
+#   sudo journalctl -u cravecart-celery-worker -f
+#
+# The deploy/deploy.sh script handles all deployment steps automatically.
+
+# Kept here only as a reference for the commands each service runs:
+# web:    gunicorn config.wsgi:application --config gunicorn.conf.py
+# worker: celery -A config worker --loglevel=info --concurrency=${CELERY_CONCURRENCY:-2} --max-tasks-per-child=200
+# beat:   celery -A config beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler

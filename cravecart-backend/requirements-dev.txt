@@ -1,0 +1,17 @@
+# Inherit all production deps
+-r requirements.txt
+
+# ── Dev tools ─────────────────────────────────────────────
+django-debug-toolbar==4.4.2
+ipython==8.26.0
+django-extensions==3.2.3
+
+# ── Testing ───────────────────────────────────────────────
+pytest==8.3.2
+pytest-django==4.8.0
+pytest-cov==5.0.0
+factory-boy==3.3.1
+faker==26.1.0
+coverage==7.6.1
+freezegun==1.5.1
+responses==0.25.3
