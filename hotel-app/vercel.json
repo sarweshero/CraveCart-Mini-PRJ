@@ -11,12 +11,6 @@
 
   "regions": ["bom1"],
 
-  "env": {
-    "NEXT_PUBLIC_API_MODE": "live",
-    "NEXT_PUBLIC_API_URL": "@cravecart_api_url",
-    "NEXT_PUBLIC_APP_URL": "@hotel_app_url"
-  },
-
   "headers": [
     {
       "source": "/(.*)",
