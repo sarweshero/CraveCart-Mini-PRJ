@@ -41,7 +41,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://api.cravecart.app/api/:path*"
+      "destination": "https://api.sarweshero.me/api/:path*"
     }
   ]
 }

@@ -18,7 +18,7 @@ export const API_MODE: "mock" | "live" =
   (process.env.NEXT_PUBLIC_API_MODE as "mock" | "live") ?? "live";
 
 export const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_URL ?? "https://api.sarweshero.me";
 
 // ─── Mock data ──────────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-require-imports
