@@ -246,10 +246,11 @@ export default function HomePage() {
 // ── Restaurant Card ──
 
 function RestaurantCard({ restaurant: r }: { restaurant: Restaurant }) {
-  const safeCuisineTags = Array.isArray(r.cuisine_tags)
-    ? r.cuisine_tags
-    : typeof r.cuisine_tags === "string"
-      ? r.cuisine_tags.split(",").map((tag) => tag.trim()).filter(Boolean)
+  const cuisineTagsRaw = r.cuisine_tags as unknown;
+  const safeCuisineTags: string[] = Array.isArray(cuisineTagsRaw)
+    ? cuisineTagsRaw.filter((tag): tag is string => typeof tag === "string")
+    : typeof cuisineTagsRaw === "string"
+      ? cuisineTagsRaw.split(",").map((tag: string) => tag.trim()).filter(Boolean)
       : [];
 
   return (
@@ -309,7 +310,7 @@ function RestaurantCard({ restaurant: r }: { restaurant: Restaurant }) {
           </div>
 
           <div className="flex flex-wrap gap-1.5 mt-3">
-            {safeCuisineTags.slice(0, 3).map((tag) => (
+            {safeCuisineTags.slice(0, 3).map((tag: string) => (
               <span key={tag} className="px-2 py-0.5 rounded-md bg-[#1E1B16] border border-[#2A2620] text-[#9E9080] text-[10px] font-medium">
                 {tag}
               </span>
