@@ -22,10 +22,57 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 function mock<T>(v: T, delay = 400): Promise<T> { return new Promise(r => setTimeout(() => r(v), delay)); }
 
+type HotelLoginRawResponse = {
+  token: string;
+  refresh_token: string;
+  expires_in?: number;
+  hotel?: Partial<Hotel>;
+  user?: {
+    id: string;
+    name?: string;
+    email?: string;
+    avatar?: string;
+    role?: "hotel_admin" | "customer";
+    is_profile_complete?: boolean;
+  };
+};
+
+type HotelLoginResponse = {
+  token: string;
+  refresh_token: string;
+  hotel: Hotel;
+};
+
+function normalizeHotel(raw: HotelLoginRawResponse): Hotel {
+  const hotel = raw.hotel ?? {};
+  const user = raw.user;
+  const fallbackName = user?.name || user?.email?.split("@")[0] || "Partner";
+
+  return {
+    id: hotel.id ?? user?.id ?? "",
+    owner_name: hotel.owner_name ?? fallbackName,
+    email: hotel.email ?? user?.email ?? "",
+    restaurant_name: hotel.restaurant_name ?? `${fallbackName}'s Restaurant`,
+    avatar: hotel.avatar ?? user?.avatar,
+    is_profile_complete: hotel.is_profile_complete ?? user?.is_profile_complete,
+    role: hotel.role ?? (user?.role === "hotel_admin" ? "hotel_admin" : "hotel_admin"),
+    is_open: hotel.is_open,
+  };
+}
+
 export const hotelAuthApi = {
-  login: async (email: string, password: string) => {
+  login: async (email: string, password: string): Promise<HotelLoginResponse> => {
     if (API_MODE === "mock") return mock(mockData.auth["POST /api/hotel/auth/login"]);
-    return request<{ token: string; refresh_token: string; hotel: Hotel }>("/api/hotel/auth/login/", { method: "POST", body: JSON.stringify({ email, password }) });
+    const raw = await request<HotelLoginRawResponse>("/api/hotel/auth/login/", {
+      method: "POST",
+      body: JSON.stringify({ email, password }),
+    });
+
+    return {
+      token: raw.token,
+      refresh_token: raw.refresh_token,
+      hotel: normalizeHotel(raw),
+    };
   },
   logout: async () => { if (API_MODE === "mock") return mock(undefined); return request("/api/hotel/auth/logout/", { method: "POST" }); },
   toggleOpen: async (is_open: boolean) => {

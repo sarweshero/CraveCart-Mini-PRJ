@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, UtensilsCrossed, Loader2, Store } from "lucide-react";
 import { hotelAuthApi } from "@/lib/api";
 import { useHotelAuthStore } from "@/lib/store";
-import type { Hotel } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -23,11 +22,11 @@ function HotelLoginContent() {
     if (!email || !password) { toast.error("Please fill all fields"); return; }
     setLoading(true);
     try {
-      const res = await hotelAuthApi.login(email, password) as { token: string; hotel: Hotel };
+      const res = await hotelAuthApi.login(email, password);
       setAuth(res.hotel, res.token);
       // Set cookie for edge middleware auth check
       document.cookie = `cravecart_hotel_token=${res.token}; path=/; SameSite=Lax; max-age=86400`;
-      toast.success(`Welcome back, ${res.hotel.owner_name}!`);
+      toast.success(`Welcome back, ${res.hotel.owner_name || "Partner"}!`);
       const redirect = searchParams.get("redirect");
       if (redirect && redirect.startsWith("/")) {
         router.push(redirect);
