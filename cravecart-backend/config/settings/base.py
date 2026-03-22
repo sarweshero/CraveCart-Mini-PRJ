@@ -208,6 +208,10 @@ ACCOUNT_AUTHENTICATION_METHOD = "email"
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
 
+# Frontend redirect targets used by /api/auth/google/callback/
+CUSTOMER_APP_URL = env("CUSTOMER_APP_URL", default="http://localhost:3000")
+HOTEL_APP_URL = env("HOTEL_APP_URL", default="http://localhost:3001")
+
 # ── Email ─────────────────────────────────────────────────────────────────────
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="CraveCart <noreply@cravecart.com>")
 EMAIL_BACKEND = env("EMAIL_BACKEND", default="django.core.mail.backends.smtp.EmailBackend")

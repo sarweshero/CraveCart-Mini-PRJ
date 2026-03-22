@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from "next/server";
 const PUBLIC_PATHS = [
   "/login",
   "/register",
+  "/auth/callback",
   "/complete-profile",
   "/api/",
   "/_next/",
