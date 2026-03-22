@@ -1,4 +1,13 @@
 /** @type {import('next').NextConfig} */
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.sarweshero.me";
+const apiOrigin = (() => {
+  try {
+    return new URL(apiUrl).origin;
+  } catch {
+    return "https://api.sarweshero.me";
+  }
+})();
+
 const nextConfig = {
   
   // FIX FE-CUS-3: Don't expose the tech stack to clients
@@ -37,7 +46,7 @@ const nextConfig = {
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
           "font-src 'self' https://fonts.gstatic.com",
           "img-src 'self' data: blob: https://images.unsplash.com https://api.dicebear.com https://vjrfmepmnhgsfstooyik.storage.supabase.co",
-          "connect-src 'self' https://localhost:8000 ${NEXT_PUBLIC_API_URL}",
+          `connect-src 'self' http://localhost:8000 https://localhost:8000 ${apiOrigin}`,
           "frame-ancestors 'none'",
         ].join("; "),
       },

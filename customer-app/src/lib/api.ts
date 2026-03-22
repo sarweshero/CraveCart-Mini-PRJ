@@ -93,7 +93,15 @@ async function request<T>(
   };
   if (token) headers["Authorization"] = `Token ${token}`;
 
-  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  } catch {
+    throw new ApiError(
+      "Unable to reach the server. Please check your connection and try again.",
+      0
+    );
+  }
 
   // 401 → attempt silent token refresh and retry once
   if (res.status === 401 && _retry) {

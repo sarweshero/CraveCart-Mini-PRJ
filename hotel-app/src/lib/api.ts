@@ -11,7 +11,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = getToken();
   const headers: Record<string,string> = { "Content-Type": "application/json", ...(options.headers as Record<string,string>) };
   if (token) headers["Authorization"] = `Token ${token}`;
-  const res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  let res: Response;
+  try {
+    res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
+  } catch {
+    throw new Error("Unable to reach the server. Please check your connection and try again.");
+  }
   if (!res.ok) { const b = await res.json().catch(()=>({})); throw new Error(b.message ?? "Request failed"); }
   return res.json();
 }

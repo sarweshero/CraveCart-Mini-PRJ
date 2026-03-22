@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, UtensilsCrossed, Loader2, Store } from "lucide-react";
 import { hotelAuthApi } from "@/lib/api";
@@ -11,6 +11,7 @@ import toast from "react-hot-toast";
 
 export default function HotelLoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { setAuth } = useHotelAuthStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -27,7 +28,12 @@ export default function HotelLoginPage() {
       // Set cookie for edge middleware auth check
       document.cookie = `cravecart_hotel_token=${res.token}; path=/; SameSite=Lax; max-age=86400`;
       toast.success(`Welcome back, ${res.hotel.owner_name}!`);
-      router.push("/orders");
+      const redirect = searchParams.get("redirect");
+      if (redirect && redirect.startsWith("/")) {
+        router.push(redirect);
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err: unknown) { toast.error(err instanceof Error ? err.message : "Invalid credentials"); }
     finally { setLoading(false); }
   };

@@ -168,12 +168,23 @@ REST_FRAMEWORK = {
 }
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
+# Frontend origins used by OAuth callback redirects and CORS checks.
+CUSTOMER_APP_URL = env("CUSTOMER_APP_URL", default="http://localhost:3000")
+HOTEL_APP_URL = env("HOTEL_APP_URL", default="http://localhost:3001")
+
 CORS_ALLOWED_ORIGINS = env.list(
     "CORS_ALLOWED_ORIGINS",
     default=[
         "http://localhost:3000",   # Customer App
         "http://localhost:3001",   # Hotel App
+        CUSTOMER_APP_URL,
+        HOTEL_APP_URL,
     ],
+)
+CORS_ALLOWED_ORIGINS = list(dict.fromkeys(CORS_ALLOWED_ORIGINS))
+CORS_ALLOWED_ORIGIN_REGEXES = env.list(
+    "CORS_ALLOWED_ORIGIN_REGEXES",
+    default=[r"^https:\/\/.*\.vercel\.app$"],
 )
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
@@ -181,6 +192,11 @@ CORS_ALLOW_HEADERS = [
     "content-type", "dnt", "origin",
     "user-agent", "x-csrftoken", "x-requested-with",
 ]
+
+CSRF_TRUSTED_ORIGINS = env.list(
+    "CSRF_TRUSTED_ORIGINS",
+    default=[CUSTOMER_APP_URL, HOTEL_APP_URL],
+)
 
 # ── Token Auth Settings ───────────────────────────────────────────────────────
 CRAVECART_TOKEN_EXPIRY_DAYS = 1        # Access token: 1 day
@@ -209,8 +225,6 @@ SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
 
 # Frontend redirect targets used by /api/auth/google/callback/
-CUSTOMER_APP_URL = env("CUSTOMER_APP_URL", default="http://localhost:3000")
-HOTEL_APP_URL = env("HOTEL_APP_URL", default="http://localhost:3001")
 
 # ── Email ─────────────────────────────────────────────────────────────────────
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", default="CraveCart <noreply@cravecart.com>")
