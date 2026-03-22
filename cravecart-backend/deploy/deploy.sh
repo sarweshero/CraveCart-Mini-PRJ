@@ -56,11 +56,29 @@ sudo systemctl restart cravecart-celery-beat
 # ── 6. Health check ───────────────────────────────────────────────────────────
 echo "[6/6] Running health check..."
 sleep 2
-HEALTH=$(curl -sf http://127.0.0.1/health/ 2>/dev/null || echo "FAIL")
-if echo "$HEALTH" | grep -q '"status": *"ok"'; then
+
+# Probe Django through Gunicorn's Unix socket to avoid hostname/TLS redirect noise.
+HEALTH_HTTP_CODE="000"
+HEALTH_BODY=""
+if [ -S /run/gunicorn/cravecart.sock ]; then
+  HEALTH_HTTP_CODE=$(curl -sS --max-time 10 \
+    --unix-socket /run/gunicorn/cravecart.sock \
+    -o /tmp/cravecart-health.json -w "%{http_code}" \
+    http://localhost/health/ || echo "000")
+  HEALTH_BODY="$(cat /tmp/cravecart-health.json 2>/dev/null || true)"
+else
+  HEALTH_HTTP_CODE=$(curl -sS --max-time 10 \
+    -o /tmp/cravecart-health.json -w "%{http_code}" \
+    http://127.0.0.1/health/ || echo "000")
+  HEALTH_BODY="$(cat /tmp/cravecart-health.json 2>/dev/null || true)"
+fi
+
+if [ "$HEALTH_HTTP_CODE" = "200" ] && echo "$HEALTH_BODY" | grep -q '"status": *"ok"'; then
   echo "✅ Deploy successful! Health check passed."
 else
-  echo "⚠️  Deploy done but health check returned: $HEALTH"
+  echo "⚠️  Deploy done but health check failed."
+  echo "   HTTP: $HEALTH_HTTP_CODE"
+  echo "   Body: ${HEALTH_BODY:-<empty>}"
   echo "   Check logs: sudo journalctl -u cravecart-gunicorn -n 50"
 fi
 
