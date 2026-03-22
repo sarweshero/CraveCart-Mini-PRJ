@@ -1,45 +1,14 @@
-# Environment — never commit
 .env
-.env.*
-!.env.example
-
-# Python
 __pycache__/
 *.py[cod]
-*$py.class
 *.egg-info/
-dist/
-build/
-.eggs/
 .venv/
 venv/
-env/
-
-# Django
 staticfiles/
 media/
 *.sqlite3
-db.sqlite3
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# OS
 .DS_Store
-Thumbs.db
-
-# Celery
 celerybeat-schedule
-celerybeat.pid
-
-# Coverage
 .coverage
 htmlcov/
 .pytest_cache/
-
-# Logs
-*.log
-logs/

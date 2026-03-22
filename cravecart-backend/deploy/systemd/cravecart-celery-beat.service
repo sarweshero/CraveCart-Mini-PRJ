@@ -1,25 +1,14 @@
 [Unit]
-Description=CraveCart Celery Beat Scheduler
-Documentation=https://docs.celeryq.dev
-After=network.target redis.service cravecart-celery-worker.service
+Description=CraveCart Celery Beat
+After=network.target redis.service
 
 [Service]
 Type=simple
-
 User=ubuntu
-Group=www-data
+Group=ubuntu
 WorkingDirectory=/home/ubuntu/cravecart-backend
-
 EnvironmentFile=/home/ubuntu/cravecart-backend/.env
-
-ExecStart=/home/ubuntu/cravecart-backend/.venv/bin/celery \
-          -A config beat \
-          --loglevel=info \
-          --scheduler django_celery_beat.schedulers:DatabaseScheduler \
-          --logfile=/var/log/cravecart/celery-beat.log \
-          --pidfile=/run/celery/cravecart-beat.pid
-
-RuntimeDirectory=celery
+ExecStart=/home/ubuntu/.genv/bin/celery -A config beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
 Restart=on-failure
 RestartSec=10s
 

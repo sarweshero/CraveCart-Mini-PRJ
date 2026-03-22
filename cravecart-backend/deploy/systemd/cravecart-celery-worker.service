@@ -1,40 +1,14 @@
 [Unit]
-Description=CraveCart Celery Task Worker
-Documentation=https://docs.celeryq.dev
+Description=CraveCart Celery Worker
 After=network.target redis.service
 
 [Service]
-Type=forking
-
+Type=simple
 User=ubuntu
-Group=www-data
+Group=ubuntu
 WorkingDirectory=/home/ubuntu/cravecart-backend
-
-# PID file for forking worker
-Environment=PYTHONPATH=/home/ubuntu/cravecart-backend
 EnvironmentFile=/home/ubuntu/cravecart-backend/.env
-
-ExecStart=/home/ubuntu/cravecart-backend/.venv/bin/celery \
-          multi start worker1 \
-          -A config \
-          --loglevel=info \
-          --concurrency=${CELERY_CONCURRENCY:-2} \
-          --max-tasks-per-child=200 \
-          --logfile=/var/log/cravecart/celery-worker.log \
-          --pidfile=/run/celery/cravecart-worker.pid
-
-ExecStop=/home/ubuntu/cravecart-backend/.venv/bin/celery \
-         multi stop worker1 \
-         --pidfile=/run/celery/cravecart-worker.pid
-
-ExecReload=/home/ubuntu/cravecart-backend/.venv/bin/celery \
-           multi restart worker1 \
-           -A config \
-           --loglevel=info \
-           --logfile=/var/log/cravecart/celery-worker.log \
-           --pidfile=/run/celery/cravecart-worker.pid
-
-RuntimeDirectory=celery
+ExecStart=/home/ubuntu/.genv/bin/celery -A config worker --loglevel=info --concurrency=2
 Restart=on-failure
 RestartSec=10s
 

@@ -21,10 +21,10 @@ set -euo pipefail
 IFS=$'\n\t'
 
 # ── Configurable variables ────────────────────────────────────────────────────
-APP_DIR="/home/ubuntu/Projects/CraveCart-Mini-PRJ/cravecart-backend"
-VENV_DIR="/home/ubuntu/.genv"
+APP_DIR="/home/ubuntu/cravecart-backend"
+VENV_DIR="$APP_DIR/.venv"
 APP_USER="ubuntu"
-DOMAIN="api.sarweshero.me"    # ← replace with your domain BEFORE running
+DOMAIN="api.cravecart.app"    # ← replace with your domain BEFORE running
 
 echo "╔══════════════════════════════════════════╗"
 echo "║  CraveCart EC2 Setup — Ubuntu 24.04      ║"
