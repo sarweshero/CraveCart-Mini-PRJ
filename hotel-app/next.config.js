@@ -7,6 +7,15 @@ const apiOrigin = (() => {
     return "https://api.sarweshero.me";
   }
 })();
+const connectSrc = Array.from(
+  new Set([
+    "'self'",
+    "http://localhost:8000",
+    "https://localhost:8000",
+    "https://api.sarweshero.me",
+    apiOrigin,
+  ])
+).join(" ");
 
 const nextConfig = {
   poweredByHeader: false,
@@ -35,7 +44,7 @@ const nextConfig = {
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
           "font-src 'self' https://fonts.gstatic.com",
           "img-src 'self' data: blob: https://images.unsplash.com https://api.dicebear.com https://vjrfmepmnhgsfstooyik.storage.supabase.co",
-          `connect-src 'self' http://localhost:8000 https://localhost:8000 ${apiOrigin}`,
+          `connect-src ${connectSrc}`,
           "frame-ancestors 'none'",
         ].join("; "),
       },
