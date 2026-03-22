@@ -17,6 +17,20 @@ const SORT_OPTIONS = [
   { value: "min_order", label: "Min. Order" },
 ];
 
+function extractList<T>(payload: unknown): T[] {
+  if (Array.isArray(payload)) return payload as T[];
+  if (payload && typeof payload === "object" && Array.isArray((payload as { results?: unknown }).results)) {
+    return (payload as { results: T[] }).results;
+  }
+  return [];
+}
+
+function normalizeCuisineTags(tags: unknown): string[] {
+  if (Array.isArray(tags)) return tags.filter((tag): tag is string => typeof tag === "string");
+  if (typeof tags === "string") return tags.split(",").map((tag) => tag.trim()).filter(Boolean);
+  return [];
+}
+
 function RestaurantsContent() {
   const searchParams = useSearchParams();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -31,12 +45,12 @@ function RestaurantsContent() {
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
-    restaurantApi.categories().then((cats) => setCategories(cats));
+    restaurantApi.categories().then((cats) => setCategories(extractList<{ id: string; name: string }>(cats)));
   }, []);
 
   useEffect(() => {
     setLoading(true);
-    restaurantApi.list(filters).then((res) => setRestaurants(res.results)).finally(() => setLoading(false));
+    restaurantApi.list(filters).then((res) => setRestaurants(extractList<Restaurant>(res))).finally(() => setLoading(false));
   }, [filters]);
 
   const debouncedSearch = debounce((val: string) => {
@@ -186,6 +200,9 @@ function RestaurantsContent() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {restaurants.map((r, i) => (
               <motion.div key={r.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
+                {(() => {
+                  const safeCuisineTags = normalizeCuisineTags(r.cuisine_tags);
+                  return (
                 <Link href={`/restaurants/${r.id}`} className="group block">
                   <div className="rounded-2xl overflow-hidden bg-[#161410] border border-[#2A2620] transition-all duration-300 hover:border-[#E8A830]/30 hover:shadow-[0_8px_40px_rgba(0,0,0,0.5)] hover:-translate-y-1">
                     <div className="relative h-44 overflow-hidden">
@@ -202,7 +219,7 @@ function RestaurantsContent() {
                     </div>
                     <div className="p-4">
                       <h3 className="text-[#F5EDD8] font-semibold text-base truncate">{r.name}</h3>
-                      <p className="text-[#9E9080] text-xs mt-0.5 truncate">{r.cuisine_tags.join(" · ")}</p>
+                      <p className="text-[#9E9080] text-xs mt-0.5 truncate">{safeCuisineTags.join(" · ")}</p>
                       <div className="flex items-center gap-4 mt-3 text-xs text-[#9E9080]">
                         <span className="flex items-center gap-1"><Clock size={11} />{r.avg_delivery_time} min</span>
                         <span>·</span>
@@ -211,6 +228,8 @@ function RestaurantsContent() {
                     </div>
                   </div>
                 </Link>
+                  );
+                })()}
               </motion.div>
             ))}
           </div>
