@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Mail, Lock, Eye, EyeOff, UtensilsCrossed, Loader2, Store } from "lucide-react";
@@ -9,7 +9,7 @@ import type { Hotel } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 
-export default function HotelLoginPage() {
+function HotelLoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setAuth } = useHotelAuthStore();
@@ -98,5 +98,13 @@ export default function HotelLoginPage() {
         </motion.div>
       </div>
     </div>
+  );
+}
+
+export default function HotelLoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen" style={{background:"var(--bg)"}} />}>
+      <HotelLoginContent />
+    </Suspense>
   );
 }

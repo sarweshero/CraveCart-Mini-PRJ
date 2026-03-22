@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuthStore } from "@/lib/store";
 import { authApi } from "@/lib/api";
 
-export default function OAuthCallbackPage() {
+function OAuthCallbackContent() {
   const router = useRouter();
   const params = useSearchParams();
   const { setAuth } = useAuthStore();
@@ -56,5 +56,22 @@ export default function OAuthCallbackPage() {
         Completing Google sign-in...
       </div>
     </main>
+  );
+}
+
+export default function OAuthCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="min-h-screen bg-[#0C0B09] text-[#F5EDD8] flex items-center justify-center px-6">
+          <div className="flex items-center gap-3 text-sm">
+            <Loader2 size={16} className="animate-spin text-[#E8A830]" />
+            Completing Google sign-in...
+          </div>
+        </main>
+      }
+    >
+      <OAuthCallbackContent />
+    </Suspense>
   );
 }
