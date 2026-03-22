@@ -4,11 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000",
-    "build": "tsc --noEmit && next build",
+    "build": "tsc --noEmit && next build --webpack",
     "start": "next start -p ${PORT:-3000}",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
-    "build:analyze": "ANALYZE=true next build"
+    "build:analyze": "ANALYZE=true next build --webpack"
   },
   "dependencies": {
     "next": "16.2.1",

@@ -26,7 +26,7 @@ export default function HotelLoginPage() {
       setAuth(res.hotel, res.token);
       // Set cookie for edge middleware auth check
       document.cookie = `cravecart_hotel_token=${res.token}; path=/; SameSite=Lax; max-age=86400`;
-      toast.success(`Welcome back, ${res.hotel.name}!`);
+      toast.success(`Welcome back, ${res.hotel.owner_name}!`);
       router.push("/orders");
     } catch (err: unknown) { toast.error(err instanceof Error ? err.message : "Invalid credentials"); }
     finally { setLoading(false); }

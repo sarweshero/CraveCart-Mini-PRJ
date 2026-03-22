@@ -92,9 +92,9 @@ export function truncate(str: string, maxLen: number): string {
   return str.slice(0, maxLen) + "…";
 }
 
-export function debounce<T extends (...args: unknown[]) => unknown>(fn: T, delay: number): (...args: Parameters<T>) => void {
+export function debounce<TArgs extends unknown[]>(fn: (...args: TArgs) => void, delay: number): (...args: TArgs) => void {
   let timer: ReturnType<typeof setTimeout>;
-  return (...args: Parameters<T>) => {
+  return (...args: TArgs) => {
     clearTimeout(timer);
     timer = setTimeout(() => fn(...args), delay);
   };

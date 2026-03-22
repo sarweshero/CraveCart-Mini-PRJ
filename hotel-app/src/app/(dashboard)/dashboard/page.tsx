@@ -38,6 +38,9 @@ export default function DashboardPage() {
   }, []);
 
   const periodData = stats?.[period];
+  const reviewCount = periodData
+    ? ("new_reviews" in periodData ? periodData.new_reviews : periodData.reviews)
+    : 0;
 
   const statCards = periodData ? [
     {
@@ -66,7 +69,7 @@ export default function DashboardPage() {
     },
     {
       label: "New Reviews",
-      value: (period === "today" ? periodData.new_reviews : (periodData as { reviews: number }).reviews) ?? periodData.new_reviews,
+      value: reviewCount,
       icon: MessageSquare,
       color: "#60A5FA",
       bg: "rgba(96,165,250,0.1)",
