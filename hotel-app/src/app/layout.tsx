@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
-import { QueryProvider }
-import { HotelSessionGuard } from "@/components/providers/session-guard" from "@/components/providers/query-provider";
+import { QueryProvider } from "@/components/providers/query-provider";
+import { HotelSessionGuard } from "@/components/providers/session-guard";
 
 export const metadata: Metadata = {
   title: { default: "CraveCart Hotel Dashboard", template: "%s | CraveCart Hotel" },
