@@ -6,7 +6,7 @@
 # ============================================================
 set -euo pipefail
 
-APP_DIR="/home/ubuntu/cravecart-backend"
+APP_DIR="/home/ubuntu/Projects/CraveCart-Mini-PRJ/cravecart-backend"
 VENV_DIR="/home/ubuntu/.genv"
 
 echo "╔══════════════════════════════════════╗"
