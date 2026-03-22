@@ -5,9 +5,11 @@ import sys
 
 
 def main():
-    # Respect DJANGO_SETTINGS_MODULE env var; default to prod so local
-    # developers must explicitly set it to dev — prevents accidental prod writes.
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.prod")
+    # Default to DEV settings for safety.
+    # On EC2 the systemd EnvironmentFile sets DJANGO_SETTINGS_MODULE=config.settings.prod
+    # explicitly, so this default only matters when running manage.py locally
+    # without the env file (e.g., during initial setup).
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings.dev")
     from django.core.management import execute_from_command_line
     execute_from_command_line(sys.argv)
 

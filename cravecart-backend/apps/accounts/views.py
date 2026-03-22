@@ -1,6 +1,4 @@
 """apps/accounts/views.py — All authentication endpoints."""
-from urllib.parse import quote
-
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -8,8 +6,6 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.throttling import AnonRateThrottle
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from django.conf import settings
-from django.shortcuts import redirect as django_redirect
 
 from .models import AuthToken, Address
 from .serializers import (
@@ -25,19 +21,6 @@ User = get_user_model()
 class LoginThrottle(AnonRateThrottle):
     rate = "10/min"
     scope = "login"
-
-
-class GoogleOAuthStartView(APIView):
-    """
-    GET /api/auth/google/
-    Starts Google OAuth flow via django-allauth and returns to our callback.
-    """
-    permission_classes = [AllowAny]
-
-    def get(self, request):
-        callback_path = "/api/auth/google/callback/"
-        login_url = f"/accounts/google/login/?process=login&next={quote(callback_path, safe='/')}"
-        return django_redirect(login_url)
 
 
 # ── Register ──────────────────────────────────────────────────────────────────
@@ -249,14 +232,15 @@ class GoogleOAuthCallbackView(APIView):
         # By this point, allauth has authenticated the user and set request.user
         user = request.user
         if not user.is_authenticated:
-            return django_redirect("/login?error=oauth_failed")
+            from django.shortcuts import redirect
+            return redirect("/login?error=oauth_failed")
 
         token = AuthToken.create_for_user(user, request)
 
-        # Redirect to frontend with token query params.
-        frontend_url = getattr(settings, "CUSTOMER_APP_URL", "http://localhost:3000")
-        if user.role == User.role.HOTEL_ADMIN:
-            frontend_url = getattr(settings, "HOTEL_APP_URL", "http://localhost:3001")
+        # Redirect to frontend with token in query params (or set cookie)
+        frontend_url = "http://localhost:3000"
+        if user.role == User.Role.HOTEL_ADMIN:
+            frontend_url = "http://localhost:3001"
 
         redirect_url = (
             f"{frontend_url}/auth/callback"
@@ -264,4 +248,5 @@ class GoogleOAuthCallbackView(APIView):
             f"&refresh={token.refresh_token}"
             f"&complete={str(user.is_profile_complete).lower()}"
         )
+        from django.shortcuts import redirect as django_redirect
         return django_redirect(redirect_url)

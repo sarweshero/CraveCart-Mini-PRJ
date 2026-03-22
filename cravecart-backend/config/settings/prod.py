@@ -70,9 +70,9 @@ CACHES = {
         "BACKEND":  "django.core.cache.backends.redis.RedisCache",
         "LOCATION": env("REDIS_CACHE_URL", default="redis://127.0.0.1:6379/1"),
         "OPTIONS": {
-            # Use redis-py option names expected by Django's built-in Redis cache backend.
-            "socket_connect_timeout": 5,
-            "socket_timeout": 5,
+            "CONNECTION_POOL_KWARGS": {"max_connections": 20},
+            "SOCKET_CONNECT_TIMEOUT": 5,
+            "SOCKET_TIMEOUT":         5,
         },
         "TIMEOUT": 600,
     }

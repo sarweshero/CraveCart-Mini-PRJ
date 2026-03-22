@@ -6,8 +6,7 @@ Batching is handled by queueing EmailRecord rows,
 then a Celery beat task flushes them every 5 minutes.
 """
 import logging
-from django.core.mail import send_mail, EmailMultiAlternatives
-from django.template.loader import render_to_string
+# EmailMultiAlternatives is used in tasks.py; render_to_string not needed
 from django.conf import settings
 from django.utils import timezone
 

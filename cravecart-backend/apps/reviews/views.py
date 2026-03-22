@@ -50,14 +50,14 @@ class ReviewAIResponseStatusView(APIView):
 
     def get(self, request, pk):
         review = get_object_or_404(Review, pk=pk, customer=request.user)
-        try:
-            ai_resp = review.ai_response
-            return Response({
-                "status":      ai_resp.generation_status,
-                "ai_response": AIResponseSerializer(ai_resp).data if ai_resp.generation_status == "completed" else None,
-            })
-        except AIResponse.DoesNotExist:
+        # FIX BUG-12: OneToOne reverse raises RelatedObjectDoesNotExist (subclass of DoesNotExist)
+        ai_resp = getattr(review, "ai_response", None)
+        if ai_resp is None:
             return Response({"status": "pending", "ai_response": None})
+        return Response({
+            "status":      ai_resp.generation_status,
+            "ai_response": AIResponseSerializer(ai_resp).data if ai_resp.generation_status == "completed" else None,
+        })
 
 
 # ── Hotel ─────────────────────────────────────────────────────────────────────
@@ -102,7 +102,7 @@ class HotelReviewListView(APIView):
                 "comment":    r.comment,
                 "created_at": r.created_at.isoformat(),
                 "ai_response": AIResponseSerializer(r.ai_response).data
-                               if hasattr(r, "ai_response") else None,
+                               if getattr(r, "ai_response", None) is not None else None,  # FIX BUG-11
             }
             for r in page
         ]

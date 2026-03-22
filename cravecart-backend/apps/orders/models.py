@@ -115,6 +115,7 @@ class Order(models.Model):
     out_for_delivery_at = models.DateTimeField(null=True, blank=True)
     delivered_at     = models.DateTimeField(null=True, blank=True)
     cancelled_at     = models.DateTimeField(null=True, blank=True)
+    cancellation_reason = models.TextField(blank=True)  # FIX BUG-04: was missing
 
     class Meta:
         db_table = "orders"
@@ -139,7 +140,11 @@ class Order(models.Model):
 
     @property
     def has_review(self):
-        return hasattr(self,"review")
+        # FIX BUG-08: hasattr swallows exceptions; use explicit try/except
+        try:
+            return self.review is not None
+        except Exception:
+            return False
 
     @property
     def tracking(self):

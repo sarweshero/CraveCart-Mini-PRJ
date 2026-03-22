@@ -14,6 +14,5 @@ urlpatterns = [
     path("addresses/",        views.AddressListCreateView.as_view(), name="addresses"),
     path("addresses/<int:pk>/", views.AddressDetailView.as_view(),   name="address_detail"),
     path("delete-account/",   views.DeleteAccountView.as_view(),     name="delete_account"),
-    path("google/",           views.GoogleOAuthStartView.as_view(),   name="google_start"),
     path("google/callback/",  views.GoogleOAuthCallbackView.as_view(), name="google_callback"),
 ]

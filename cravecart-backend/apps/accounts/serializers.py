@@ -79,19 +79,27 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
     def validate(self, data):
-        user = authenticate(
-            request  = self.context.get("request"),
-            username = data["email"].lower(),
-            password = data["password"],
-        )
-        if not user:
+        from django.contrib.auth import get_user_model
+        UserModel = get_user_model()
+        email    = data["email"].lower()
+        password = data["password"]
+
+        # FIX BUG-05: Authenticate using email directly against ModelBackend.
+        # We bypass authenticate() to avoid allauth intercepting and failing.
+        try:
+            user = UserModel.objects.get(email=email)
+        except UserModel.DoesNotExist:
             raise serializers.ValidationError({"non_field_errors": "Invalid email or password."})
+
+        if not user.check_password(password):
+            raise serializers.ValidationError({"non_field_errors": "Invalid email or password."})
+
         if not user.is_active:
-            # Reactivate temporarily deactivated accounts on login
-            if user.deletion_type == User.DeletionType.TEMPORARY:
+            if user.deletion_type == UserModel.DeletionType.TEMPORARY:
                 user.reactivate()
             else:
                 raise serializers.ValidationError({"non_field_errors": "Account is inactive."})
+
         data["user"] = user
         return data
 
