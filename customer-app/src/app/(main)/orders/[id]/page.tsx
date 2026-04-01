@@ -1,135 +1,145 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useOrderPolling } from "@/hooks/useOrderPolling";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ChevronLeft, Package, CheckCircle2, Clock, Truck, Home, X,
-  Star, Send, Sparkles, Mail, RefreshCw, Phone, MapPin,
-} from "lucide-react";
+import { ChevronLeft, Package, CheckCircle2, Clock, Truck, Home, X, Star, Send, Sparkles, Mail, RefreshCw, Phone, MapPin } from "lucide-react";
 import { orderApi, reviewApi } from "@/lib/api";
 import type { OrderDetail, TrackingStep } from "@/lib/types";
 import { cn, formatCurrency, formatDate, formatTime, getOrderStatusLabel, getOrderStatusColor } from "@/lib/utils";
 import toast from "react-hot-toast";
 
-const TRACK_ICONS = {
-  placed: Package,
-  confirmed: CheckCircle2,
-  preparing: Clock,
-  out_for_delivery: Truck,
-  delivered: Home,
-  cancelled: X,
-};
+const TRACK_ICONS = { placed: Package, confirmed: CheckCircle2, preparing: Clock, out_for_delivery: Truck, delivered: Home, cancelled: X };
+const TERMINAL_STATUSES = ["delivered", "cancelled"];
+const POLL_INTERVAL_MS  = 8000;
 
 export default function OrderDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const router = useRouter();
-  const [order, setOrder] = useState<OrderDetail | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { id }   = useParams<{ id: string }>();
+  const router   = useRouter();
+  const [order, setOrder]           = useState<OrderDetail | null>(null);
+  const [loading, setLoading]       = useState(true);
   const [showReviewForm, setShowReviewForm] = useState(false);
-
+  const [rating, setRating]         = useState(0);
+  const [comment, setComment]       = useState("");
+  const [submittingReview, setSubmittingReview] = useState(false);
   const loadOrder = useCallback(async () => {
     try {
       const data = await orderApi.get(id);
       setOrder(data);
+      return data;
     } finally {
       setLoading(false);
     }
   }, [id]);
 
+  // Initial load
   useEffect(() => { loadOrder(); }, [loadOrder]);
 
-  // Poll for AI response if review submitted but no AI response yet
+  // Live polling via hook — stops automatically on terminal status
+  useOrderPolling({
+    id,
+    enabled: !!order && !TERMINAL_STATUSES.includes(order?.status ?? ""),
+    intervalMs: POLL_INTERVAL_MS,
+    onUpdate: (fresh) => {
+      setOrder(fresh);
+      if (fresh.status === "delivered") toast.success("Your order has been delivered! 🎉");
+    },
+  });
+
+  // Poll for AI response after review submission
   useEffect(() => {
     if (!order?.review || order.review.ai_response) return;
-
     const poll = setInterval(async () => {
-      const res = await reviewApi.getAiResponse(order.review!.id);
+      const res = await reviewApi.getAiResponse(String(order.review!.id));
       if (res.status === "completed" && res.ai_response) {
-        setOrder((prev) => prev ? {
-          ...prev,
-          review: { ...prev.review!, ai_response: res.ai_response! },
-        } : prev);
+        setOrder(prev => prev ? { ...prev, review: { ...prev.review!, ai_response: res.ai_response! } } : prev);
         clearInterval(poll);
         toast.success("AI response received! 🤖✨");
       }
     }, 3000);
-
     return () => clearInterval(poll);
   }, [order?.review?.id, order?.review?.ai_response]);
 
-  if (loading) return <LoadingSkeleton />;
-  if (!order) return <div className="flex items-center justify-center min-h-screen text-[#9E9080]">Order not found</div>;
+  const handleSubmitReview = async () => {
+    if (!rating) { toast.error("Please select a rating"); return; }
+    setSubmittingReview(true);
+    try {
+      await reviewApi.submit({ order_id: id, rating, comment: comment || undefined });
+      toast.success("Review submitted! Thank you 🙏");
+      setShowReviewForm(false);
+      loadOrder();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to submit review");
+    } finally { setSubmittingReview(false); }
+  };
 
-  const currentStep = ["placed", "confirmed", "preparing", "out_for_delivery", "delivered"].indexOf(order.status);
+  if (loading) return <LoadingSkeleton />;
+  if (!order)  return <div className="flex items-center justify-center min-h-screen text-[#9E9080]">Order not found</div>;
+
+  const steps = ["placed","confirmed","preparing","out_for_delivery","delivered"];
+  const currentStep = steps.indexOf(order.status);
+  const isTerminal  = TERMINAL_STATUSES.includes(order.status);
 
   return (
     <div className="min-h-screen">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-        {/* Header */}
         <div className="flex items-center gap-4 mb-8">
-          <button
-            onClick={() => router.back()}
-            className="w-9 h-9 rounded-xl bg-[#161410] border border-[#2A2620] flex items-center justify-center text-[#BFB49A] hover:text-[#F5EDD8] transition-all"
-          >
+          <button onClick={() => router.back()} className="w-9 h-9 rounded-xl bg-[#161410] border border-[#2A2620] flex items-center justify-center text-[#BFB49A] hover:text-[#F5EDD8] transition-all">
             <ChevronLeft size={18} />
           </button>
           <div>
-            <h1 className="text-[#F5EDD8] font-display font-semibold text-2xl" style={{ fontFamily: "var(--font-fraunces)" }}>
-              Order Details
-            </h1>
-            <p className="text-[#9E9080] text-sm mt-0.5">#{order.id} · {formatDate(order.placed_at)}</p>
+            <h1 className="text-[#F5EDD8] font-semibold text-xl" className="font-display">Order #{order.id.slice(-6).toUpperCase()}</h1>
+            <p className="text-[#9E9080] text-sm">{formatDate(order.placed_at)}</p>
           </div>
-          <div className="ml-auto">
-            <span className={cn("badge", getOrderStatusColor(order.status))}>
-              {getOrderStatusLabel(order.status)}
-            </span>
-          </div>
+          {!isTerminal && (
+            <div className="ml-auto flex items-center gap-1.5 text-xs text-[#E8A830] bg-[#E8A830]/10 px-2.5 py-1 rounded-full">
+              <div className="w-1.5 h-1.5 rounded-full bg-[#E8A830] animate-pulse" />
+              Live Tracking
+            </div>
+          )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          {/* Left column */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-5">
-            {/* Order tracking */}
+            {/* Status tracker */}
             {order.status !== "cancelled" && (
               <div className="bg-[#161410] border border-[#2A2620] rounded-2xl p-5">
-                <h2 className="text-[#F5EDD8] font-semibold mb-5">Order Tracking</h2>
+                <div className="flex items-center justify-between mb-5">
+                  <h2 className="text-[#F5EDD8] font-semibold">Order Status</h2>
+                  {!isTerminal && (
+                    <div className="flex items-center gap-1 text-[#9E9080] text-xs">
+                      <RefreshCw size={11} className="animate-spin" /> Updates every 8s
+                    </div>
+                  )}
+                </div>
                 <div className="space-y-0">
-                  {order.tracking.map((step, idx) => {
-                    const Icon = TRACK_ICONS[step.status as keyof typeof TRACK_ICONS] ?? Package;
-                    const isLast = idx === order.tracking.length - 1;
+                  {steps.map((s, i) => {
+                    const tracking = order.tracking?.find((t: TrackingStep) => t.status === s);
+                    const done   = i <= currentStep;
+                    const active = i === currentStep;
+                    const Icon   = TRACK_ICONS[s as keyof typeof TRACK_ICONS] ?? Package;
                     return (
-                      <div key={step.status} className="flex gap-4">
+                      <div key={s} className="flex gap-4">
                         <div className="flex flex-col items-center">
-                          <div className={cn(
-                            "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 border-2 transition-all",
-                            step.completed
-                              ? "bg-[#E8A830] border-[#E8A830] text-[#0C0B09]"
-                              : "bg-transparent border-[#2A2620] text-[#9E9080]"
-                          )}>
-                            <Icon size={14} strokeWidth={2.5} />
-                          </div>
-                          {!isLast && (
-                            <div className={cn(
-                              "w-0.5 h-10 mt-1 transition-all",
-                              step.completed ? "bg-[#E8A830]/40" : "bg-[#2A2620]"
-                            )} />
-                          )}
+                          <motion.div animate={{ backgroundColor: done ? (active ? "#E8A830" : "#16A34A") : "#1E1B16", borderColor: done ? (active ? "#E8A830" : "#16A34A") : "#2A2620" }}
+                            className="w-9 h-9 rounded-full border-2 flex items-center justify-center flex-shrink-0 relative">
+                            <Icon size={15} className={done ? "text-[#0C0B09]" : "text-[#4B4542]"} />
+                            {active && <span className="absolute inset-0 rounded-full border-2 border-[#E8A830] animate-ping opacity-60" />}
+                          </motion.div>
+                          {i < steps.length - 1 && <div className={cn("w-0.5 flex-1 my-1 min-h-[20px] rounded transition-all duration-700", i < currentStep ? "bg-green-600" : "bg-[#2A2620]")} />}
                         </div>
-                        <div className="flex-1 pb-6 last:pb-0">
-                          <div className="flex items-center justify-between">
-                            <p className={cn(
-                              "font-medium text-sm",
-                              step.completed ? "text-[#F5EDD8]" : "text-[#9E9080]"
-                            )}>
-                              {step.label}
-                            </p>
-                            {step.time && (
-                              <p className="text-[#9E9080] text-xs">{formatTime(step.time)}</p>
-                            )}
+                        <div className="pb-4 flex-1">
+                          <div className={cn("font-medium text-sm", done ? "text-[#F5EDD8]" : "text-[#4B4542]")}>
+                            {getOrderStatusLabel(s)}
+                            {active && <span className="ml-2 text-[10px] px-1.5 py-0.5 bg-[#E8A830]/15 text-[#E8A830] rounded-full uppercase tracking-wider">Now</span>}
                           </div>
-                          <p className="text-[#9E9080] text-xs mt-0.5">{step.description}</p>
+                          {tracking?.time ? (
+                            <p className="text-xs text-[#9E9080] mt-0.5">{formatTime(tracking.time)}</p>
+                          ) : done ? null : (
+                            <p className="text-xs text-[#4B4542] mt-0.5">Upcoming</p>
+                          )}
                         </div>
                       </div>
                     );
@@ -138,334 +148,152 @@ export default function OrderDetailPage() {
               </div>
             )}
 
-            {/* Order items */}
+            {order.status === "cancelled" && (
+              <div className="bg-red-500/10 border border-red-500/20 rounded-2xl p-5 text-center">
+                <X size={32} className="text-red-400 mx-auto mb-2" />
+                <h3 className="text-[#F5EDD8] font-semibold">Order Cancelled</h3>
+                {order.cancellation_reason && <p className="text-[#9E9080] text-sm mt-1">{order.cancellation_reason}</p>}
+              </div>
+            )}
+
+            {/* Restaurant info */}
             <div className="bg-[#161410] border border-[#2A2620] rounded-2xl p-5">
-              <div className="flex items-center gap-3 mb-4 pb-4 border-b border-[#2A2620]">
-                <div className="relative w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-                  <Image src={order.restaurant.thumbnail} alt={order.restaurant.name} fill className="object-cover" sizes="40px" />
+              <div className="flex items-center gap-3 mb-4">
+                {order.restaurant?.thumbnail && (
+                  <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                    <Image src={order.restaurant.thumbnail} alt={order.restaurant.name} fill className="object-cover" sizes="48px" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <p className="text-[#F5EDD8] font-semibold">{order.restaurant?.name}</p>
+                  {order.restaurant?.address && <p className="text-[#9E9080] text-xs mt-0.5 flex items-center gap-1"><MapPin size={10} /> {order.restaurant.address}</p>}
                 </div>
-                <div>
-                  <h2 className="text-[#F5EDD8] font-semibold text-sm">{order.restaurant.name}</h2>
-                  {order.restaurant.address && (
-                    <p className="text-[#9E9080] text-xs flex items-center gap-1 mt-0.5">
-                      <MapPin size={10} />
-                      {order.restaurant.address}
-                    </p>
-                  )}
-                </div>
-                {order.restaurant.phone && (
-                  <a href={`tel:${order.restaurant.phone}`} className="ml-auto w-8 h-8 rounded-lg bg-[#1E1B16] border border-[#2A2620] flex items-center justify-center text-[#9E9080] hover:text-[#E8A830] transition-colors">
-                    <Phone size={14} />
+                {order.restaurant?.phone && (
+                  <a href={`tel:${order.restaurant.phone}`} className="w-9 h-9 rounded-xl bg-[#1E1B16] border border-[#2A2620] flex items-center justify-center text-[#9E9080] hover:text-[#E8A830] transition-colors">
+                    <Phone size={15} />
                   </a>
                 )}
               </div>
-
-              <div className="space-y-3">
-                {order.items.map((item, i) => (
-                  <div key={i} className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[#F5EDD8] text-sm font-medium">{item.quantity}× {item.name}</p>
-                      {item.customizations.length > 0 && (
-                        <p className="text-[#9E9080] text-xs mt-0.5">{item.customizations.join(", ")}</p>
-                      )}
-                    </div>
-                    <span className="text-[#BFB49A] text-sm font-medium flex-shrink-0">{formatCurrency(item.item_total)}</span>
+              <div className="space-y-2">
+                {order.items?.map((item: { name: string; quantity: number; item_total: number }, i: number) => (
+                  <div key={i} className="flex justify-between text-sm">
+                    <span className="text-[#BFB49A]">{item.quantity}× {item.name}</span>
+                    <span className="text-[#9E9080]">{formatCurrency(item.item_total)}</span>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Review section */}
-            {order.status === "delivered" && (
-              <div>
-                {!order.review ? (
-                  <div className="bg-[#161410] border border-[#2A2620] rounded-2xl p-5">
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-[#F5EDD8] font-semibold">How was your order?</h2>
-                    </div>
-                    {!showReviewForm ? (
-                      <div className="flex flex-col items-center py-4 gap-3 text-center">
-                        <p className="text-[#9E9080] text-sm">Share your experience and get an AI-powered response from the restaurant!</p>
-                        <button
-                          onClick={() => setShowReviewForm(true)}
-                          className="px-5 py-2.5 rounded-xl bg-[#E8A830] text-[#0C0B09] font-semibold text-sm hover:bg-[#F5C842] transition-colors"
-                        >
-                          Write a Review
-                        </button>
-                      </div>
-                    ) : (
-                      <ReviewForm orderId={order.id} onSuccess={(review) => {
-                        setOrder((prev) => prev ? { ...prev, review } : prev);
-                        setShowReviewForm(false);
-                      }} />
-                    )}
-                  </div>
-                ) : (
-                  <ReviewCard review={order.review} restaurantName={order.restaurant.name} />
-                )}
+            {order.status === "delivered" && !order.has_review && !showReviewForm && (
+              <div className="bg-[#161410] border border-[#2A2620] rounded-2xl p-5">
+                <p className="text-[#BFB49A] text-sm mb-3">How was your experience?</p>
+                <button onClick={() => setShowReviewForm(true)} className="w-full py-3 rounded-xl bg-[#E8A830]/10 border border-[#E8A830]/30 text-[#E8A830] text-sm font-semibold hover:bg-[#E8A830]/20 transition-all flex items-center justify-center gap-2">
+                  <Star size={14} /> Write a Review
+                </button>
+              </div>
+            )}
+
+            {showReviewForm && (
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="bg-[#161410] border border-[#2A2620] rounded-2xl p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-[#F5EDD8] font-semibold">Rate your order</h3>
+                  <button onClick={() => setShowReviewForm(false)} className="text-[#9E9080] hover:text-[#BFB49A]"><X size={16} /></button>
+                </div>
+                <div className="flex gap-2 justify-center mb-4">
+                  {[1,2,3,4,5].map(s => (
+                    <button key={s} onClick={() => setRating(s)}>
+                      <Star size={36} className={cn("transition-all", s <= rating ? "text-[#E8A830] fill-[#E8A830] scale-110" : "text-[#4B4542] hover:text-[#E8A830]/50")} />
+                    </button>
+                  ))}
+                </div>
+                <textarea value={comment} onChange={e => setComment(e.target.value)} placeholder="Share details about your experience (optional)…" rows={3}
+                  className="w-full bg-[#1E1B16] border border-[#2A2620] rounded-xl px-4 py-3 text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none focus:border-[#E8A830]/50 transition-colors resize-none mb-3" />
+                <button onClick={handleSubmitReview} disabled={submittingReview || !rating}
+                  className="w-full py-3 rounded-xl bg-[#E8A830] text-[#0C0B09] font-semibold text-sm disabled:opacity-50 flex items-center justify-center gap-2">
+                  {submittingReview ? <><RefreshCw size={14} className="animate-spin" /> Submitting…</> : <><Send size={14} /> Submit Review</>}
+                </button>
+              </motion.div>
+            )}
+
+            {order.review?.ai_response && (
+              <div className="bg-[#161410] border border-[#E8A830]/20 rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <Sparkles size={15} className="text-[#E8A830]" />
+                  <h3 className="text-[#E8A830] font-semibold text-sm">AI Response from Restaurant</h3>
+                  {order.review.ai_response.email_sent && <Mail size={13} className="text-[#9E9080] ml-auto" />}
+                </div>
+                <p className="text-[#BFB49A] text-sm leading-relaxed">{order.review.ai_response.text}</p>
               </div>
             )}
           </div>
 
-          {/* Right column */}
+          {/* Bill summary */}
           <div className="space-y-5">
-            {/* Bill summary */}
             <div className="bg-[#161410] border border-[#2A2620] rounded-2xl p-5">
-              <h2 className="text-[#F5EDD8] font-semibold mb-4">Bill Summary</h2>
+              <h2 className="text-[#F5EDD8] font-semibold mb-4">Bill Details</h2>
               <div className="space-y-2.5 text-sm">
                 {[
-                  { label: "Subtotal", value: formatCurrency(order.subtotal) },
-                  { label: "Delivery fee", value: formatCurrency(order.delivery_fee) },
-                  { label: "Platform fee", value: formatCurrency(order.platform_fee) },
-                  { label: "Taxes", value: formatCurrency(order.taxes) },
+                  { label: "Subtotal",     value: order.subtotal },
+                  { label: "Delivery Fee", value: order.delivery_fee },
+                  { label: "Platform Fee", value: order.platform_fee },
+                  { label: "Taxes",        value: order.taxes },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex justify-between text-[#9E9080]">
-                    <span>{label}</span>
-                    <span>{value}</span>
+                    <span>{label}</span><span>{formatCurrency(Number(value))}</span>
                   </div>
                 ))}
-                {order.discount > 0 && (
+                {Number(order.discount) > 0 && (
                   <div className="flex justify-between text-[#4ADE80]">
-                    <span>Discount</span>
-                    <span>-{formatCurrency(order.discount)}</span>
+                    <span>Coupon {order.coupon_code && `(${order.coupon_code})`}</span>
+                    <span>-{formatCurrency(Number(order.discount))}</span>
                   </div>
                 )}
-                <div className="pt-3 border-t border-[#2A2620] flex justify-between text-[#F5EDD8] font-semibold">
-                  <span>Total Paid</span>
-                  <span className="text-[#E8A830]">{formatCurrency(order.total)}</span>
+                <div className="pt-2.5 border-t border-[#2A2620] flex justify-between font-semibold text-[#F5EDD8]">
+                  <span>Total</span><span className="text-[#E8A830] text-base">{formatCurrency(Number(order.total))}</span>
                 </div>
               </div>
-
-              <div className="mt-4 pt-4 border-t border-[#2A2620] space-y-2">
-                <div className="flex justify-between text-xs text-[#9E9080]">
+              <div className="mt-4 pt-4 border-t border-[#2A2620]">
+                <div className="flex items-center justify-between text-xs text-[#9E9080]">
                   <span>Payment</span>
-                  <span className="text-[#F5EDD8]">{order.payment_method}</span>
+                  <span className="text-[#BFB49A] font-medium uppercase">{order.payment_method}</span>
                 </div>
-                <div className="flex justify-between text-xs text-[#9E9080]">
+                <div className="flex items-center justify-between text-xs text-[#9E9080] mt-1">
                   <span>Status</span>
-                  <span className={cn("font-medium", order.payment_status === "paid" ? "text-[#4ADE80]" : "text-[#F87171]")}>
-                    {order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1)}
+                  <span className={cn("font-medium", order.payment_status === "paid" ? "text-[#4ADE80]" : "text-[#E8A830]")}>
+                    {order.payment_status === "paid" ? "✓ Paid" : order.payment_method === "cod" ? "Pay on delivery" : order.payment_status}
                   </span>
                 </div>
               </div>
             </div>
 
-            {/* Delivery address */}
-            <div className="bg-[#161410] border border-[#2A2620] rounded-2xl p-5">
-              <h2 className="text-[#F5EDD8] font-semibold mb-3">Delivery Address</h2>
-              <div className="flex items-start gap-3">
-                <div className="w-7 h-7 rounded-lg bg-[#E8A830]/15 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Home size={13} className="text-[#E8A830]" />
-                </div>
-                <div>
-                  <p className="text-[#F5EDD8] text-sm font-medium">{order.delivery_address.label}</p>
-                  <p className="text-[#9E9080] text-xs mt-0.5 leading-relaxed">
-                    {order.delivery_address.line1}
-                    {order.delivery_address.line2 && `, ${order.delivery_address.line2}`}
-                    <br />
-                    {order.delivery_address.city}, {order.delivery_address.pincode}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── Review Form ──
-
-function ReviewForm({ orderId, onSuccess }: { orderId: string; onSuccess: (review: import("@/lib/types").Review) => void }) {
-  const [rating, setRating] = useState(0);
-  const [hoveredRating, setHoveredRating] = useState(0);
-  const [comment, setComment] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-
-  const PROMPTS: Record<number, string> = {
-    1: "Sorry to hear that. What went wrong?",
-    2: "Not great. What could be improved?",
-    3: "It was okay. Any suggestions?",
-    4: "Glad you liked it! What stood out?",
-    5: "Wonderful! Tell us what made it great.",
-  };
-
-  const handleSubmit = async () => {
-    if (rating === 0) { toast.error("Please select a rating"); return; }
-    if (comment.trim().length < 10) { toast.error("Please write at least 10 characters"); return; }
-
-    setSubmitting(true);
-    try {
-      const res = await reviewApi.submit({ order_id: orderId, rating, comment });
-      toast.success("Review submitted! AI is crafting a response... ✨");
-      onSuccess(res.review);
-    } catch {
-      toast.error("Failed to submit review. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <div className="space-y-4">
-      {/* Star rating */}
-      <div className="flex flex-col items-center gap-3 py-2">
-        <div className="flex gap-2">
-          {[1, 2, 3, 4, 5].map((s) => (
-            <button
-              key={s}
-              onMouseEnter={() => setHoveredRating(s)}
-              onMouseLeave={() => setHoveredRating(0)}
-              onClick={() => setRating(s)}
-              className="transition-transform hover:scale-110"
-            >
-              <Star
-                size={36}
-                className={cn(
-                  "transition-colors",
-                  s <= (hoveredRating || rating)
-                    ? "text-[#E8A830] fill-[#E8A830]"
-                    : "text-[#2A2620] fill-[#2A2620]"
-                )}
-              />
-            </button>
-          ))}
-        </div>
-        {(hoveredRating || rating) > 0 && (
-          <p className="text-[#9E9080] text-sm">{PROMPTS[hoveredRating || rating]}</p>
-        )}
-      </div>
-
-      {/* Comment */}
-      <textarea
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        placeholder="Describe your experience..."
-        rows={4}
-        className="w-full bg-[#1E1B16] border border-[#2A2620] rounded-xl px-4 py-3 text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none focus:border-[#E8A830]/50 transition-colors resize-none"
-      />
-
-      <button
-        onClick={handleSubmit}
-        disabled={submitting || rating === 0}
-        className={cn(
-          "w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm transition-all",
-          submitting || rating === 0
-            ? "bg-[#2A2620] text-[#9E9080] cursor-not-allowed"
-            : "bg-[#E8A830] text-[#0C0B09] hover:bg-[#F5C842] shadow-[0_0_20px_rgba(232,168,48,0.2)]"
-        )}
-      >
-        {submitting ? (
-          <>
-            <RefreshCw size={15} className="animate-spin" />
-            Submitting...
-          </>
-        ) : (
-          <>
-            <Send size={15} />
-            Submit Review
-          </>
-        )}
-      </button>
-
-      <p className="text-[#9E9080] text-xs text-center">
-        Your review will receive an AI-powered response from the restaurant, sent to your email.
-      </p>
-    </div>
-  );
-}
-
-// ── Review + AI Response Card ──
-
-function ReviewCard({ review, restaurantName }: { review: import("@/lib/types").Review; restaurantName: string }) {
-  return (
-    <div className="space-y-3">
-      {/* User review */}
-      <div className="bg-[#161410] border border-[#2A2620] rounded-2xl p-5">
-        <h2 className="text-[#F5EDD8] font-semibold mb-4">Your Review</h2>
-        <div className="flex gap-1 mb-2">
-          {[1, 2, 3, 4, 5].map((s) => (
-            <Star
-              key={s}
-              size={16}
-              className={cn(s <= review.rating ? "text-[#E8A830] fill-[#E8A830]" : "text-[#2A2620] fill-[#2A2620]")}
-            />
-          ))}
-          <span className="text-[#9E9080] text-xs ml-2">{formatDate(review.created_at)}</span>
-        </div>
-        <p className="text-[#BFB49A] text-sm leading-relaxed">{review.comment}</p>
-      </div>
-
-      {/* AI response */}
-      {!review.ai_response ? (
-        <div className="bg-[#161410] border border-[#E8A830]/20 rounded-2xl p-5">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-6 h-6 rounded-full bg-[#E8A830]/15 flex items-center justify-center">
-              <Sparkles size={12} className="text-[#E8A830] animate-pulse" />
-            </div>
-            <span className="text-[#E8A830] text-sm font-medium">AI is crafting a response...</span>
-          </div>
-          <p className="text-[#9E9080] text-xs">
-            {restaurantName} will receive your review and an AI-generated response will be sent to your email shortly.
-          </p>
-          <div className="flex gap-1.5 mt-3">
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className="w-2 h-2 rounded-full bg-[#E8A830]/50 animate-bounce"
-                style={{ animationDelay: `${i * 0.15}s` }}
-              />
-            ))}
-          </div>
-        </div>
-      ) : (
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-br from-[#1A1608] to-[#161410] border border-[#E8A830]/30 rounded-2xl p-5 shadow-[0_0_30px_rgba(232,168,48,0.08)]"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-[#E8A830]/20 border border-[#E8A830]/30 flex items-center justify-center">
-                <Sparkles size={13} className="text-[#E8A830]" />
-              </div>
-              <div>
-                <p className="text-[#E8A830] text-sm font-semibold">{restaurantName}</p>
-                <p className="text-[#9E9080] text-[10px]">AI-crafted response · {formatDate(review.ai_response.generated_at)}</p>
-              </div>
-            </div>
-            {review.ai_response.email_sent && (
-              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#4ADE80]/10 border border-[#4ADE80]/20">
-                <Mail size={11} className="text-[#4ADE80]" />
-                <span className="text-[#4ADE80] text-[10px] font-semibold">Emailed</span>
+            {order.delivery_address && (
+              <div className="bg-[#161410] border border-[#2A2620] rounded-2xl p-5">
+                <h2 className="text-[#F5EDD8] font-semibold mb-3">Delivery Address</h2>
+                <p className="text-[#BFB49A] text-sm font-medium">{order.delivery_address.label}</p>
+                <p className="text-[#9E9080] text-xs mt-1 leading-relaxed">
+                  {order.delivery_address.line1}{order.delivery_address.line2 && `, ${order.delivery_address.line2}`}<br/>
+                  {order.delivery_address.city}, {order.delivery_address.pincode}
+                </p>
               </div>
             )}
           </div>
-
-          <p className="text-[#F5EDD8] text-sm leading-relaxed">{review.ai_response.text}</p>
-
-          <div className="mt-3 pt-3 border-t border-[#2A2620] flex items-center gap-1.5">
-            <Sparkles size={11} className="text-[#9E9080]" />
-            <p className="text-[#9E9080] text-xs">Generated by Google Gemini AI on behalf of {restaurantName}</p>
-          </div>
-        </motion.div>
-      )}
+        </div>
+      </div>
     </div>
   );
 }
 
 function LoadingSkeleton() {
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
-      <div className="skeleton h-10 w-64 rounded-xl mb-8" />
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2 space-y-5">
-          {[...Array(3)].map((_, i) => <div key={i} className="skeleton h-48 rounded-2xl" />)}
+    <div className="min-h-screen max-w-4xl mx-auto px-4 py-8 animate-pulse">
+      <div className="h-12 bg-[#161410] rounded-2xl mb-6 w-48" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-4">
+          <div className="h-72 bg-[#161410] rounded-2xl" />
+          <div className="h-40 bg-[#161410] rounded-2xl" />
         </div>
-        <div className="space-y-5">
-          {[...Array(2)].map((_, i) => <div key={i} className="skeleton h-48 rounded-2xl" />)}
-        </div>
+        <div className="h-64 bg-[#161410] rounded-2xl" />
       </div>
     </div>
   );

@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 
 /**
- * Edge middleware — runs before every request.
+ * Edge middleware — route protection.
  *
- * Rules:
- * 1. Unauthenticated users hitting protected routes → redirect to /login
- * 2. Authenticated users with incomplete profiles → redirect to /complete-profile
- *    (except on the /complete-profile page itself and /api/* routes)
+ * Public paths: accessible without auth.
+ * Protected paths: require token cookie.
+ * Profile-incomplete paths: require profile completion.
  *
- * We read the token from localStorage only on the client, so here we check
- * for the existence of the token cookie that the login page can optionally
- * set, OR we rely on client-side guards for the full auth flow.
- * This middleware primarily guards against direct URL access.
+ * SECURITY: Token validation (expiry/revocation) is enforced by the backend.
+ * This middleware only checks cookie presence for quick redirects.
  */
 
 const PUBLIC_PATHS = [
@@ -19,7 +16,6 @@ const PUBLIC_PATHS = [
   "/register",
   "/auth/callback",
   "/complete-profile",
-  "/api/",
   "/_next/",
   "/favicon",
   "/health",
@@ -28,34 +24,55 @@ const PUBLIC_PATHS = [
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Allow all public paths through
-  const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
-  if (isPublic) return NextResponse.next();
+  // Always allow Next.js internals and public paths
+  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next();
+  }
 
-  // Read auth token from cookie (set by login page for SSR-compatible auth check)
+  // Skip middleware for static assets
+  if (/\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff2?)$/.test(pathname)) {
+    return NextResponse.next();
+  }
+
   const token           = request.cookies.get("cravecart_token")?.value;
   const profileComplete = request.cookies.get("cravecart_profile_complete")?.value;
 
-  // No token → redirect to login
+  // No token → redirect to login with return URL
   if (!token) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(url);
+    // Only set redirect param for non-root paths to keep URLs clean
+    if (pathname !== "/") {
+      url.searchParams.set("redirect", pathname);
+    }
+    const response = NextResponse.redirect(url);
+    // Clear any stale cookies on redirect
+    response.cookies.delete("cravecart_token");
+    response.cookies.delete("cravecart_profile_complete");
+    return response;
   }
 
-  // Token present but profile not complete → redirect to complete-profile
-  if (profileComplete === "false" && pathname !== "/complete-profile") {
+  // Token present but profile incomplete → redirect to complete-profile
+  if (profileComplete === "false" && !pathname.startsWith("/complete-profile")) {
     const url = request.nextUrl.clone();
     url.pathname = "/complete-profile";
     return NextResponse.redirect(url);
   }
 
-  return NextResponse.next();
+  // Add security headers to all responses
+  const response = NextResponse.next();
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=()"
+  );
+
+  return response;
 }
 
 export const config = {
-  // Apply middleware to all routes except static assets and API routes
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],

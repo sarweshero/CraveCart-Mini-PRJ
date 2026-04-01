@@ -15,11 +15,19 @@ interface CartStoreItem extends CartItem {
   restaurantName: string;
 }
 
+interface ConflictPending {
+  item: CartItem;
+  restaurantId: string;
+  restaurantName: string;
+}
+
 interface CartState {
   items: CartStoreItem[];
   restaurantId: string | null;
   restaurantName: string | null;
   appliedCoupon: { code: string; discount: number } | null;
+  // Conflict state — set when user tries to add item from a different restaurant
+  conflictPending: ConflictPending | null;
 
   // Actions
   addItem: (item: CartItem, restaurantId: string, restaurantName: string) => void;
@@ -28,6 +36,8 @@ interface CartState {
   clearCart: () => void;
   applyCoupon: (code: string, discount: number) => void;
   removeCoupon: () => void;
+  clearConflict: () => void;
+  clearCartAndAdd: (item: CartItem, restaurantId: string, restaurantName: string) => void;
 
   // Selectors
   getSubtotal: () => number;
@@ -45,16 +55,16 @@ export const useCartStore = create<CartState>()(
       restaurantId: null,
       restaurantName: null,
       appliedCoupon: null,
+      conflictPending: null,
 
       addItem: (item, restaurantId, restaurantName) => {
         const state = get();
 
-        // If cart belongs to different restaurant, clear first
+        // If cart belongs to different restaurant, set conflict state.
+        // CartConflictListener in the layout will show the dialog.
         if (state.restaurantId && state.restaurantId !== restaurantId) {
-          if (!window.confirm("Your cart contains items from another restaurant. Clear cart and add this item?")) {
-            return;
-          }
-          set({ items: [], restaurantId: null, restaurantName: null, appliedCoupon: null });
+          set({ conflictPending: { item, restaurantId, restaurantName } });
+          return;
         }
 
         const existing = state.items.find((i) => i.menu_item.id === item.menu_item.id);
@@ -100,16 +110,27 @@ export const useCartStore = create<CartState>()(
         }));
       },
 
-      clearCart: () => set({ items: [], restaurantId: null, restaurantName: null, appliedCoupon: null }),
+      clearCart: () => set({ items: [], restaurantId: null, restaurantName: null, appliedCoupon: null, conflictPending: null }),
 
       applyCoupon: (code, discount) => set({ appliedCoupon: { code, discount } }),
-
       removeCoupon: () => set({ appliedCoupon: null }),
 
+      clearConflict: () => set({ conflictPending: null }),
+
+      clearCartAndAdd: (item, restaurantId, restaurantName) => {
+        // Clear old cart, apply new restaurant, add the item
+        const cartItem: CartStoreItem = { ...item, restaurantId, restaurantName };
+        set({
+          items: [cartItem],
+          restaurantId,
+          restaurantName,
+          appliedCoupon: null,
+          conflictPending: null,
+        });
+      },
+
       getSubtotal: () => get().items.reduce((acc, i) => acc + i.item_total, 0),
-
       getItemCount: () => get().items.reduce((acc, i) => acc + i.quantity, 0),
-
       getDeliveryFee: () => (get().items.length === 0 ? 0 : 30),
 
       getTotal: () => {
@@ -160,7 +181,6 @@ export const useAuthStore = create<AuthState>()(
       setAuth: (user, token) => {
         if (typeof window !== "undefined") {
           localStorage.setItem("cravecart_token", token);
-          // Set cookies for edge middleware route protection
           document.cookie = `cravecart_token=${token}; path=/; max-age=86400; SameSite=Lax`;
           document.cookie = `cravecart_profile_complete=${user.is_profile_complete}; path=/; max-age=86400; SameSite=Lax`;
         }
@@ -170,7 +190,7 @@ export const useAuthStore = create<AuthState>()(
       clearAuth: () => {
         if (typeof window !== "undefined") {
           localStorage.removeItem("cravecart_token");
-          // Clear auth cookies
+          localStorage.removeItem("cravecart_refresh_token");
           document.cookie = "cravecart_token=; path=/; max-age=0";
           document.cookie = "cravecart_profile_complete=; path=/; max-age=0";
         }
@@ -178,7 +198,9 @@ export const useAuthStore = create<AuthState>()(
       },
 
       updateUser: (updates) =>
-        set((s) => ({ user: s.user ? { ...s.user, ...updates } : null })),
+        set((s) => ({
+          user: s.user ? { ...s.user, ...updates } : null,
+        })),
     }),
     {
       name: "cravecart-auth",
@@ -189,7 +211,7 @@ export const useAuthStore = create<AuthState>()(
 );
 
 // ─────────────────────────────────────────────────────────────
-// UI Store (modal states, sidebar, etc.)
+// UI Store
 // ─────────────────────────────────────────────────────────────
 
 interface UIState {

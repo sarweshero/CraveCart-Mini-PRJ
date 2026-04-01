@@ -41,6 +41,7 @@ export default function AITemplatesPage() {
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   useEffect(() => {
     templateApi.list().then((data) => setTemplates(data as Template[])).finally(() => setLoading(false));
@@ -57,7 +58,8 @@ export default function AITemplatesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this template?")) return;
+    if (deletingId !== id) { setDeletingId(id); return; } // first click arms, second confirms
+    setDeletingId(null);
     try {
       await templateApi.delete(id);
       setTemplates((prev) => prev.filter((t) => t.id !== id));

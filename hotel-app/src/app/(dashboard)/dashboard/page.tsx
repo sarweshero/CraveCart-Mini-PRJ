@@ -34,7 +34,7 @@ export default function DashboardPage() {
   const [period, setPeriod] = useState<"today" | "this_week" | "this_month">("today");
 
   useEffect(() => {
-    dashboardApi.stats().then((data) => setStats(data as DashboardStats)).finally(() => setLoading(false));
+    dashboardApi.stats().then((data) => setStats(data as DashboardStats)).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   const periodData = stats?.[period];

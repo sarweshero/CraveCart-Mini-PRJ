@@ -1,7 +1,6 @@
 """
 apps/accounts/models.py
-Custom User model supporting both customers and hotel admins.
-Includes expirable token auth, soft-deletion, profile completion gate.
+Custom User model supporting customers, hotel admins, and delivery partners.
 """
 import uuid
 from datetime import timedelta
@@ -10,8 +9,6 @@ from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseU
 from django.utils import timezone
 from django.conf import settings
 
-
-# ── User Manager ──────────────────────────────────────────────────────────────
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -26,49 +23,34 @@ class UserManager(BaseUserManager):
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
-        extra_fields.setdefault("role", "customer")  # string — User class not yet defined here
+        extra_fields.setdefault("role", "customer")
         return self.create_user(email, password, **extra_fields)
 
 
-# ── User ──────────────────────────────────────────────────────────────────────
-
 class User(AbstractBaseUser, PermissionsMixin):
-    """
-    Single user model for both customers and hotel admins.
-    Role differentiates access to customer vs hotel portal endpoints.
-    """
-
     class Role(models.TextChoices):
-        CUSTOMER    = "customer",     "Customer"
-        HOTEL_ADMIN = "hotel_admin",  "Hotel Admin"
+        CUSTOMER         = "customer",          "Customer"
+        HOTEL_ADMIN      = "hotel_admin",        "Hotel Admin"
+        DELIVERY_PARTNER = "delivery_partner",   "Delivery Partner"
 
     class DeletionType(models.TextChoices):
         NONE      = "none",      "None"
         TEMPORARY = "temporary", "Temporary (Deactivated)"
         PERMANENT = "permanent", "Permanent (Scheduled)"
 
-    # Core identity
     id                  = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     email               = models.EmailField(unique=True, db_index=True)
     name                = models.CharField(max_length=150, blank=True)
     phone               = models.CharField(max_length=20, blank=True)
     avatar              = models.URLField(blank=True)
     role                = models.CharField(max_length=20, choices=Role.choices, default=Role.CUSTOMER)
-
-    # Profile completion gate — portal access blocked until True
     is_profile_complete = models.BooleanField(default=False)
-
-    # Account state
     is_active           = models.BooleanField(default=True)
     is_staff            = models.BooleanField(default=False)
     deletion_type       = models.CharField(max_length=15, choices=DeletionType.choices, default=DeletionType.NONE)
     deletion_requested_at = models.DateTimeField(null=True, blank=True)
     permanent_delete_at   = models.DateTimeField(null=True, blank=True)
-
-    # OAuth
     google_id           = models.CharField(max_length=100, blank=True, unique=True, null=True)
-
-    # Timestamps
     created_at          = models.DateTimeField(auto_now_add=True)
     updated_at          = models.DateTimeField(auto_now=True)
 
@@ -78,7 +60,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     REQUIRED_FIELDS = []
 
     class Meta:
-        db_table    = "users"
+        db_table = "users"
         verbose_name = "User"
         verbose_name_plural = "Users"
         indexes = [
@@ -97,30 +79,25 @@ class User(AbstractBaseUser, PermissionsMixin):
     def is_hotel_admin(self):
         return self.role == self.Role.HOTEL_ADMIN
 
+    @property
+    def is_delivery_partner(self):
+        return self.role == self.Role.DELIVERY_PARTNER
+
     def deactivate(self):
-        """Temporarily deactivate — reversible by logging in."""
         self.is_active = False
         self.deletion_type = self.DeletionType.TEMPORARY
         self.deletion_requested_at = timezone.now()
         self.save(update_fields=["is_active", "deletion_type", "deletion_requested_at"])
 
     def schedule_permanent_delete(self):
-        """
-        Schedule permanent deletion N days from now.
-        A Celery beat task will execute the actual deletion.
-        """
         days = getattr(settings, "PERMANENT_DELETE_AFTER_DAYS", 30)
         self.is_active = False
         self.deletion_type = self.DeletionType.PERMANENT
         self.deletion_requested_at = timezone.now()
         self.permanent_delete_at = timezone.now() + timedelta(days=days)
-        self.save(update_fields=[
-            "is_active", "deletion_type",
-            "deletion_requested_at", "permanent_delete_at",
-        ])
+        self.save(update_fields=["is_active", "deletion_type", "deletion_requested_at", "permanent_delete_at"])
 
     def reactivate(self):
-        """Reactivate a temporarily deactivated account."""
         if self.deletion_type == self.DeletionType.TEMPORARY:
             self.is_active = True
             self.deletion_type = self.DeletionType.NONE
@@ -128,14 +105,7 @@ class User(AbstractBaseUser, PermissionsMixin):
             self.save(update_fields=["is_active", "deletion_type", "deletion_requested_at"])
 
 
-# ── Auth Token ────────────────────────────────────────────────────────────────
-
 class AuthToken(models.Model):
-    """
-    Expirable access + refresh token pair.
-    Access token: 1 day validity.
-    Refresh token: 30 days validity (configurable via settings).
-    """
     user            = models.ForeignKey(User, on_delete=models.CASCADE, related_name="auth_tokens")
     access_token    = models.CharField(max_length=64, unique=True, db_index=True)
     refresh_token   = models.CharField(max_length=64, unique=True, db_index=True)
@@ -149,7 +119,7 @@ class AuthToken(models.Model):
 
     class Meta:
         db_table = "auth_tokens"
-        indexes  = [
+        indexes = [
             models.Index(fields=["access_token"]),
             models.Index(fields=["refresh_token"]),
             models.Index(fields=["user", "is_revoked"]),
@@ -176,20 +146,17 @@ class AuthToken(models.Model):
         access_days  = getattr(settings, "CRAVECART_TOKEN_EXPIRY_DAYS", 1)
         refresh_days = getattr(settings, "CRAVECART_REFRESH_EXPIRY_DAYS", 30)
         now = timezone.now()
-
         token = cls.objects.create(
-            user            = user,
-            access_token    = secrets.token_hex(32),
-            refresh_token   = secrets.token_hex(32),
-            access_expires  = now + timedelta(days=access_days),
-            refresh_expires = now + timedelta(days=refresh_days),
-            ip_address      = request.META.get("REMOTE_ADDR") if request else None,
-            device_info     = (request.META.get("HTTP_USER_AGENT", "")[:255]) if request else "",
+            user           = user,
+            access_token   = secrets.token_hex(32),
+            refresh_token  = secrets.token_hex(32),
+            access_expires = now + timedelta(days=access_days),
+            refresh_expires= now + timedelta(days=refresh_days),
+            ip_address     = request.META.get("REMOTE_ADDR") if request else None,
+            device_info    = (request.META.get("HTTP_USER_AGENT", "")[:255]) if request else "",
         )
         return token
 
-
-# ── Delivery Address ──────────────────────────────────────────────────────────
 
 class Address(models.Model):
     class Label(models.TextChoices):
@@ -208,14 +175,13 @@ class Address(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        db_table  = "addresses"
-        ordering  = ["-is_default", "-created_at"]
+        db_table = "addresses"
+        ordering = ["-is_default", "-created_at"]
 
     def __str__(self):
         return f"{self.label} — {self.line1}, {self.city}"
 
     def save(self, *args, **kwargs):
-        # Ensure only one default address per user
         if self.is_default:
             Address.objects.filter(user=self.user, is_default=True).exclude(pk=self.pk).update(is_default=False)
         super().save(*args, **kwargs)

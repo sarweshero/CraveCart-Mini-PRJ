@@ -3,42 +3,41 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { MapPin, CreditCard, Wallet, Banknote, Tag, ChevronRight, Plus, Check, ArrowLeft, Loader2 } from "lucide-react";
+import { MapPin, CreditCard, Wallet, Banknote, Tag, ChevronRight, Plus, Check, ArrowLeft, Loader2, Building2 } from "lucide-react";
 import { useCartStore, useAuthStore } from "@/lib/store";
-import { orderApi, cartApi, couponApi } from "@/lib/api";
+import { orderApi, cartApi } from "@/lib/api";
 import { cn, formatCurrency } from "@/lib/utils";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import type { Address } from "@/lib/types";
+import { RazorpayModal, useRazorpayPayment, type PaymentPayload } from "@/components/payment/RazorpayPayment";
 
 const PAYMENT_METHODS = [
-  { id: "upi", label: "UPI", icon: Wallet, description: "Google Pay, PhonePe, Paytm" },
-  { id: "card", label: "Credit / Debit Card", icon: CreditCard, description: "Visa, Mastercard, RuPay" },
-  { id: "cod", label: "Cash on Delivery", icon: Banknote, description: "Pay when order arrives" },
+  { id: "upi",        label: "UPI",                icon: Wallet,    description: "Google Pay, PhonePe, Paytm, BHIM" },
+  { id: "card",       label: "Credit / Debit Card", icon: CreditCard, description: "Visa, Mastercard, RuPay" },
+  { id: "netbanking", label: "Net Banking",          icon: Building2, description: "All major Indian banks" },
+  { id: "cod",        label: "Cash on Delivery",     icon: Banknote,  description: "Pay when order arrives" },
 ];
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const {
-    items, restaurantId, restaurantName,
-    getSubtotal, getDeliveryFee, getTotal,
-    applyCoupon, removeCoupon, appliedCoupon, clearCart,
-  } = useCartStore();
+  const { items, restaurantId, restaurantName, getSubtotal, getDeliveryFee, getTotal, applyCoupon, removeCoupon, appliedCoupon, clearCart } = useCartStore();
+  const { paymentPayload, initiate, dismiss } = useRazorpayPayment();
 
   const [selectedAddress, setSelectedAddress] = useState<string>(user?.addresses.find((a) => a.is_default)?.id ?? "");
-  const [paymentMethod, setPaymentMethod] = useState("upi");
-  const [couponInput, setCouponInput] = useState("");
-  const [couponLoading, setCouponLoading] = useState(false);
-  const [instructions, setInstructions] = useState("");
-  const [placing, setPlacing] = useState(false);
+  const [paymentMethod, setPaymentMethod]     = useState("upi");
+  const [couponInput, setCouponInput]         = useState("");
+  const [couponLoading, setCouponLoading]     = useState(false);
+  const [instructions, setInstructions]       = useState("");
+  const [placing, setPlacing]                 = useState(false);
 
-  const subtotal = getSubtotal();
-  const delivery = getDeliveryFee();
-  const taxes = Math.round(subtotal * 0.05);
+  const subtotal   = getSubtotal();
+  const delivery   = getDeliveryFee();
+  const taxes      = Math.round(subtotal * 0.05);
   const platformFee = 5;
-  const discount = appliedCoupon?.discount ?? 0;
-  const total = getTotal();
+  const discount   = appliedCoupon?.discount ?? 0;
+  const total      = getTotal();
 
   const handleCoupon = async () => {
     if (!couponInput.trim()) return;
@@ -48,16 +47,21 @@ export default function CheckoutPage() {
       applyCoupon(couponInput.toUpperCase(), res.discount);
       toast.success(`Coupon applied! You save ${formatCurrency(res.discount)}`);
       setCouponInput("");
-    } catch {
-      toast.error("Invalid or expired coupon code");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Invalid or expired coupon code");
     } finally {
       setCouponLoading(false);
     }
   };
 
+  const handleRemoveCoupon = async () => {
+    removeCoupon(); // local store
+    try { await cartApi.removeCoupon(); } catch { /* non-critical */ }
+  };
+
   const handlePlaceOrder = async () => {
     if (!selectedAddress) { toast.error("Please select a delivery address"); return; }
-    if (!paymentMethod) { toast.error("Please select a payment method"); return; }
+    if (!paymentMethod)   { toast.error("Please select a payment method"); return; }
     if (items.length === 0) { toast.error("Your cart is empty"); return; }
 
     setPlacing(true);
@@ -67,11 +71,33 @@ export default function CheckoutPage() {
         payment_method: paymentMethod,
         instructions: instructions || undefined,
       });
-      clearCart();
-      toast.success("Order placed successfully! 🎉");
-      router.push(`/orders/${res.id}`);
-    } catch {
-      toast.error("Failed to place order. Please try again.");
+
+      if (paymentMethod === "cod") {
+        clearCart();
+        cartApi.clear().catch(() => {}); // sync backend cart clear
+        toast.success("Order placed! Pay on delivery. 🎉");
+        router.push(`/orders/${res.id}`);
+      } else {
+        // Show Razorpay payment modal
+        initiate({
+          order_id: res.id,
+          amount: res.total,
+          restaurant_name: restaurantName ?? "",
+          payment_method: paymentMethod as PaymentPayload["payment_method"],
+          on_success: (_paymentId) => {
+            clearCart();
+            cartApi.clear().catch(() => {}); // sync backend cart clear
+            toast.success("Payment successful! Order confirmed. 🎉");
+            router.push(`/orders/${res.id}`);
+          },
+          on_fail: () => {
+            toast.error("Payment failed. Your order is saved — retry from Orders.");
+            router.push(`/orders/${res.id}`);
+          },
+        });
+      }
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to place order. Please try again.");
     } finally {
       setPlacing(false);
     }
@@ -91,63 +117,41 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
-        {/* Header */}
         <div className="flex items-center gap-4 mb-8">
           <Link href="/restaurants" className="w-9 h-9 rounded-xl bg-[#161410] border border-[#2A2620] flex items-center justify-center text-[#BFB49A] hover:text-[#F5EDD8] transition-all">
             <ArrowLeft size={18} />
           </Link>
-          <h1 className="text-[#F5EDD8] font-display font-semibold text-2xl" style={{ fontFamily: "var(--font-fraunces)" }}>
-            Checkout
-          </h1>
+          <h1 className="text-[#F5EDD8] font-semibold text-2xl" className="font-display">Checkout</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {/* Left: Address + Payment */}
           <div className="lg:col-span-3 space-y-5">
-            {/* Delivery address */}
+            {/* Delivery Address */}
             <Section title="Delivery Address" icon={MapPin}>
               <div className="space-y-3">
                 {user?.addresses.map((addr) => (
-                  <AddressOption
-                    key={addr.id}
-                    address={addr}
-                    selected={selectedAddress === addr.id}
-                    onSelect={() => setSelectedAddress(addr.id)}
-                  />
+                  <AddressOption key={addr.id} address={addr} selected={selectedAddress === addr.id} onSelect={() => setSelectedAddress(addr.id)} />
                 ))}
                 <button className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-[#2A2620] text-[#9E9080] hover:border-[#E8A830]/40 hover:text-[#E8A830] transition-all text-sm">
-                  <Plus size={14} />
-                  Add New Address
+                  <Plus size={14} /> Add New Address
                 </button>
               </div>
             </Section>
 
-            {/* Payment method */}
+            {/* Payment Method */}
             <Section title="Payment Method" icon={CreditCard}>
               <div className="space-y-2">
                 {PAYMENT_METHODS.map((pm) => {
                   const Icon = pm.icon;
                   return (
-                    <button
-                      key={pm.id}
-                      onClick={() => setPaymentMethod(pm.id)}
-                      className={cn(
-                        "w-full flex items-center gap-3 p-3.5 rounded-xl border transition-all text-left",
-                        paymentMethod === pm.id
-                          ? "border-[#E8A830]/50 bg-[#E8A830]/5"
-                          : "border-[#2A2620] bg-[#1E1B16] hover:border-[#E8A830]/25"
-                      )}
-                    >
-                      <div className={cn(
-                        "w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0",
-                        paymentMethod === pm.id ? "bg-[#E8A830]/20" : "bg-[#2A2620]"
-                      )}>
+                    <button key={pm.id} onClick={() => setPaymentMethod(pm.id)}
+                      className={cn("w-full flex items-center gap-3 p-3.5 rounded-xl border transition-all text-left",
+                        paymentMethod === pm.id ? "border-[#E8A830]/50 bg-[#E8A830]/5" : "border-[#2A2620] bg-[#1E1B16] hover:border-[#E8A830]/25")}>
+                      <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0", paymentMethod === pm.id ? "bg-[#E8A830]/20" : "bg-[#2A2620]")}>
                         <Icon size={16} className={paymentMethod === pm.id ? "text-[#E8A830]" : "text-[#9E9080]"} />
                       </div>
                       <div className="flex-1">
-                        <p className={cn("text-sm font-medium", paymentMethod === pm.id ? "text-[#F5EDD8]" : "text-[#BFB49A]")}>
-                          {pm.label}
-                        </p>
+                        <p className={cn("text-sm font-medium", paymentMethod === pm.id ? "text-[#F5EDD8]" : "text-[#BFB49A]")}>{pm.label}</p>
                         <p className="text-[#9E9080] text-xs">{pm.description}</p>
                       </div>
                       {paymentMethod === pm.id && (
@@ -163,26 +167,15 @@ export default function CheckoutPage() {
 
             {/* Instructions */}
             <Section title="Delivery Instructions" icon={ChevronRight}>
-              <textarea
-                value={instructions}
-                onChange={(e) => setInstructions(e.target.value)}
-                placeholder="E.g. Ring the doorbell twice, leave at door, call on arrival..."
-                rows={3}
-                className="w-full bg-[#1E1B16] border border-[#2A2620] rounded-xl px-4 py-3 text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none focus:border-[#E8A830]/50 transition-colors resize-none"
-              />
+              <textarea value={instructions} onChange={(e) => setInstructions(e.target.value)} placeholder="E.g. Ring the doorbell twice, leave at door..." rows={3}
+                className="w-full bg-[#1E1B16] border border-[#2A2620] rounded-xl px-4 py-3 text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none focus:border-[#E8A830]/50 transition-colors resize-none" />
             </Section>
           </div>
 
-          {/* Right: Order summary */}
           <div className="lg:col-span-2 space-y-5">
-            {/* Order summary */}
             <div className="bg-[#161410] border border-[#2A2620] rounded-2xl p-5 sticky top-24">
               <h2 className="text-[#F5EDD8] font-semibold mb-4">Order Summary</h2>
-
-              {/* Restaurant */}
               <div className="text-[#9E9080] text-xs mb-3 font-medium">{restaurantName}</div>
-
-              {/* Items */}
               <div className="space-y-2 mb-4 pb-4 border-b border-[#2A2620]">
                 {items.map((item) => (
                   <div key={item.id} className="flex justify-between text-sm">
@@ -197,19 +190,12 @@ export default function CheckoutPage() {
                 <div className="flex gap-2 mb-4">
                   <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl bg-[#1E1B16] border border-[#2A2620] focus-within:border-[#E8A830]/50 transition-colors">
                     <Tag size={13} className="text-[#9E9080]" />
-                    <input
-                      type="text"
-                      value={couponInput}
-                      onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                      placeholder="Coupon code"
-                      className="flex-1 bg-transparent text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none"
-                    />
+                    <input type="text" value={couponInput} onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => e.key === "Enter" && handleCoupon()}
+                      placeholder="Coupon code" className="flex-1 bg-transparent text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none" />
                   </div>
-                  <button
-                    onClick={handleCoupon}
-                    disabled={couponLoading || !couponInput.trim()}
-                    className="px-4 py-2 rounded-xl bg-[#E8A830]/10 border border-[#E8A830]/30 text-[#E8A830] text-sm font-semibold hover:bg-[#E8A830]/20 transition-all disabled:opacity-50"
-                  >
+                  <button onClick={handleCoupon} disabled={couponLoading || !couponInput.trim()}
+                    className="px-4 py-2 rounded-xl bg-[#E8A830]/10 border border-[#E8A830]/30 text-[#E8A830] text-sm font-semibold hover:bg-[#E8A830]/20 transition-all disabled:opacity-50">
                     {couponLoading ? <Loader2 size={14} className="animate-spin" /> : "Apply"}
                   </button>
                 </div>
@@ -219,65 +205,39 @@ export default function CheckoutPage() {
                     <Tag size={12} className="text-[#4ADE80]" />
                     <span className="text-[#4ADE80] text-xs font-semibold">{appliedCoupon.code}</span>
                   </div>
-                  <button onClick={removeCoupon} className="text-[#9E9080] hover:text-[#F87171] transition-colors text-xs">Remove</button>
+                  <button onClick={handleRemoveCoupon} className="text-[#9E9080] hover:text-[#F87171] transition-colors text-xs">Remove</button>
                 </div>
               )}
 
               {/* Bill */}
               <div className="space-y-2 text-sm">
-                {[
-                  { label: "Subtotal", value: subtotal },
-                  { label: "Delivery", value: delivery },
-                  { label: "Platform fee", value: platformFee },
-                  { label: "Taxes (5%)", value: taxes },
-                ].map(({ label, value }) => (
+                {[{ label: "Subtotal", value: subtotal }, { label: "Delivery", value: delivery }, { label: "Platform fee", value: platformFee }, { label: "Taxes (5%)", value: taxes }].map(({ label, value }) => (
                   <div key={label} className="flex justify-between text-[#9E9080]">
-                    <span>{label}</span>
-                    <span>{formatCurrency(value)}</span>
+                    <span>{label}</span><span>{formatCurrency(value)}</span>
                   </div>
                 ))}
                 {discount > 0 && (
                   <div className="flex justify-between text-[#4ADE80]">
-                    <span>Discount</span>
-                    <span>-{formatCurrency(discount)}</span>
+                    <span>Discount</span><span>-{formatCurrency(discount)}</span>
                   </div>
                 )}
                 <div className="pt-3 border-t border-[#2A2620] flex justify-between font-semibold text-[#F5EDD8]">
-                  <span>Total</span>
-                  <span className="text-[#E8A830] text-lg">{formatCurrency(total)}</span>
+                  <span>Total</span><span className="text-[#E8A830] text-lg">{formatCurrency(total)}</span>
                 </div>
               </div>
 
-              <button
-                onClick={handlePlaceOrder}
-                disabled={placing}
-                className={cn(
-                  "w-full flex items-center justify-center gap-2 mt-5 py-4 rounded-xl font-semibold transition-all",
-                  placing
-                    ? "bg-[#2A2620] text-[#9E9080] cursor-not-allowed"
-                    : "bg-[#E8A830] text-[#0C0B09] hover:bg-[#F5C842] shadow-[0_0_25px_rgba(232,168,48,0.25)]"
-                )}
-              >
-                {placing ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    Placing Order...
-                  </>
-                ) : (
-                  <>
-                    Place Order · {formatCurrency(total)}
-                    <ChevronRight size={16} />
-                  </>
-                )}
+              <button onClick={handlePlaceOrder} disabled={placing}
+                className={cn("w-full flex items-center justify-center gap-2 mt-5 py-4 rounded-xl font-semibold transition-all",
+                  placing ? "bg-[#2A2620] text-[#9E9080] cursor-not-allowed" : "bg-[#E8A830] text-[#0C0B09] hover:bg-[#F5C842] shadow-[0_0_25px_rgba(232,168,48,0.25)]")}>
+                {placing ? (<><Loader2 size={16} className="animate-spin" /> Placing Order...</>) : (<>Place Order · {formatCurrency(total)}<ChevronRight size={16} /></>)}
               </button>
-
-              <p className="text-[#9E9080] text-xs text-center mt-3">
-                By placing order you agree to our Terms & Conditions
-              </p>
+              <p className="text-[#9E9080] text-xs text-center mt-3">By placing order you agree to our Terms & Conditions</p>
             </div>
           </div>
         </div>
       </div>
+
+      {paymentPayload && <RazorpayModal payload={paymentPayload} onClose={dismiss} />}
     </div>
   );
 }
@@ -286,9 +246,7 @@ function Section({ title, icon: Icon, children }: { title: string; icon: React.E
   return (
     <div className="bg-[#161410] border border-[#2A2620] rounded-2xl p-5">
       <div className="flex items-center gap-2.5 mb-4">
-        <div className="w-7 h-7 rounded-lg bg-[#E8A830]/15 flex items-center justify-center">
-          <Icon size={14} className="text-[#E8A830]" />
-        </div>
+        <div className="w-7 h-7 rounded-lg bg-[#E8A830]/15 flex items-center justify-center"><Icon size={14} className="text-[#E8A830]" /></div>
         <h2 className="text-[#F5EDD8] font-semibold">{title}</h2>
       </div>
       {children}
@@ -298,32 +256,16 @@ function Section({ title, icon: Icon, children }: { title: string; icon: React.E
 
 function AddressOption({ address, selected, onSelect }: { address: Address; selected: boolean; onSelect: () => void }) {
   return (
-    <button
-      onClick={onSelect}
-      className={cn(
-        "w-full flex items-start gap-3 p-3.5 rounded-xl border transition-all text-left",
-        selected
-          ? "border-[#E8A830]/50 bg-[#E8A830]/5"
-          : "border-[#2A2620] bg-[#1E1B16] hover:border-[#E8A830]/25"
-      )}
-    >
-      <div className={cn(
-        "w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all",
-        selected ? "border-[#E8A830] bg-[#E8A830]" : "border-[#2A2620]"
-      )}>
+    <button onClick={onSelect} className={cn("w-full flex items-start gap-3 p-3.5 rounded-xl border transition-all text-left", selected ? "border-[#E8A830]/50 bg-[#E8A830]/5" : "border-[#2A2620] bg-[#1E1B16] hover:border-[#E8A830]/25")}>
+      <div className={cn("w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 transition-all", selected ? "border-[#E8A830] bg-[#E8A830]" : "border-[#2A2620]")}>
         {selected && <div className="w-2 h-2 rounded-full bg-[#0C0B09]" />}
       </div>
       <div>
         <div className="flex items-center gap-2">
           <p className={cn("text-sm font-medium", selected ? "text-[#F5EDD8]" : "text-[#BFB49A]")}>{address.label}</p>
-          {address.is_default && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#E8A830]/15 text-[#E8A830] font-semibold">DEFAULT</span>
-          )}
+          {address.is_default && <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#E8A830]/15 text-[#E8A830] font-semibold">DEFAULT</span>}
         </div>
-        <p className="text-[#9E9080] text-xs mt-0.5 leading-relaxed">
-          {address.line1}{address.line2 && `, ${address.line2}`}<br />
-          {address.city}, {address.pincode}
-        </p>
+        <p className="text-[#9E9080] text-xs mt-0.5 leading-relaxed">{address.line1}{address.line2 && `, ${address.line2}`}<br />{address.city}, {address.pincode}</p>
       </div>
     </button>
   );

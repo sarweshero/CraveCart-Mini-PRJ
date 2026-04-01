@@ -1,7 +1,5 @@
 // ============================================================
 // CraveCart Customer App — API Service Layer
-// Connected to Django REST Framework backend.
-// Toggle API_MODE to "mock" to run against local JSON fixtures.
 // ============================================================
 
 import type {
@@ -11,23 +9,19 @@ import type {
   PaginatedResponse, RestaurantFilters, Address,
 } from "./types";
 
-// ─── Mode switch ────────────────────────────────────────────
-// "mock"  → reads from src/mock/api.json  (no backend needed)
-// "live"  → calls the real Django backend
 export const API_MODE: "mock" | "live" =
   (process.env.NEXT_PUBLIC_API_MODE as "mock" | "live") ?? "live";
 
 export const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "https://api.sarweshero.me";
+  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-// ─── Mock data ──────────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockData = require("../mock/api.json");
 function mock<T>(v: T, delay = 400): Promise<T> {
   return new Promise((r) => setTimeout(() => r(v), delay));
 }
 
-// ─── Error class ────────────────────────────────────────────
+// ── Error class ─────────────────────────────────────────────
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -39,24 +33,23 @@ export class ApiError extends Error {
   }
 }
 
-// ─── Token helpers ──────────────────────────────────────────
+// ── Token helpers ────────────────────────────────────────────
 const TOKEN_KEY   = "cravecart_token";
 const REFRESH_KEY = "cravecart_refresh_token";
 
-function getToken():   string | null { return typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY)   : null; }
-function getRefresh(): string | null { return typeof window !== "undefined" ? localStorage.getItem(REFRESH_KEY) : null; }
+export function getToken():   string | null { return typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY)   : null; }
+export function getRefresh(): string | null { return typeof window !== "undefined" ? localStorage.getItem(REFRESH_KEY) : null; }
 
-function saveTokens(token: string, refresh: string) {
+export function saveTokens(token: string, refresh: string) {
   localStorage.setItem(TOKEN_KEY,   token);
   localStorage.setItem(REFRESH_KEY, refresh);
 }
 
-function clearTokens() {
+export function clearTokens() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(REFRESH_KEY);
 }
 
-// Prevent concurrent refresh calls
 let refreshPromise: Promise<string> | null = null;
 
 async function refreshAccessToken(): Promise<string> {
@@ -79,8 +72,7 @@ async function refreshAccessToken(): Promise<string> {
   return data.token;
 }
 
-// ─── Core request function ───────────────────────────────────
-// Automatically retries once with a fresh token on 401.
+// ── Core request with auto-refresh on 401 ────────────────────
 async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -97,23 +89,18 @@ async function request<T>(
   try {
     res = await fetch(`${BASE_URL}${path}`, { ...options, headers });
   } catch {
-    throw new ApiError(
-      "Unable to reach the server. Please check your connection and try again.",
-      0
-    );
+    throw new ApiError("Unable to reach the server. Check your connection and try again.", 0);
   }
 
-  // 401 → attempt silent token refresh and retry once
   if (res.status === 401 && _retry) {
     try {
       if (!refreshPromise) {
         refreshPromise = refreshAccessToken().finally(() => { refreshPromise = null; });
       }
-      const newToken = await refreshPromise;
+      await refreshPromise;
       return request<T>(path, options, false);
     } catch {
       clearTokens();
-      // Dispatch event so the app can redirect to /login
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("cravecart:session-expired"));
       }
@@ -130,7 +117,6 @@ async function request<T>(
     );
   }
 
-  // 204 No Content
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
 }
@@ -154,16 +140,12 @@ export const authApi = {
     const res = await request<{ message: string; user: Partial<User> } & AuthTokens>(
       "/api/auth/register/", { method: "POST", body: JSON.stringify(payload) }
     );
-    // Backend returns token on register too — save them
     if (res.token) saveTokens(res.token, res.refresh_token);
     return res;
   },
 
   googleOAuth: (): void => {
-    if (API_MODE === "mock") {
-      alert("[Mock] Redirecting to Google OAuth…");
-      return;
-    }
+    if (API_MODE === "mock") { alert("[Mock] Redirecting to Google OAuth…"); return; }
     window.location.href = `${BASE_URL}/api/auth/google/`;
   },
 
@@ -177,7 +159,6 @@ export const authApi = {
     return request("/api/auth/me/");
   },
 
-  // Backend: PATCH /api/auth/me/  (not /api/auth/profile/)
   updateProfile: async (payload: Partial<User>): Promise<User> => {
     if (API_MODE === "mock") return mock({ ...mockData.auth.me["GET /api/auth/me"], ...payload });
     return request("/api/auth/me/", { method: "PATCH", body: JSON.stringify(payload) });
@@ -185,27 +166,18 @@ export const authApi = {
 
   logout: async (): Promise<void> => {
     if (API_MODE === "mock") { clearTokens(); return mock(undefined); }
-    try {
-      await request("/api/auth/logout/", { method: "POST" });
-    } finally {
-      clearTokens();
-    }
+    try { await request("/api/auth/logout/", { method: "POST" }); } finally { clearTokens(); }
   },
 
   refreshToken: async (): Promise<AuthTokens> => {
     if (API_MODE === "mock") return mock({ token: "mock_refreshed", refresh_token: getRefresh() ?? "", expires_in: 2592000 });
     return refreshAccessToken().then((token) => ({
-      token,
-      refresh_token: getRefresh() ?? "",
-      expires_in: 2592000,
+      token, refresh_token: getRefresh() ?? "", expires_in: 2592000,
     }));
   },
 
   deleteAccount: async (payload: { type: "temporary" | "permanent"; password?: string }): Promise<{ message: string; type: string }> => {
-    if (API_MODE === "mock") {
-      clearTokens();
-      return mock({ message: `Account ${payload.type} deletion initiated.`, type: payload.type });
-    }
+    if (API_MODE === "mock") { clearTokens(); return mock({ message: `Account ${payload.type} deletion initiated.`, type: payload.type }); }
     const res = await request<{ message: string; type: string }>(
       "/api/auth/delete-account/", { method: "DELETE", body: JSON.stringify(payload) }
     );
@@ -239,19 +211,14 @@ export const restaurantApi = {
       let results: Restaurant[] = mockData.restaurants["GET /api/restaurants"].results;
       if (filters?.search) {
         const q = filters.search.toLowerCase();
-        results = results.filter(
-          (r) => r.name.toLowerCase().includes(q) ||
-                 r.cuisine_tags.some((t) => t.toLowerCase().includes(q))
-        );
+        results = results.filter((r) => r.name.toLowerCase().includes(q) || r.cuisine_tags.some((t) => t.toLowerCase().includes(q)));
       }
-      if (filters?.is_open)  results = results.filter((r) => r.is_open);
-      if (filters?.cuisine)  results = results.filter((r) => r.cuisine_tags.includes(filters.cuisine!));
+      if (filters?.is_open) results = results.filter((r) => r.is_open);
+      if (filters?.cuisine) results = results.filter((r) => r.cuisine_tags.includes(filters.cuisine!));
       return mock({ ...mockData.restaurants["GET /api/restaurants"], results, count: results.length });
     }
     const params = new URLSearchParams(
-      Object.fromEntries(
-        Object.entries(filters ?? {}).filter(([, v]) => v != null && v !== "")
-      ) as Record<string, string>
+      Object.fromEntries(Object.entries(filters ?? {}).filter(([, v]) => v != null && v !== "")) as Record<string, string>
     ).toString();
     return request(`/api/restaurants/${params ? `?${params}` : ""}`);
   },
@@ -267,8 +234,7 @@ export const restaurantApi = {
   },
 
   featured: async (): Promise<Restaurant[]> => {
-    if (API_MODE === "mock")
-      return mock(mockData.restaurants["GET /api/restaurants"].results.filter((r: Restaurant) => r.is_featured));
+    if (API_MODE === "mock") return mock(mockData.restaurants["GET /api/restaurants"].results.filter((r: Restaurant) => r.is_featured));
     return request("/api/restaurants/featured/");
   },
 };
@@ -298,10 +264,7 @@ export const cartApi = {
   updateItem: async (cartItemId: string, quantity: number): Promise<void> => {
     if (API_MODE === "mock") return mock(undefined);
     if (quantity <= 0) return cartApi.removeItem(cartItemId);
-    return request(`/api/cart/items/${cartItemId}/`, {
-      method: "PATCH",
-      body: JSON.stringify({ quantity }),
-    });
+    return request(`/api/cart/items/${cartItemId}/`, { method: "PATCH", body: JSON.stringify({ quantity }) });
   },
 
   removeItem: async (cartItemId: string): Promise<void> => {
@@ -310,11 +273,15 @@ export const cartApi = {
   },
 
   applyCoupon: async (code: string): Promise<{ message: string; discount: number }> => {
-    if (API_MODE === "mock") return mock(mockData.cart["POST /api/cart/apply-coupon"]);
-    return request("/api/cart/apply-coupon/", {
-      method: "POST",
-      body: JSON.stringify({ code }),
-    });
+    if (API_MODE === "mock") {
+      const validMockCodes = ["SAVE10", "FEAST20", "CRAVE50", "WELCOME"];
+      if (!validMockCodes.includes(code.toUpperCase())) {
+        throw new ApiError("Invalid or expired coupon code.", 400);
+      }
+      return mock({ message: "Coupon applied!", discount: 50 });
+    }
+    // BUG FIX: let ApiError propagate — don't swallow it silently
+    return request("/api/cart/apply-coupon/", { method: "POST", body: JSON.stringify({ code }) });
   },
 
   removeCoupon: async (): Promise<void> => {
@@ -371,9 +338,8 @@ export const reviewApi = {
     return request("/api/reviews/", { method: "POST", body: JSON.stringify(payload) });
   },
 
-  // Poll this until status === "completed"
   getAiResponse: async (
-    reviewId: string
+    reviewId: string | number
   ): Promise<{ status: "pending" | "completed" | "failed"; ai_response?: Review["ai_response"] }> => {
     if (API_MODE === "mock") return mock(mockData.reviews["GET /api/reviews/:id/ai-response"]);
     return request(`/api/reviews/${reviewId}/ai-response/`);
@@ -396,9 +362,7 @@ export const couponApi = {
 // ─────────────────────────────────────────────────────────────
 
 export const searchApi = {
-  search: async (
-    q: string
-  ): Promise<{
+  search: async (q: string): Promise<{
     restaurants: Restaurant[];
     dishes: { id: number; name: string; restaurant_id: number; restaurant_name: string; price: number; image: string }[];
   }> => {

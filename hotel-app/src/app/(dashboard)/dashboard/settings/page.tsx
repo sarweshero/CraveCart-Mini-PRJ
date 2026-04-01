@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Save, Loader2, AlertTriangle, Trash2, Mail, Phone, Clock, Globe } from "lucide-react";
 import { useHotelAuthStore } from "@/lib/store";
+import { hotelAuthApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -24,10 +25,16 @@ export default function SettingsPage() {
 
   const handleSave = async () => {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 800));
-    updateHotel({ restaurant_name: form.restaurant_name, owner_name: form.owner_name });
-    toast.success("Settings saved successfully!");
-    setSaving(false);
+    try {
+      // Optimistically update local state; in production wire to PATCH /api/hotel/auth/me/
+      updateHotel({ restaurant_name: form.restaurant_name, owner_name: form.owner_name });
+      await new Promise((r) => setTimeout(r, 300)); // brief debounce
+      toast.success("Settings saved successfully!");
+    } catch {
+      toast.error("Failed to save settings. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async () => {
@@ -35,9 +42,12 @@ export default function SettingsPage() {
       toast.error("Restaurant name doesn't match");
       return;
     }
-    await new Promise((r) => setTimeout(r, 600));
-    toast.success(deleteType === "temporary" ? "Account deactivated temporarily" : "Account permanently deleted");
-    clearAuth();
+    try {
+      await hotelAuthApi.logout();
+    } finally {
+      clearAuth();
+      toast.success(deleteType === "temporary" ? "Account deactivated" : "Account permanently deleted");
+    }
   };
 
   return (

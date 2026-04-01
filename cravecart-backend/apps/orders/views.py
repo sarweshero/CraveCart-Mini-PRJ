@@ -109,7 +109,7 @@ class OrderListCreateView(APIView):
         s.is_valid(raise_exception=True)
         cart = s.validated_data["cart"]
         from apps.accounts.models import Address
-        address = Address.objects.get(pk=s.validated_data["delivery_address_id"], user=request.user)
+        address = get_object_or_404(Address, pk=s.validated_data["delivery_address_id"], user=request.user)
         items_snapshot = [{"name":ci.menu_item.name,"quantity":ci.quantity,"price":float(ci.menu_item.price),"customizations":ci.customizations,"item_total":float(ci.item_total)} for ci in cart.items.select_related("menu_item").all()]
         order = Order.objects.create(
             customer=request.user, restaurant=cart.restaurant, delivery_address=address,
@@ -117,7 +117,7 @@ class OrderListCreateView(APIView):
             platform_fee=cart.platform_fee, discount=cart.discount, taxes=cart.taxes, total=cart.total,
             coupon_code=cart.coupon.code if cart.coupon else "",
             payment_method=s.validated_data["payment_method"],
-            payment_status=Order.PaymentStatus.PAID if s.validated_data["payment_method"]!="cod" else Order.PaymentStatus.PENDING,
+            payment_status=Order.PaymentStatus.PENDING,  # Always PENDING — set to PAID only after verify endpoint confirms payment
             instructions=s.validated_data.get("instructions",""),
         )
         if cart.coupon:

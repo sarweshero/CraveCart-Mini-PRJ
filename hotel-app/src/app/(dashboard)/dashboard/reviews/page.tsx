@@ -41,7 +41,7 @@ export default function ReviewsPage() {
     Promise.all([hotelReviewApi.list(), templateApi.list()]).then(([revData, tmplData]) => {
       setReviews((revData as { results: Review[] }).results);
       setTemplates(tmplData as Template[]);
-    }).finally(() => setLoading(false));
+    }).catch(() => { /* silently degrade */ }).finally(() => setLoading(false));
   }, []);
 
   const activeTemplate = templates.find((t) => t.is_active);

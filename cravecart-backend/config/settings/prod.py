@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "apps.reviews",
     "apps.notifications",
     "apps.ai_templates",
+    "apps.delivery",
 ]
 
 SITE_ID = 1
@@ -103,8 +104,8 @@ SECURE_PROXY_SSL_HEADER     = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_BROWSER_XSS_FILTER   = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS             = "DENY"
-SESSION_COOKIE_SECURE       = False
-CSRF_COOKIE_SECURE          = False
+SESSION_COOKIE_SECURE       = True
+CSRF_COOKIE_SECURE          = True
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -113,6 +114,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# Add http://localhost:3002 for local delivery app dev
 CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=["http://localhost:3000","http://localhost:3001"])
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = ["accept","accept-encoding","authorization","content-type","dnt","origin","user-agent","x-csrftoken","x-requested-with"]
@@ -133,7 +135,7 @@ REST_FRAMEWORK = {
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
     ],
-    "DEFAULT_THROTTLE_RATES": {"anon": "100/hour", "user": "2000/hour", "login": "10/min"},
+    "DEFAULT_THROTTLE_RATES": {"anon": "100/hour", "user": "2000/hour", "login": "10/min", "hotel_register": "3/hour"},
 }
 
 AUTHENTICATION_BACKENDS = [
@@ -205,3 +207,20 @@ LOGGING = {
         "apps":           {"handlers": ["console"], "level": "INFO",     "propagate": False},
     },
 }
+
+# ── Additional Security Headers ────────────────────────────────────────────
+SECURE_HSTS_SECONDS            = 31536000   # 1 year HSTS
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD            = True
+SECURE_REFERRER_POLICY         = "strict-origin-when-cross-origin"
+PERMISSIONS_POLICY             = {"geolocation": [], "camera": [], "microphone": []}
+
+# ── Razorpay ────────────────────────────────────────────────────────────────
+RAZORPAY_KEY_ID     = env("RAZORPAY_KEY_ID",     default="")
+RAZORPAY_KEY_SECRET = env("RAZORPAY_KEY_SECRET", default="")
+
+# ── Delivery Config ──────────────────────────────────────────────────────────
+DELIVERY_BASE_EARNING  = 25
+DELIVERY_PER_KM_BONUS  = 5
+DELIVERY_ACCEPT_WINDOW = 60
+CORS_ALLOWED_ORIGINS_REGEX = None

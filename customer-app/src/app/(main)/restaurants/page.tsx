@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import { Search, SlidersHorizontal, Star, Clock, X, ChevronDown } from "lucide-react";
 import { restaurantApi } from "@/lib/api";
 import type { Restaurant, RestaurantFilters } from "@/lib/types";
-import { cn, formatCurrency, debounce } from "@/lib/utils";
+import { cn, extractList, formatCurrency, debounce } from "@/lib/utils";
 
 const SORT_OPTIONS = [
   { value: "popularity", label: "Popularity" },
@@ -16,20 +16,6 @@ const SORT_OPTIONS = [
   { value: "delivery_time", label: "Fastest Delivery" },
   { value: "min_order", label: "Min. Order" },
 ];
-
-function extractList<T>(payload: unknown): T[] {
-  if (Array.isArray(payload)) return payload as T[];
-  if (payload && typeof payload === "object" && Array.isArray((payload as { results?: unknown }).results)) {
-    return (payload as { results: T[] }).results;
-  }
-  return [];
-}
-
-function normalizeCuisineTags(tags: unknown): string[] {
-  if (Array.isArray(tags)) return tags.filter((tag): tag is string => typeof tag === "string");
-  if (typeof tags === "string") return tags.split(",").map((tag) => tag.trim()).filter(Boolean);
-  return [];
-}
 
 function RestaurantsContent() {
   const searchParams = useSearchParams();
@@ -45,7 +31,7 @@ function RestaurantsContent() {
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
-    restaurantApi.categories().then((cats) => setCategories(extractList<{ id: string; name: string }>(cats)));
+    restaurantApi.categories().then((cats) => setCategories(extractList<{ id: string; name: string }>(cats))).catch(() => {/* categories optional */});
   }, []);
 
   useEffect(() => {
@@ -68,7 +54,7 @@ function RestaurantsContent() {
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-[#F5EDD8] font-display font-semibold text-3xl mb-1" style={{ fontFamily: "var(--font-fraunces)" }}>
+          <h1 className="text-[#F5EDD8] font-display font-semibold text-3xl mb-1" className="font-display">
             Restaurants
           </h1>
           <p className="text-[#9E9080] text-sm">

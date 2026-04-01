@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
@@ -8,7 +8,7 @@ import {
   Star, Clock, MapPin, Phone, ChevronLeft, Search,
   Plus, Minus, Flame, Leaf, ChevronRight, Info,
 } from "lucide-react";
-import { restaurantApi } from "@/lib/api";
+import { restaurantApi, cartApi } from "@/lib/api";
 import type { RestaurantDetail, MenuItem } from "@/lib/types";
 import { cn, formatCurrency } from "@/lib/utils";
 import { useCartStore, useUIStore } from "@/lib/store";
@@ -31,7 +31,7 @@ export default function RestaurantDetailPage() {
     restaurantApi.get(id).then((data) => {
       setRestaurant(data);
       if (data.menu_categories[0]) setActiveCategory(data.menu_categories[0].id);
-    }).finally(() => setLoading(false));
+    }).catch(() => setRestaurant(null)).finally(() => setLoading(false));
   }, [id]);
 
   const scrollToCategory = (catId: string) => {
@@ -43,10 +43,11 @@ export default function RestaurantDetailPage() {
     }
   };
 
-  const handleAddToCart = (item: MenuItem) => {
+  const handleAddToCart = async (item: MenuItem) => {
     if (!restaurant) return;
     if (!item.is_available) return;
 
+    // 1. Optimistically update the local store for instant UI feedback
     const cartItem = {
       id: `ci_${item.id}_${Date.now()}`,
       menu_item: { id: item.id, name: item.name, price: item.price, image: item.image },
@@ -55,10 +56,16 @@ export default function RestaurantDetailPage() {
       item_total: item.price,
     };
     addItem(cartItem, restaurant.id, restaurant.name);
-    toast.success(`${item.name} added to cart`, {
-      icon: "🛒",
-      duration: 1500,
-    });
+
+    // 2. Sync to backend cart so the order placement works
+    try {
+      await cartApi.addItem(String(item.id), 1);
+    } catch {
+      // Backend sync failed — silently continue (cart will be re-synced at checkout)
+      // This can happen if user is not logged in or backend is briefly unavailable
+    }
+
+    toast.success(`${item.name} added to cart`, { icon: "🛒", duration: 1500 });
   };
 
   const filteredCategories = restaurant?.menu_categories.map((cat) => ({
@@ -97,7 +104,7 @@ export default function RestaurantDetailPage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <h1 className="text-[#F5EDD8] font-display font-semibold text-2xl leading-tight"
-                  style={{ fontFamily: "var(--font-fraunces)" }}>
+                  className="font-display">
                   {restaurant.name}
                 </h1>
                 <span className={cn("badge flex-shrink-0", restaurant.is_open ? "badge-success" : "badge-error")}>
@@ -196,7 +203,7 @@ export default function RestaurantDetailPage() {
                 ref={(el) => { categoryRefs.current[cat.id] = el; }}
               >
                 <h2 className="flex items-center gap-2 text-[#F5EDD8] font-display font-semibold text-xl mb-4"
-                  style={{ fontFamily: "var(--font-fraunces)" }}>
+                  className="font-display">
                   <span>{cat.icon}</span>
                   {cat.name}
                 </h2>
@@ -240,7 +247,7 @@ export default function RestaurantDetailPage() {
 
 // ── Menu Item Row ──
 
-function MenuItemRow({
+const MenuItemRow = memo(function MenuItemRow({
   item, quantity, onAdd, onUpdate, onExpand,
 }: {
   item: MenuItem;

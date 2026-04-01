@@ -115,3 +115,33 @@ export function getRatingLabel(rating: number): string {
 export function pluralize(count: number, singular: string, plural?: string): string {
   return count === 1 ? singular : (plural ?? `${singular}s`);
 }
+
+/**
+ * Safely extract a list from either a plain array or a paginated { results: T[] } response.
+ * Avoids duplicating this logic in every page component.
+ */
+export function extractList<T>(payload: unknown): T[] {
+  if (Array.isArray(payload)) return payload as T[];
+  if (
+    payload &&
+    typeof payload === "object" &&
+    Array.isArray((payload as { results?: unknown }).results)
+  ) {
+    return (payload as { results: T[] }).results;
+  }
+  return [];
+}
+
+/**
+ * Normalise cuisine_tags which may arrive as an array or a comma-separated string.
+ */
+export function normalizeTags(value: unknown): string[] {
+  if (Array.isArray(value)) return value.filter((t): t is string => typeof t === "string");
+  if (typeof value === "string") return value.split(",").map((t) => t.trim()).filter(Boolean);
+  return [];
+}
+
+/** Deep-clone a plain object (JSON-safe). */
+export function deepClone<T>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj));
+}

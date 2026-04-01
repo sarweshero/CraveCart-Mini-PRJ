@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root { color-scheme: dark; }
+  * { -webkit-tap-highlight-color: transparent; }
+  body { @apply bg-bg text-ink antialiased; min-height: 100svh; }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-bg-card; }
+  ::-webkit-scrollbar-thumb { @apply bg-bg-border rounded-full; }
+}
+
+@layer components {
+  .btn-primary { @apply bg-brand hover:bg-brand-bright active:scale-[0.97] text-bg font-semibold rounded-xl px-6 py-3.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-brand; }
+  .btn-ghost { @apply border border-bg-border hover:border-brand/40 text-ink-muted hover:text-ink rounded-xl px-6 py-3.5 transition-all duration-200; }
+  .card { @apply bg-bg-card border border-bg-border rounded-2xl; }
+  .input { @apply bg-bg-elevated border border-bg-border rounded-xl px-4 py-3 text-ink placeholder-ink-faint focus:outline-none focus:border-brand/60 focus:ring-2 focus:ring-brand/20 transition-all duration-200 w-full; }
+}

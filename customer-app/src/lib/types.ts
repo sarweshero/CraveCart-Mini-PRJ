@@ -228,7 +228,7 @@ export interface OrderDetail extends Omit<Order, "items_count" | "has_review"> {
 export interface ReviewPayload {
   order_id: string;
   rating: number;
-  comment: string;
+  comment?: string;
 }
 
 // --- Coupon ---

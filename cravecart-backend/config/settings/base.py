@@ -55,6 +55,7 @@ LOCAL_APPS = [
     "apps.reviews",
     "apps.notifications",
     "apps.ai_templates",
+    "apps.delivery",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -273,3 +274,15 @@ PLATFORM_FEE              = 5
 DEFAULT_DELIVERY_FEE      = 30
 TAX_RATE                  = 0.05
 PERMANENT_DELETE_AFTER_DAYS = 30
+# ── Razorpay Payment Gateway ──────────────────────────────────────────────────
+RAZORPAY_KEY_ID     = env("RAZORPAY_KEY_ID",     default="")
+RAZORPAY_KEY_SECRET = env("RAZORPAY_KEY_SECRET", default="")
+
+# ── Delivery Partner Config ────────────────────────────────────────────────────
+DELIVERY_BASE_EARNING  = 25   # Rs per delivery
+DELIVERY_PER_KM_BONUS  = 5    # Rs per km after first 2km
+DELIVERY_ACCEPT_WINDOW = 60   # seconds partner has to accept
+
+# ── Security: DRF throttle rates (also apply in prod.py) ─────────────────────
+# Defined in REST_FRAMEWORK.DEFAULT_THROTTLE_RATES
+# "login": 10/min, "anon": 100/hour, "user": 2000/hour, "hotel_register": 3/hour

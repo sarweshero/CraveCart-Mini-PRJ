@@ -52,7 +52,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
     review           = serializers.SerializerMethodField()
     class Meta:
         model  = Order
-        fields = ["id","restaurant","status","tracking","items","delivery_address","subtotal","delivery_fee","platform_fee","discount","taxes","total","coupon_code","payment_method","payment_status","placed_at","delivered_at","instructions","review"]
+        fields = ["id","restaurant","status","tracking","items","delivery_address","subtotal","delivery_fee","platform_fee","discount","taxes","total","coupon_code","payment_method","payment_status","placed_at","delivered_at","instructions","review","cancellation_reason"]
     def get_restaurant(self, obj):
         r = obj.restaurant
         return {"id":r.id,"name":r.name,"thumbnail":r.thumbnail,"phone":r.phone,"address":r.address}

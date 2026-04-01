@@ -41,9 +41,9 @@ export default function RegisterPage() {
       <motion.div initial={{opacity:0,y:24}} animate={{opacity:1,y:0}} transition={{duration:0.5}} className="w-full max-w-sm">
         <Link href="/" className="flex items-center gap-2 mb-10">
           <div className="w-8 h-8 rounded-lg bg-[#E8A830] flex items-center justify-center"><UtensilsCrossed size={16} className="text-[#0C0B09]" strokeWidth={2.5}/></div>
-          <span className="text-[#F5EDD8] font-display font-semibold text-xl" style={{fontFamily:"var(--font-fraunces)"}}>Crave<span className="text-[#E8A830]">Cart</span></span>
+          <span className="text-[#F5EDD8] font-display font-semibold text-xl">Crave<span className="text-[#E8A830]">Cart</span></span>
         </Link>
-        <h1 className="text-[#F5EDD8] font-display font-semibold text-3xl mb-2" style={{fontFamily:"var(--font-fraunces)"}}>Create account</h1>
+        <h1 className="text-[#F5EDD8] font-display font-semibold text-3xl mb-2">Create account</h1>
         <p className="text-[#9E9080] text-sm mb-8">Join thousands of food lovers</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           {[{k:"email",label:"Email address",type:"email",ph:"you@example.com",Icon:Mail},{k:"password",label:"Password",type:showPwd?"text":"password",ph:"Min. 8 characters",Icon:Lock},{k:"confirm_password",label:"Confirm password",type:"password",ph:"••••••••",Icon:ShieldCheck}].map(({k,label,type,ph,Icon})=>(

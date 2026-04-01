@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useHotelOrders } from "@/hooks/useHotelOrders";
 import { motion } from "framer-motion";
 import { Clock, Phone, MapPin, ChevronRight, RefreshCw } from "lucide-react";
 import { hotelOrderApi } from "@/lib/api";
@@ -28,22 +29,9 @@ const STATUS_TABS: { value: string; label: string }[] = [
 ];
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<HotelOrder[]>([]);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
-
-  const loadOrders = async (status?: string) => {
-    setLoading(true);
-    try {
-      const data = await hotelOrderApi.list(status);
-      setOrders((data as { results: HotelOrder[] }).results);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { loadOrders(activeTab); }, [activeTab]);
+  const { orders, loading, reload: loadOrders } = useHotelOrders(activeTab);
 
   const handleStatusUpdate = async (order: HotelOrder) => {
     const next = STATUS_TRANSITIONS[order.status];

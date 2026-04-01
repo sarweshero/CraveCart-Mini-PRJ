@@ -7,9 +7,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { restaurantApi } from "@/lib/api";
 import type { Restaurant, FoodCategory } from "@/lib/types";
-import { formatCurrency } from "@/lib/utils";
-import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { cn, extractList, formatCurrency } from "@/lib/utils";
 
 const stagger = {
   visible: { transition: { staggerChildren: 0.07 } },
@@ -18,14 +17,6 @@ const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
 };
-
-function extractList<T>(payload: unknown): T[] {
-  if (Array.isArray(payload)) return payload as T[];
-  if (payload && typeof payload === "object" && Array.isArray((payload as { results?: unknown }).results)) {
-    return (payload as { results: T[] }).results;
-  }
-  return [];
-}
 
 export default function HomePage() {
   const router = useRouter();
@@ -92,7 +83,7 @@ export default function HomePage() {
             <motion.h1
               variants={fadeUp}
               className="text-5xl md:text-6xl lg:text-7xl font-display font-semibold text-[#F5EDD8] leading-[1.05] tracking-tight"
-              style={{ fontFamily: "var(--font-fraunces)" }}
+              className="font-display"
             >
               Craving{" "}
               <span className="text-[#E8A830] italic">something</span>
@@ -136,7 +127,7 @@ export default function HomePage() {
                 { value: "25 min", label: "Avg Delivery" },
               ].map(({ value, label }) => (
                 <div key={label}>
-                  <p className="text-[#F5EDD8] font-display font-semibold text-2xl" style={{ fontFamily: "var(--font-fraunces)" }}>
+                  <p className="text-[#F5EDD8] font-display font-semibold text-2xl" className="font-display">
                     {value}
                   </p>
                   <p className="text-[#9E9080] text-xs mt-0.5">{label}</p>
@@ -150,7 +141,7 @@ export default function HomePage() {
       {/* ── Categories ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-[#F5EDD8] font-display font-semibold text-2xl" style={{ fontFamily: "var(--font-fraunces)" }}>
+          <h2 className="text-[#F5EDD8] font-display font-semibold text-2xl" className="font-display">
             What are you craving?
           </h2>
         </div>
@@ -175,7 +166,7 @@ export default function HomePage() {
       {/* ── Featured ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-[#F5EDD8] font-display font-semibold text-2xl" style={{ fontFamily: "var(--font-fraunces)" }}>
+          <h2 className="text-[#F5EDD8] font-display font-semibold text-2xl" className="font-display">
             🔥 Featured today
           </h2>
           <Link href="/restaurants" className="text-[#E8A830] text-sm font-medium flex items-center gap-1.5 hover:gap-2.5 transition-all">
@@ -196,7 +187,7 @@ export default function HomePage() {
       {/* ── All Restaurants ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-[#F5EDD8] font-display font-semibold text-2xl" style={{ fontFamily: "var(--font-fraunces)" }}>
+          <h2 className="text-[#F5EDD8] font-display font-semibold text-2xl" className="font-display">
             All Restaurants
           </h2>
           <Link href="/restaurants" className="text-[#E8A830] text-sm font-medium flex items-center gap-1.5 hover:gap-2.5 transition-all">
@@ -222,7 +213,7 @@ export default function HomePage() {
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#E8A830]/10 border border-[#E8A830]/20 text-[#E8A830] text-xs font-semibold mb-4">
               ✨ Powered by Google Gemini AI
             </div>
-            <h2 className="text-3xl md:text-4xl font-display font-semibold text-[#F5EDD8] leading-tight" style={{ fontFamily: "var(--font-fraunces)" }}>
+            <h2 className="text-3xl md:text-4xl font-display font-semibold text-[#F5EDD8] leading-tight" className="font-display">
               Your feedback, answered{" "}
               <span className="text-[#E8A830] italic">intelligently</span>
             </h2>

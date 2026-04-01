@@ -14,3 +14,8 @@ class IsProfileComplete(BasePermission):
     message = "Please complete your profile to access this feature."
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.is_profile_complete
+
+
+class IsDeliveryPartner(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == "delivery_partner"

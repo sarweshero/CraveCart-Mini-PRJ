@@ -37,11 +37,11 @@ export default function CompleteProfilePage() {
       <motion.div initial={{opacity:0,y:24}} animate={{opacity:1,y:0}} className="w-full max-w-sm">
         <div className="flex items-center gap-2 mb-10">
           <div className="w-8 h-8 rounded-lg bg-[#E8A830] flex items-center justify-center"><UtensilsCrossed size={16} className="text-[#0C0B09]" strokeWidth={2.5}/></div>
-          <span className="text-[#F5EDD8] font-display font-semibold text-xl" style={{fontFamily:"var(--font-fraunces)"}}>Crave<span className="text-[#E8A830]">Cart</span></span>
+          <span className="text-[#F5EDD8] font-display font-semibold text-xl">Crave<span className="text-[#E8A830]">Cart</span></span>
         </div>
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2"><div className="flex gap-1">{[1,2].map(i=><div key={i} className="h-1 w-8 rounded-full" style={{background:i===1?"#E8A830":"#2A2620"}}/>)}</div><span className="text-[#9E9080] text-xs">Step 1 of 2</span></div>
-          <h1 className="text-[#F5EDD8] font-display font-semibold text-3xl" style={{fontFamily:"var(--font-fraunces)"}}>Complete your profile</h1>
+          <h1 className="text-[#F5EDD8] font-display font-semibold text-3xl">Complete your profile</h1>
           <p className="text-[#9E9080] text-sm mt-2">We need a few more details to get you started</p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
