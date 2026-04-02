@@ -95,6 +95,22 @@ export default function SettingsPage() {
     };
   }, [avatarPreviewUrl, thumbnailPreviewUrl, coverPreviewUrl]);
 
+  const isUploadingMedia = uploadingAvatar || uploadingThumbnail || uploadingCover;
+  const hasPendingMedia = Boolean(avatarPendingFile || thumbnailPendingFile || coverPendingFile);
+  const isMediaBusy = isUploadingMedia || hasPendingMedia;
+
+  useEffect(() => {
+    if (!isMediaBusy) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isMediaBusy]);
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -122,6 +138,63 @@ export default function SettingsPage() {
     }
   };
 
+  const uploadAvatarFile = async (file: File) => {
+    setUploadingAvatar(true);
+    try {
+      const upload = await mediaApi.uploadImage(file, {
+        folder: "uploads/avatars/hotels",
+        replaceUrl: hotel?.avatar || undefined,
+      });
+      await hotelAuthApi.updateProfile({ avatar: upload.url });
+      updateHotel({ avatar: upload.url });
+      setAvatarPendingFile(null);
+      toast.success("Profile photo updated");
+    } catch {
+      clearAvatarDraft();
+      toast.error("Failed to upload profile photo");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const uploadThumbnailFile = async (file: File) => {
+    setUploadingThumbnail(true);
+    try {
+      const upload = await mediaApi.uploadImage(file, {
+        folder: "uploads/restaurants/thumbnail",
+        replaceUrl: hotel?.thumbnail || undefined,
+      });
+      const profile = await dashboardApi.updateProfile({ thumbnail: upload.url });
+      updateHotel({ thumbnail: profile.thumbnail ?? upload.url });
+      setThumbnailPendingFile(null);
+      toast.success("Card thumbnail updated");
+    } catch {
+      clearThumbnailDraft();
+      toast.error("Failed to upload card thumbnail");
+    } finally {
+      setUploadingThumbnail(false);
+    }
+  };
+
+  const uploadCoverFile = async (file: File) => {
+    setUploadingCover(true);
+    try {
+      const upload = await mediaApi.uploadImage(file, {
+        folder: "uploads/restaurants/cover",
+        replaceUrl: hotel?.cover_image || undefined,
+      });
+      const profile = await dashboardApi.updateProfile({ cover_image: upload.url });
+      updateHotel({ cover_image: profile.cover_image ?? upload.url });
+      setCoverPendingFile(null);
+      toast.success("Cover photo updated");
+    } catch {
+      clearCoverDraft();
+      toast.error("Failed to upload cover photo");
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
   const handleAvatarSelected = (file: File | null) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
@@ -134,6 +207,7 @@ export default function SettingsPage() {
     }
     setAvatarPendingFile(file);
     setAvatarPreviewUrl(URL.createObjectURL(file));
+    void uploadAvatarFile(file);
   };
 
   const handleThumbnailSelected = (file: File | null) => {
@@ -148,6 +222,7 @@ export default function SettingsPage() {
     }
     setThumbnailPendingFile(file);
     setThumbnailPreviewUrl(URL.createObjectURL(file));
+    void uploadThumbnailFile(file);
   };
 
   const handleCoverSelected = (file: File | null) => {
@@ -162,6 +237,7 @@ export default function SettingsPage() {
     }
     setCoverPendingFile(file);
     setCoverPreviewUrl(URL.createObjectURL(file));
+    void uploadCoverFile(file);
   };
 
   const clearAvatarDraft = () => {
@@ -186,66 +262,6 @@ export default function SettingsPage() {
     }
     setCoverPreviewUrl(null);
     setCoverPendingFile(null);
-  };
-
-  const handleAvatarUpload = async () => {
-    if (!avatarPendingFile) return;
-
-    setUploadingAvatar(true);
-    try {
-      const upload = await mediaApi.uploadImage(avatarPendingFile, {
-        folder: "uploads/avatars/hotels",
-        replaceUrl: hotel?.avatar || undefined,
-      });
-      await hotelAuthApi.updateProfile({ avatar: upload.url });
-      updateHotel({ avatar: upload.url });
-      clearAvatarDraft();
-      toast.success("Profile photo updated");
-    } catch {
-      toast.error("Failed to upload profile photo");
-    } finally {
-      setUploadingAvatar(false);
-    }
-  };
-
-  const handleThumbnailUpload = async () => {
-    if (!thumbnailPendingFile) return;
-
-    setUploadingThumbnail(true);
-    try {
-      const upload = await mediaApi.uploadImage(thumbnailPendingFile, {
-        folder: "uploads/restaurants/thumbnail",
-        replaceUrl: hotel?.thumbnail || undefined,
-      });
-      const profile = await dashboardApi.updateProfile({ thumbnail: upload.url });
-      updateHotel({ thumbnail: profile.thumbnail ?? upload.url });
-      clearThumbnailDraft();
-      toast.success("Card thumbnail updated");
-    } catch {
-      toast.error("Failed to upload card thumbnail");
-    } finally {
-      setUploadingThumbnail(false);
-    }
-  };
-
-  const handleCoverUpload = async () => {
-    if (!coverPendingFile) return;
-
-    setUploadingCover(true);
-    try {
-      const upload = await mediaApi.uploadImage(coverPendingFile, {
-        folder: "uploads/restaurants/cover",
-        replaceUrl: hotel?.cover_image || undefined,
-      });
-      const profile = await dashboardApi.updateProfile({ cover_image: upload.url });
-      updateHotel({ cover_image: profile.cover_image ?? upload.url });
-      clearCoverDraft();
-      toast.success("Cover photo updated");
-    } catch {
-      toast.error("Failed to upload cover photo");
-    } finally {
-      setUploadingCover(false);
-    }
   };
 
   const handleDelete = async () => {
@@ -319,20 +335,11 @@ export default function SettingsPage() {
             </div>
             {avatarPendingFile && (
               <div className="flex items-center gap-2">
-                <button
-                  onClick={handleAvatarUpload}
-                  disabled={uploadingAvatar}
-                  className="px-3 py-1.5 rounded-lg bg-[#7C3AED] text-white text-xs font-medium hover:bg-[#6D28D9] disabled:opacity-70"
-                >
-                  {uploadingAvatar ? "Uploading..." : "Upload selected"}
-                </button>
-                <button
-                  onClick={clearAvatarDraft}
-                  disabled={uploadingAvatar}
-                  className="px-3 py-1.5 rounded-lg border border-[#27272A] text-[#A1A1AA] text-xs hover:text-[#FAFAFA]"
-                >
-                  Cancel
-                </button>
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#7C3AED]/10 border border-[#7C3AED]/20 text-[#C4B5FD] text-xs font-medium">
+                  {uploadingAvatar && <Loader2 size={12} className="animate-spin" />}
+                  {uploadingAvatar ? "Uploading photo..." : "Photo uploaded"}
+                </div>
+                {uploadingAvatar && <span className="text-[#71717A] text-xs">Please wait before refreshing.</span>}
               </div>
             )}
           </div>
@@ -371,20 +378,11 @@ export default function SettingsPage() {
               </label>
               {thumbnailPendingFile && (
                 <>
-                  <button
-                    onClick={handleThumbnailUpload}
-                    disabled={uploadingThumbnail}
-                    className="px-2.5 py-1.5 rounded-lg bg-[#7C3AED] text-white text-xs font-medium disabled:opacity-70"
-                  >
-                    {uploadingThumbnail ? "Uploading..." : "Upload"}
-                  </button>
-                  <button
-                    onClick={clearThumbnailDraft}
-                    disabled={uploadingThumbnail}
-                    className="px-2.5 py-1.5 rounded-lg border border-[#27272A] text-[#A1A1AA] text-xs hover:text-[#FAFAFA]"
-                  >
-                    Cancel
-                  </button>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#7C3AED]/10 border border-[#7C3AED]/20 text-[#C4B5FD] text-xs font-medium">
+                    {uploadingThumbnail && <Loader2 size={12} className="animate-spin" />}
+                    {uploadingThumbnail ? "Uploading..." : "Uploaded"}
+                  </div>
+                  {uploadingThumbnail && <span className="text-[#71717A] text-xs">Please wait before refreshing.</span>}
                 </>
               )}
             </div>
@@ -422,20 +420,11 @@ export default function SettingsPage() {
               </label>
               {coverPendingFile && (
                 <>
-                  <button
-                    onClick={handleCoverUpload}
-                    disabled={uploadingCover}
-                    className="px-2.5 py-1.5 rounded-lg bg-[#7C3AED] text-white text-xs font-medium disabled:opacity-70"
-                  >
-                    {uploadingCover ? "Uploading..." : "Upload"}
-                  </button>
-                  <button
-                    onClick={clearCoverDraft}
-                    disabled={uploadingCover}
-                    className="px-2.5 py-1.5 rounded-lg border border-[#27272A] text-[#A1A1AA] text-xs hover:text-[#FAFAFA]"
-                  >
-                    Cancel
-                  </button>
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#7C3AED]/10 border border-[#7C3AED]/20 text-[#C4B5FD] text-xs font-medium">
+                    {uploadingCover && <Loader2 size={12} className="animate-spin" />}
+                    {uploadingCover ? "Uploading..." : "Uploaded"}
+                  </div>
+                  {uploadingCover && <span className="text-[#71717A] text-xs">Please wait before refreshing.</span>}
                 </>
               )}
             </div>
@@ -488,13 +477,13 @@ export default function SettingsPage() {
         </div>
         <button
           onClick={handleSave}
-          disabled={saving}
+          disabled={saving || isMediaBusy}
           className={cn(
             "mt-5 flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all",
-            saving ? "bg-[#27272A] text-[#71717A] cursor-not-allowed" : "bg-[#7C3AED] text-white hover:bg-[#6D28D9]"
+            saving || isMediaBusy ? "bg-[#27272A] text-[#71717A] cursor-not-allowed" : "bg-[#7C3AED] text-white hover:bg-[#6D28D9]"
           )}
         >
-          {saving ? <><Loader2 size={14} className="animate-spin" />Saving...</> : <><Save size={14} />Save Changes</>}
+          {saving ? <><Loader2 size={14} className="animate-spin" />Saving...</> : isMediaBusy ? <><Loader2 size={14} className="animate-spin" />Waiting for uploads...</> : <><Save size={14} />Save Changes</>}
         </button>
       </div>
 

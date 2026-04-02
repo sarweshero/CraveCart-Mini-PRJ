@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { User, Phone, MapPin, Loader2, UtensilsCrossed } from "lucide-react";
@@ -10,11 +10,51 @@ import toast from "react-hot-toast";
 
 export default function CompleteProfilePage() {
   const router = useRouter();
-  const { updateUser } = useAuthStore();
+  const { user, setAuth, updateUser } = useAuthStore();
   const [form, setForm] = useState({ name: "", phone: "", line1: "", city: "", state: "", pincode: "" });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isPrefilled, setIsPrefilled] = useState(false);
   const set = (k: string) => (v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  useEffect(() => {
+    if (user) return;
+
+    const token = typeof window !== "undefined" ? localStorage.getItem("cravecart_token") : null;
+    if (!token) return;
+
+    let active = true;
+    (async () => {
+      try {
+        const latestUser = await authApi.me();
+        if (!active) return;
+        setAuth(latestUser, token);
+      } catch {
+        // Best-effort hydration; normal submit flow still works without prefill.
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [user, setAuth]);
+
+  useEffect(() => {
+    if (!user || isPrefilled) return;
+
+    const defaultAddress = user.addresses?.find((addr) => addr.is_default) ?? user.addresses?.[0];
+    setForm((prev) => ({
+      ...prev,
+      name: user.name || prev.name,
+      phone: user.phone || prev.phone,
+      line1: defaultAddress?.line1 || prev.line1,
+      city: defaultAddress?.city || prev.city,
+      state: defaultAddress?.state || prev.state,
+      pincode: defaultAddress?.pincode || prev.pincode,
+    }));
+    setIsPrefilled(true);
+  }, [user, isPrefilled]);
+
   const validate = () => {
     const e: Record<string,string> = {};
     if (!form.name.trim()) e.name = "Name is required";

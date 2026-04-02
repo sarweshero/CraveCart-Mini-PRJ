@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Camera, MapPin, Plus, Save, User as UserIcon, X } from "lucide-react";
+import { Camera, Loader2, MapPin, Plus, Save, User as UserIcon, X } from "lucide-react";
 import { authApi, mediaApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 import type { Address } from "@/lib/types";
@@ -41,6 +41,20 @@ export default function ProfilePage() {
       }
     };
   }, [avatarPreviewUrl]);
+
+  const isAvatarUploadPending = uploadingAvatar || Boolean(avatarPendingFile);
+
+  useEffect(() => {
+    if (!isAvatarUploadPending) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isAvatarUploadPending]);
 
   const refreshAddresses = async () => {
     const latest = await authApi.me();
@@ -88,6 +102,25 @@ export default function ProfilePage() {
     }
   };
 
+  const uploadAvatarFile = async (file: File) => {
+    setUploadingAvatar(true);
+    try {
+      const upload = await mediaApi.uploadImage(file, {
+        folder: "uploads/avatars/customers",
+        replaceUrl: user?.avatar || undefined,
+      });
+      const updated = await authApi.updateProfile({ avatar: upload.url });
+      updateUser(updated);
+      setAvatarPendingFile(null);
+      toast.success("Profile photo updated");
+    } catch (err: unknown) {
+      clearAvatarDraft();
+      toast.error(err instanceof Error ? err.message : "Failed to upload profile photo");
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const handleAvatarSelected = (file: File | null) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
@@ -100,6 +133,7 @@ export default function ProfilePage() {
     }
     setAvatarPendingFile(file);
     setAvatarPreviewUrl(URL.createObjectURL(file));
+    void uploadAvatarFile(file);
   };
 
   const clearAvatarDraft = () => {
@@ -108,26 +142,6 @@ export default function ProfilePage() {
     }
     setAvatarPreviewUrl(null);
     setAvatarPendingFile(null);
-  };
-
-  const handleUploadAvatar = async () => {
-    if (!avatarPendingFile) return;
-
-    setUploadingAvatar(true);
-    try {
-      const upload = await mediaApi.uploadImage(avatarPendingFile, {
-        folder: "uploads/avatars/customers",
-        replaceUrl: user?.avatar || undefined,
-      });
-      const updated = await authApi.updateProfile({ avatar: upload.url });
-      updateUser(updated);
-      clearAvatarDraft();
-      toast.success("Profile photo updated");
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed to upload profile photo");
-    } finally {
-      setUploadingAvatar(false);
-    }
   };
 
   const resetAddressForm = () => {
@@ -251,22 +265,13 @@ export default function ProfilePage() {
                   />
                 </label>
               </div>
-              {avatarPendingFile && (
+              {isAvatarUploadPending && (
                 <div className="flex items-center gap-2">
-                  <button
-                    onClick={handleUploadAvatar}
-                    disabled={uploadingAvatar}
-                    className="px-3 py-1.5 rounded-lg bg-[#E8A830] text-[#0C0B09] text-xs font-semibold hover:bg-[#F5C842] transition-colors disabled:opacity-70"
-                  >
-                    {uploadingAvatar ? "Uploading..." : "Upload Selected Photo"}
-                  </button>
-                  <button
-                    onClick={clearAvatarDraft}
-                    disabled={uploadingAvatar}
-                    className="px-3 py-1.5 rounded-lg border border-[#2A2620] text-[#BFB49A] text-xs hover:text-[#F5EDD8] transition-colors"
-                  >
-                    Cancel
-                  </button>
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#E8A830]/10 border border-[#E8A830]/20 text-[#E8A830] text-xs font-medium">
+                    {uploadingAvatar && <Loader2 size={12} className="animate-spin" />}
+                    {uploadingAvatar ? "Uploading photo..." : "Photo uploaded"}
+                  </div>
+                  {uploadingAvatar && <span className="text-[#9E9080] text-xs">Please wait before refreshing.</span>}
                 </div>
               )}
               <p className="text-[#9E9080] text-xs">JPG, PNG, WEBP up to 10MB</p>
@@ -281,16 +286,16 @@ export default function ProfilePage() {
           <div className="mt-4 flex justify-end">
             <button
               onClick={handleSaveProfile}
-              disabled={savingProfile}
+              disabled={savingProfile || isAvatarUploadPending}
               className={cn(
                 "inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all",
-                savingProfile
+                savingProfile || isAvatarUploadPending
                   ? "bg-[#2A2620] text-[#9E9080] cursor-not-allowed"
                   : "bg-[#E8A830] text-[#0C0B09] hover:bg-[#F5C842]"
               )}
             >
               <Save size={14} />
-              {savingProfile ? "Saving..." : "Save Profile"}
+              {savingProfile ? "Saving..." : isAvatarUploadPending ? "Wait for Upload" : "Save Profile"}
             </button>
           </div>
         </section>
@@ -429,7 +434,7 @@ function Input({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-[#1E1B16] border border-[#2A2620] rounded-xl px-3.5 py-2.5 text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none focus:border-[#E8A830]/50 focus:shadow-[0_0_0_3px_rgba(232,168,48,0.08)] transition-all"
+        className="w-full bg-[#1E1B16] border border-[#2A2620] rounded-xl px-3.5 py-2.5 text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none focus:border-[#E8A830]/50 transition-all"
       />
     </label>
   );

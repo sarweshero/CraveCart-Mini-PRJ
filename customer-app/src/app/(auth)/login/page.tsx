@@ -119,7 +119,7 @@ function Field({ label, type, value, onChange, placeholder, icon: Icon, error, s
   return (
     <div>
       <label className="block text-[#BFB49A] text-xs font-medium mb-1.5">{label}</label>
-      <div className={cn("flex items-center gap-2.5 px-4 py-3 rounded-xl border bg-[#161410] transition-all", error ? "border-[#F87171]/50 shadow-[0_0_0_3px_rgba(248,113,113,0.08)]" : "border-[#2A2620] focus-within:border-[#E8A830]/50 focus-within:shadow-[0_0_0_3px_rgba(232,168,48,0.08)]")}>
+      <div className={cn("flex items-center gap-2.5 px-4 py-3 rounded-xl border bg-[#161410] transition-all", error ? "border-[#F87171]/50 shadow-[0_0_0_3px_rgba(248,113,113,0.08)]" : "border-[#2A2620] focus-within:border-[#E8A830]/50")}>
         <Icon size={15} className={error ? "text-[#F87171]" : "text-[#9E9080]"} />
         <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} className="flex-1 bg-transparent text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none" />
         {suffix}

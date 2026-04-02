@@ -35,7 +35,7 @@ p { text-wrap: pretty; }
 .badge-out_for_delivery { background: rgba(34, 211, 238, 0.12); color: #22D3EE; border: 1px solid rgba(34, 211, 238, 0.25); }
 .badge-delivered { background: rgba(74, 222, 128, 0.12); color: #4ADE80; border: 1px solid rgba(74, 222, 128, 0.25); }
 .badge-cancelled { background: rgba(248, 113, 113, 0.12); color: #F87171; border: 1px solid rgba(248, 113, 113, 0.25); }
-*:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:where(button, a, [role="button"], input[type="checkbox"], input[type="radio"], summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 .page-enter { animation: fadeUp 0.4s ease forwards; }
 .sidebar-link { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px; font-size: 14px; font-weight: 500; color: var(--text-muted); transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1); text-decoration: none; }
@@ -55,4 +55,4 @@ p { text-wrap: pretty; }
 .btn-primary-hotel:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 
 /* Input focus ring */
-.input-hotel:focus { border-color: rgba(124, 58, 237, 0.5); box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.08); }
+.input-hotel:focus { border-color: rgba(124, 58, 237, 0.5); }

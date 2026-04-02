@@ -116,8 +116,8 @@ p {
   color: var(--accent);
 }
 
-/* Focus ring */
-*:focus-visible {
+/* Keep keyboard focus visible without drawing an extra inner box on form fields */
+:where(button, a, [role="button"], input[type="checkbox"], input[type="radio"], summary):focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -297,7 +297,6 @@ p {
 }
 .input-field:focus {
   border-color: rgba(232, 168, 48, 0.5);
-  box-shadow: 0 0 0 3px rgba(232, 168, 48, 0.08);
 }
 
 /* Section headings */

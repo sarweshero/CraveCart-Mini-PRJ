@@ -103,6 +103,20 @@ export default function MenuPage() {
     };
   }, [imagePreviewUrl]);
 
+  const isImageBusy = imageUploading || Boolean(pendingImageFile);
+
+  useEffect(() => {
+    if (!isImageBusy) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isImageBusy]);
+
   const totalItems = categories.reduce((acc, c) => acc + c.items.length, 0);
   const availableItems = categories.reduce((acc, c) => acc + c.items.filter((i) => i.is_available).length, 0);
   const activecat = categories.find((c) => c.id === activeCategory);
@@ -236,6 +250,24 @@ export default function MenuPage() {
     }
   };
 
+  const uploadImageFile = async (file: File) => {
+    setImageUploading(true);
+    try {
+      const uploaded = await mediaApi.uploadImage(file, {
+        folder: "uploads/menu-items",
+        replaceUrl: form.image || undefined,
+      });
+      setForm((prev) => ({ ...prev, image: uploaded.url }));
+      setPendingImageFile(null);
+      toast.success("Image uploaded");
+    } catch (err: unknown) {
+      clearSelectedImage();
+      toast.error(err instanceof Error ? err.message : "Image upload failed");
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
   const handleImageSelected = (file: File | null) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
@@ -248,6 +280,7 @@ export default function MenuPage() {
     }
     setPendingImageFile(file);
     setImagePreviewUrl(URL.createObjectURL(file));
+    void uploadImageFile(file);
   };
 
   const clearSelectedImage = () => {
@@ -256,25 +289,6 @@ export default function MenuPage() {
     }
     setPendingImageFile(null);
     setImagePreviewUrl(null);
-  };
-
-  const handleImageUpload = async () => {
-    if (!pendingImageFile) return;
-
-    setImageUploading(true);
-    try {
-      const uploaded = await mediaApi.uploadImage(pendingImageFile, {
-        folder: "uploads/menu-items",
-        replaceUrl: form.image || undefined,
-      });
-      setForm((prev) => ({ ...prev, image: uploaded.url }));
-      clearSelectedImage();
-      toast.success("Image uploaded");
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Image upload failed");
-    } finally {
-      setImageUploading(false);
-    }
   };
 
   if (loading) {
@@ -455,7 +469,7 @@ export default function MenuPage() {
                   value={form.category}
                   onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
                   disabled={Boolean(editingItemId)}
-                  className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-3 py-2.5 text-sm text-[#FAFAFA] outline-none"
+                  className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-3 py-2.5 text-sm text-[#FAFAFA] outline-none focus:border-[#7C3AED]/50 transition-colors"
                   placeholder="Type or select category"
                 />
                 <datalist id="menu-categories">
@@ -473,7 +487,7 @@ export default function MenuPage() {
                 <input
                   value={form.name}
                   onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                  className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-3 py-2.5 text-sm text-[#FAFAFA] outline-none"
+                  className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-3 py-2.5 text-sm text-[#FAFAFA] outline-none focus:border-[#7C3AED]/50 transition-colors"
                   placeholder="E.g. Masala Dosa"
                 />
               </label>
@@ -483,7 +497,7 @@ export default function MenuPage() {
                 <textarea
                   value={form.description}
                   onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-                  className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-3 py-2.5 text-sm text-[#FAFAFA] outline-none resize-none"
+                  className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-3 py-2.5 text-sm text-[#FAFAFA] outline-none resize-none focus:border-[#7C3AED]/50 transition-colors"
                   rows={3}
                   placeholder="Short description"
                 />
@@ -497,7 +511,7 @@ export default function MenuPage() {
                     min="1"
                     value={form.price}
                     onChange={(e) => setForm((prev) => ({ ...prev, price: e.target.value }))}
-                    className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-3 py-2.5 text-sm text-[#FAFAFA] outline-none"
+                    className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-3 py-2.5 text-sm text-[#FAFAFA] outline-none focus:border-[#7C3AED]/50 transition-colors"
                     placeholder="75"
                   />
                 </label>
@@ -507,7 +521,7 @@ export default function MenuPage() {
                   <input
                     value={form.image}
                     onChange={(e) => setForm((prev) => ({ ...prev, image: e.target.value }))}
-                    className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-3 py-2.5 text-sm text-[#FAFAFA] outline-none"
+                    className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-3 py-2.5 text-sm text-[#FAFAFA] outline-none focus:border-[#7C3AED]/50 transition-colors"
                     placeholder="https://..."
                   />
                   <div className="mt-2 space-y-2">
@@ -547,22 +561,11 @@ export default function MenuPage() {
                       <div className="flex items-center gap-2">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={imagePreviewUrl} alt="Menu preview" className="w-11 h-11 rounded-lg object-cover border border-[#27272A]" />
-                        <button
-                          type="button"
-                          onClick={handleImageUpload}
-                          disabled={imageUploading}
-                          className="px-2.5 py-1.5 rounded-lg bg-[#7C3AED] text-white text-xs hover:bg-[#6D28D9] disabled:opacity-70"
-                        >
-                          {imageUploading ? "Uploading..." : "Upload selected"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={clearSelectedImage}
-                          disabled={imageUploading}
-                          className="px-2.5 py-1.5 rounded-lg border border-[#27272A] text-[#A1A1AA] text-xs hover:text-[#FAFAFA]"
-                        >
-                          Cancel
-                        </button>
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#7C3AED]/10 border border-[#7C3AED]/20 text-[#C4B5FD] text-xs font-medium">
+                          {imageUploading && <Loader2 size={12} className="animate-spin" />}
+                          {imageUploading ? "Uploading..." : "Uploaded"}
+                        </div>
+                        {imageUploading && <span className="text-[#71717A] text-xs">Please wait before refreshing.</span>}
                       </div>
                     )}
 
@@ -611,13 +614,13 @@ export default function MenuPage() {
               </button>
               <button
                 onClick={handleSaveItem}
-                disabled={formSaving}
+                disabled={formSaving || isImageBusy}
                 className={cn(
                   "px-4 py-2.5 rounded-xl text-sm font-medium",
-                  formSaving ? "bg-[#27272A] text-[#71717A]" : "bg-[#7C3AED] text-white hover:bg-[#6D28D9]"
+                  formSaving || isImageBusy ? "bg-[#27272A] text-[#71717A]" : "bg-[#7C3AED] text-white hover:bg-[#6D28D9]"
                 )}
               >
-                {formSaving ? "Saving..." : editingItemId ? "Update Item" : "Create Item"}
+                {formSaving ? "Saving..." : isImageBusy ? "Waiting for image..." : editingItemId ? "Update Item" : "Create Item"}
               </button>
             </div>
           </div>

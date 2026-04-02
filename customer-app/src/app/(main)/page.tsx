@@ -104,7 +104,7 @@ export default function HomePage() {
                 <MapPin size={16} className="text-[#E8A830] flex-shrink-0" />
                 <span className="text-[#BFB49A] text-sm truncate">Coimbatore, Tamil Nadu</span>
               </div>
-              <div className="flex-1 flex items-center gap-2.5 px-4 py-3.5 rounded-xl bg-[#161410]/80 backdrop-blur-sm border border-[#2A2620] focus-within:border-[#E8A830]/50 focus-within:shadow-[0_0_0_3px_rgba(232,168,48,0.08)] transition-all">
+              <div className="flex-1 flex items-center gap-2.5 px-4 py-3.5 rounded-xl bg-[#161410]/80 backdrop-blur-sm border border-[#2A2620] focus-within:border-[#E8A830]/50 transition-all">
                 <Search size={16} className="text-[#9E9080] flex-shrink-0" />
                 <input
                   type="text"
