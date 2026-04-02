@@ -23,7 +23,7 @@ from .serializers import (
     DeleteAccountSerializer, UserPublicSerializer, AddressSerializer,
     AuthTokenSerializer,
 )
-from utils.media import build_upload_path, delete_storage_file_if_managed, sanitize_folder
+from utils.media import build_public_media_url, build_upload_path, delete_storage_file_if_managed, sanitize_folder
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -269,7 +269,7 @@ class MediaUploadView(APIView):
 
         upload_path = build_upload_path(image_file.name, folder=folder)
         saved_key = default_storage.save(upload_path, image_file)
-        file_url = default_storage.url(saved_key)
+        file_url = build_public_media_url(saved_key)
 
         if old_url:
             delete_storage_file_if_managed(old_url)

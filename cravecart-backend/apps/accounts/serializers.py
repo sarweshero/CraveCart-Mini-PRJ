@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from .models import User, AuthToken, Address
-from utils.media import delete_storage_file_if_managed
+from utils.media import delete_storage_file_if_managed, ensure_public_media_url
 
 
 # ── Token Output ──────────────────────────────────────────────────────────────
@@ -41,6 +41,11 @@ class UserPublicSerializer(serializers.ModelSerializer):
             "role", "is_profile_complete", "addresses", "created_at",
         ]
         read_only_fields = fields
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["avatar"] = ensure_public_media_url(data.get("avatar", ""))
+        return data
 
 
 # ── Register ──────────────────────────────────────────────────────────────────

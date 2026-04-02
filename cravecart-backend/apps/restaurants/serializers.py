@@ -1,7 +1,7 @@
 """apps/restaurants/serializers.py"""
 from rest_framework import serializers
 from .models import Restaurant, MenuCategory, MenuItem, CuisineCategory, Coupon
-from utils.media import delete_storage_file_if_managed
+from utils.media import delete_storage_file_if_managed, ensure_public_media_url
 
 
 class CuisineCategorySerializer(serializers.ModelSerializer):
@@ -18,6 +18,11 @@ class MenuItemSerializer(serializers.ModelSerializer):
             "image", "is_veg", "is_bestseller", "is_available",
             "spice_level", "customizations",
         ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["image"] = ensure_public_media_url(data.get("image", ""))
+        return data
 
 
 class MenuCategorySerializer(serializers.ModelSerializer):
@@ -42,6 +47,12 @@ class RestaurantListSerializer(serializers.ModelSerializer):
             "avg_delivery_time", "min_order", "delivery_fee",
             "is_open", "is_featured", "discount", "location",
         ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["thumbnail"] = ensure_public_media_url(data.get("thumbnail", ""))
+        data["cover_image"] = ensure_public_media_url(data.get("cover_image", ""))
+        return data
 
     def get_discount(self, obj):
         return obj.discount

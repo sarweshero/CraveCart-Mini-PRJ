@@ -2,7 +2,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import DeliveryPartner, DeliveryAssignment, EarningsSummary
-from utils.media import delete_storage_file_if_managed
+from utils.media import delete_storage_file_if_managed, ensure_public_media_url
 
 User = get_user_model()
 
@@ -58,6 +58,11 @@ class DeliveryPartnerProfileSerializer(serializers.ModelSerializer):
             "total_earnings", "rating_avg", "rating_count",
             "today_deliveries", "today_earnings", "joined_at",
         ]
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data["avatar"] = ensure_public_media_url(data.get("avatar", ""))
+        return data
 
     def update(self, instance, validated_data):
         old_avatar = instance.avatar

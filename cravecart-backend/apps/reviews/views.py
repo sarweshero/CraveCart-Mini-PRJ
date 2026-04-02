@@ -7,6 +7,7 @@ from django.shortcuts import get_object_or_404
 
 from .models import Review, AIResponse
 from .serializers import ReviewCreateSerializer, ReviewSerializer, AIResponseSerializer
+from utils.media import ensure_public_media_url
 from utils.permissions import IsHotelAdmin, IsCustomer
 from utils.pagination import StandardPagination
 
@@ -96,7 +97,7 @@ class HotelReviewListView(APIView):
                 "customer": {
                     "name":   r.customer.name,
                     "email":  r.customer.email,
-                    "avatar": r.customer.avatar,
+                    "avatar": ensure_public_media_url(r.customer.avatar),
                 },
                 "rating":     r.rating,
                 "comment":    r.comment,

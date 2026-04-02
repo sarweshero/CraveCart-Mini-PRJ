@@ -2,7 +2,7 @@
 import posixpath
 import re
 from datetime import datetime
-from urllib.parse import urlparse, unquote
+from urllib.parse import quote, urlparse, unquote
 from uuid import uuid4
 
 from django.conf import settings
@@ -35,12 +35,67 @@ def build_upload_path(original_name: str, folder: str = "uploads/general") -> st
 
 def _strip_known_prefixes(path: str) -> str:
     path = path.strip("/")
+
+    parts = path.split("/")
+    if len(parts) >= 6 and parts[:4] == ["storage", "v1", "object", "public"]:
+        # /storage/v1/object/public/<bucket>/<key>
+        path = "/".join(parts[5:])
+    elif len(parts) >= 5 and parts[:3] == ["storage", "v1", "s3"]:
+        # /storage/v1/s3/<bucket>/<key>
+        path = "/".join(parts[4:])
+
     bucket = getattr(settings, "AWS_STORAGE_BUCKET_NAME", "")
     if bucket and path.startswith(f"{bucket}/"):
         path = path[len(bucket) + 1 :]
     if path.startswith("media/"):
         path = path[len("media/") :]
     return path
+
+
+def _supabase_public_base_url() -> str | None:
+    explicit_base = (getattr(settings, "SUPABASE_PUBLIC_BASE_URL", "") or "").strip().rstrip("/")
+    if explicit_base:
+        return explicit_base
+
+    endpoint = (getattr(settings, "AWS_S3_ENDPOINT_URL", "") or "").strip()
+    bucket = (getattr(settings, "AWS_STORAGE_BUCKET_NAME", "") or "").strip()
+    if not endpoint or not bucket:
+        return None
+
+    parsed = urlparse(endpoint)
+    if not parsed.scheme or not parsed.netloc:
+        return None
+
+    host = parsed.netloc
+    if host.endswith(".storage.supabase.co"):
+        host = host.replace(".storage.supabase.co", ".supabase.co")
+
+    return f"{parsed.scheme}://{host}/storage/v1/object/public/{bucket}"
+
+
+def build_public_media_url(storage_key: str) -> str:
+    """Return a browser-loadable URL for media object keys."""
+    normalized_key = posixpath.normpath((storage_key or "").lstrip("/"))
+    if not normalized_key or normalized_key == ".":
+        return default_storage.url(storage_key)
+
+    public_base = _supabase_public_base_url()
+    if public_base:
+        return f"{public_base}/{quote(normalized_key, safe='/')}"
+
+    return default_storage.url(normalized_key)
+
+
+def ensure_public_media_url(url: str) -> str:
+    """Normalize known storage URLs/keys into a browser-loadable public URL."""
+    if not url:
+        return url
+
+    key = extract_storage_key(url)
+    if not key:
+        return url
+
+    return build_public_media_url(key)
 
 
 def extract_storage_key(url: str) -> str | None:
