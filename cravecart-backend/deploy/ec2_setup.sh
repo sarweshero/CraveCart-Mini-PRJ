@@ -21,7 +21,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 # ── Configurable variables ────────────────────────────────────────────────────
-APP_DIR="/home/ubuntu/cravecart-backend"
+APP_DIR="/home/ubuntu/Projects/CraveCart-Mini-PRJ/cravecart-backend"
 VENV_DIR="$APP_DIR/.venv"
 APP_USER="ubuntu"
 DOMAIN="api.cravecart.app"    # ← replace with your domain BEFORE running
