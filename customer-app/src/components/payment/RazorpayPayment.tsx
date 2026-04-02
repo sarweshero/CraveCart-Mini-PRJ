@@ -131,7 +131,7 @@ export function RazorpayModal({ payload, onClose }: { payload: PaymentPayload; o
             <div className="flex items-center justify-between px-5 py-4 border-b border-[#2A2620]">
               <div>
                 <div className="text-xs text-[#9E9080] uppercase tracking-wider">Secure Checkout</div>
-                <div className="text-[#F5EDD8] font-semibold text-xl" className="font-display">
+                <div className="text-[#F5EDD8] font-semibold text-xl">
                   ₹{payload.amount.toFixed(2)}
                 </div>
               </div>
@@ -262,7 +262,7 @@ export function RazorpayModal({ payload, onClose }: { payload: PaymentPayload; o
                     <div className="absolute inset-0 rounded-full border-4 border-t-[#E8A830] animate-spin" />
                     <div className="absolute inset-0 flex items-center justify-center"><Lock className="w-7 h-7 text-[#E8A830]" /></div>
                   </div>
-                  <h3 className="text-xl font-semibold text-[#F5EDD8] mb-1" className="font-display">Processing…</h3>
+                  <h3 className="text-xl font-semibold text-[#F5EDD8] mb-1">Processing…</h3>
                   <p className="text-sm text-[#9E9080]">Communicating with {method === "upi" ? upiApp : method === "card" ? "your bank" : bank}</p>
                   <p className="text-xs text-[#4B4542] mt-2">Please do not close this window</p>
                   <div className="mt-4 flex gap-1.5 justify-center">
@@ -277,7 +277,7 @@ export function RazorpayModal({ payload, onClose }: { payload: PaymentPayload; o
                     className="w-20 h-20 bg-green-500/15 rounded-full flex items-center justify-center mx-auto mb-4 border border-green-500/30">
                     <CheckCircle2 className="w-10 h-10 text-green-400" />
                   </motion.div>
-                  <h3 className="text-2xl font-bold text-[#F5EDD8]" className="font-display">Payment Successful!</h3>
+                  <h3 className="text-2xl font-bold text-[#F5EDD8]">Payment Successful!</h3>
                   <p className="text-[#9E9080] text-sm mt-1">
                     {method === "cod" ? `Pay ₹${payload.amount.toFixed(0)} when your order arrives.` : `₹${payload.amount.toFixed(0)} paid successfully.`}
                   </p>
@@ -299,7 +299,7 @@ export function RazorpayModal({ payload, onClose }: { payload: PaymentPayload; o
                   <div className="w-20 h-20 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/20">
                     <AlertCircle className="w-10 h-10 text-red-400" />
                   </div>
-                  <h3 className="text-xl font-bold text-[#F5EDD8]" className="font-display">Payment Failed</h3>
+                  <h3 className="text-xl font-bold text-[#F5EDD8]">Payment Failed</h3>
                   <p className="text-[#9E9080] text-sm mt-1">No money was deducted from your account.</p>
                   {errorMsg && <p className="text-red-400/80 text-xs mt-2 px-4">{errorMsg}</p>}
                   <div className="flex gap-2 mt-5">

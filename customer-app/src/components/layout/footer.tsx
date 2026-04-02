@@ -11,7 +11,7 @@ export function Footer() {
               <div className="w-8 h-8 rounded-lg bg-[#E8A830] flex items-center justify-center">
                 <UtensilsCrossed size={15} className="text-[#0C0B09]" strokeWidth={2.5} />
               </div>
-              <span className="text-[#F5EDD8] font-display font-semibold text-lg" className="font-display">
+              <span className="text-[#F5EDD8] font-display font-semibold text-lg">
                 Crave<span className="text-[#E8A830]">Cart</span>
               </span>
             </div>

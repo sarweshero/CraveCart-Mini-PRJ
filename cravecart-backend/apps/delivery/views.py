@@ -5,6 +5,7 @@ import logging
 from datetime import timedelta
 
 from django.conf import settings
+from django.db import transaction
 from django.db.models import F, Sum
 from django.utils import timezone
 from rest_framework import status
@@ -303,6 +304,7 @@ class PaymentInitiateView(APIView):
         import secrets
         order_id = request.data.get("order_id")
         amount   = request.data.get("amount", 0)
+        is_production = not bool(getattr(settings, "DEBUG", True))
 
         # Validate amount — must be positive number
         try:
@@ -318,6 +320,11 @@ class PaymentInitiateView(APIView):
                 return Response({"message": "Order not found."}, status=404)
 
         rzp_key_id = getattr(settings, "RAZORPAY_KEY_ID", "rzp_test_XXXXXXXXXX")
+        rzp_secret = getattr(settings, "RAZORPAY_KEY_SECRET", "")
+
+        if is_production and (not rzp_key_id or not rzp_secret or rzp_secret.startswith("CHANGE_ME")):
+            logger.error("Razorpay is not configured in production environment")
+            return Response({"message": "Payment gateway is not configured."}, status=503)
 
         # Production: use razorpay Python SDK
         # import razorpay
@@ -349,8 +356,14 @@ class PaymentVerifyView(APIView):
         razorpay_payment_id = request.data.get("razorpay_payment_id", "")
         razorpay_order_id   = request.data.get("razorpay_order_id", "")
         razorpay_signature  = request.data.get("razorpay_signature", "")
+        is_production = not bool(getattr(settings, "DEBUG", True))
 
         rzp_secret = getattr(settings, "RAZORPAY_KEY_SECRET", "")
+
+        if not order_id:
+            return Response({"message": "order_id is required."}, status=400)
+        if not razorpay_payment_id or not razorpay_order_id:
+            return Response({"message": "Payment details are incomplete."}, status=400)
 
         if rzp_secret and not rzp_secret.startswith("CHANGE_ME"):
             # Production signature verification
@@ -367,18 +380,22 @@ class PaymentVerifyView(APIView):
                 )
                 return Response({"message": "Payment verification failed."}, status=400)
         else:
+            if is_production:
+                logger.error("Payment verification attempted without Razorpay secret in production")
+                return Response({"message": "Payment gateway is not configured."}, status=503)
+
             # Development/demo mode — skip HMAC (no secret configured)
             logger.info("Payment verify in demo mode for order %s", order_id)
 
         # Verify order ownership before marking paid
-        if order_id:
-            try:
-                order = Order.objects.get(pk=order_id, customer=request.user)
+        try:
+            with transaction.atomic():
+                order = Order.objects.select_for_update().get(pk=order_id, customer=request.user)
                 if order.payment_status != Order.PaymentStatus.PAID:
                     order.payment_status = Order.PaymentStatus.PAID
                     order.save(update_fields=["payment_status"])
-            except Order.DoesNotExist:
-                return Response({"message": "Order not found."}, status=404)
+        except Order.DoesNotExist:
+            return Response({"message": "Order not found."}, status=404)
 
         return Response({
             "message": "Payment verified successfully.",

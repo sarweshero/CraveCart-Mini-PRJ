@@ -66,11 +66,11 @@ export default function LoginPage() {
             <div className="w-10 h-10 rounded-xl bg-[#E8A830] flex items-center justify-center shadow-[0_0_25px_rgba(232,168,48,0.5)]">
               <UtensilsCrossed size={20} className="text-[#0C0B09]" strokeWidth={2.5} />
             </div>
-            <span className="text-[#F5EDD8] font-display font-semibold text-2xl" className="font-display">
+            <span className="text-[#F5EDD8] font-display font-semibold text-2xl">
               Crave<span className="text-[#E8A830]">Cart</span>
             </span>
           </div>
-          <h2 className="text-[#F5EDD8] font-display font-semibold text-4xl leading-tight" className="font-display">
+          <h2 className="text-[#F5EDD8] font-display font-semibold text-4xl leading-tight">
             Great food,<br /><span className="text-[#E8A830] italic">delivered fast.</span>
           </h2>
           <p className="text-[#BFB49A] mt-4 text-base leading-relaxed max-w-sm">
@@ -85,11 +85,11 @@ export default function LoginPage() {
             <div className="w-8 h-8 rounded-lg bg-[#E8A830] flex items-center justify-center">
               <UtensilsCrossed size={16} className="text-[#0C0B09]" strokeWidth={2.5} />
             </div>
-            <span className="text-[#F5EDD8] font-display font-semibold text-xl" className="font-display">
+            <span className="text-[#F5EDD8] font-display font-semibold text-xl">
               Crave<span className="text-[#E8A830]">Cart</span>
             </span>
           </div>
-          <h1 className="text-[#F5EDD8] font-display font-semibold text-3xl mb-2" className="font-display">Welcome back</h1>
+          <h1 className="text-[#F5EDD8] font-display font-semibold text-3xl mb-2">Welcome back</h1>
           <p className="text-[#9E9080] text-sm mb-8">Sign in to continue ordering</p>
           <button onClick={() => authApi.googleOAuth()} className="w-full flex items-center justify-center gap-3 py-3 rounded-xl border border-[#2A2620] bg-[#161410] text-[#F5EDD8] text-sm font-medium hover:border-[#E8A830]/30 transition-all mb-5">
             <Chrome size={16} className="text-[#E8A830]" />Continue with Google

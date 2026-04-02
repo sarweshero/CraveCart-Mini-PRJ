@@ -8,7 +8,7 @@ ignore = ["E501", "B904", "N805", "N806"]
 known-first-party = ["apps", "utils", "config"]
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "config.settings.dev"
+DJANGO_SETTINGS_MODULE = "config.settings.test"
 python_files  = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]

@@ -2,7 +2,7 @@ import type { Hotel, HotelOrder, HotelReview, AITemplate, MenuCategory, Dashboar
 
 export const API_MODE: "mock" | "live" =
   (process.env.NEXT_PUBLIC_API_MODE as "mock" | "live") ?? "live";
-export export const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+export const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockData = require("../mock/api.json");
 

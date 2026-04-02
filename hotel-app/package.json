@@ -6,7 +6,7 @@
     "dev": "next dev --port 3001",
     "build": "tsc --noEmit && next build --webpack",
     "start": "next start -p ${PORT:-3001}",
-    "lint": "next lint",
+    "lint": "npm run type-check",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

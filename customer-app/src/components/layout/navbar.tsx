@@ -64,7 +64,6 @@ export function Navbar() {
             </div>
             <span
               className="text-[#F5EDD8] font-display font-semibold text-xl tracking-tight"
-              className="font-display"
             >
               Crave<span className="text-[#E8A830]">Cart</span>
             </span>

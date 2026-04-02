@@ -103,8 +103,7 @@ export default function RestaurantDetailPage() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
-                <h1 className="text-[#F5EDD8] font-display font-semibold text-2xl leading-tight"
-                  className="font-display">
+                <h1 className="text-[#F5EDD8] font-display font-semibold text-2xl leading-tight">
                   {restaurant.name}
                 </h1>
                 <span className={cn("badge flex-shrink-0", restaurant.is_open ? "badge-success" : "badge-error")}>
@@ -202,8 +201,7 @@ export default function RestaurantDetailPage() {
                 key={cat.id}
                 ref={(el) => { categoryRefs.current[cat.id] = el; }}
               >
-                <h2 className="flex items-center gap-2 text-[#F5EDD8] font-display font-semibold text-xl mb-4"
-                  className="font-display">
+                <h2 className="flex items-center gap-2 text-[#F5EDD8] font-display font-semibold text-xl mb-4">
                   <span>{cat.icon}</span>
                   {cat.name}
                 </h2>
@@ -343,7 +341,7 @@ const MenuItemRow = memo(function MenuItemRow({
       </div>
     </div>
   );
-}
+});
 
 // ── Item Detail Modal ──
 

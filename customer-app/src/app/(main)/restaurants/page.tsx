@@ -17,6 +17,11 @@ const SORT_OPTIONS = [
   { value: "min_order", label: "Min. Order" },
 ];
 
+function normalizeCuisineTags(tags: unknown): string[] {
+  if (!Array.isArray(tags)) return [];
+  return tags.filter((tag): tag is string => typeof tag === "string" && tag.trim().length > 0);
+}
+
 function RestaurantsContent() {
   const searchParams = useSearchParams();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
@@ -54,7 +59,7 @@ function RestaurantsContent() {
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-[#F5EDD8] font-display font-semibold text-3xl mb-1" className="font-display">
+          <h1 className="text-[#F5EDD8] font-display font-semibold text-3xl mb-1">
             Restaurants
           </h1>
           <p className="text-[#9E9080] text-sm">

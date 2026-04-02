@@ -83,7 +83,6 @@ export default function HomePage() {
             <motion.h1
               variants={fadeUp}
               className="text-5xl md:text-6xl lg:text-7xl font-display font-semibold text-[#F5EDD8] leading-[1.05] tracking-tight"
-              className="font-display"
             >
               Craving{" "}
               <span className="text-[#E8A830] italic">something</span>
@@ -127,7 +126,7 @@ export default function HomePage() {
                 { value: "25 min", label: "Avg Delivery" },
               ].map(({ value, label }) => (
                 <div key={label}>
-                  <p className="text-[#F5EDD8] font-display font-semibold text-2xl" className="font-display">
+                  <p className="text-[#F5EDD8] font-display font-semibold text-2xl">
                     {value}
                   </p>
                   <p className="text-[#9E9080] text-xs mt-0.5">{label}</p>
@@ -141,7 +140,7 @@ export default function HomePage() {
       {/* ── Categories ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-[#F5EDD8] font-display font-semibold text-2xl" className="font-display">
+          <h2 className="text-[#F5EDD8] font-display font-semibold text-2xl">
             What are you craving?
           </h2>
         </div>
@@ -166,7 +165,7 @@ export default function HomePage() {
       {/* ── Featured ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-12">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-[#F5EDD8] font-display font-semibold text-2xl" className="font-display">
+          <h2 className="text-[#F5EDD8] font-display font-semibold text-2xl">
             🔥 Featured today
           </h2>
           <Link href="/restaurants" className="text-[#E8A830] text-sm font-medium flex items-center gap-1.5 hover:gap-2.5 transition-all">
@@ -187,7 +186,7 @@ export default function HomePage() {
       {/* ── All Restaurants ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-[#F5EDD8] font-display font-semibold text-2xl" className="font-display">
+          <h2 className="text-[#F5EDD8] font-display font-semibold text-2xl">
             All Restaurants
           </h2>
           <Link href="/restaurants" className="text-[#E8A830] text-sm font-medium flex items-center gap-1.5 hover:gap-2.5 transition-all">
@@ -213,7 +212,7 @@ export default function HomePage() {
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#E8A830]/10 border border-[#E8A830]/20 text-[#E8A830] text-xs font-semibold mb-4">
               ✨ Powered by Google Gemini AI
             </div>
-            <h2 className="text-3xl md:text-4xl font-display font-semibold text-[#F5EDD8] leading-tight" className="font-display">
+            <h2 className="text-3xl md:text-4xl font-display font-semibold text-[#F5EDD8] leading-tight">
               Your feedback, answered{" "}
               <span className="text-[#E8A830] italic">intelligently</span>
             </h2>

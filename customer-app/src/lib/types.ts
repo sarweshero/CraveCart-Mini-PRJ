@@ -213,12 +213,15 @@ export interface Order {
 export interface OrderDetail extends Omit<Order, "items_count" | "has_review"> {
   tracking: TrackingStep[];
   items: OrderItem[];
-  delivery_address: Omit<Address, "id" | "is_default">;
+  delivery_address: (Omit<Address, "id" | "is_default">) | null;
   subtotal: number;
   delivery_fee: number;
   platform_fee: number;
   discount: number;
   taxes: number;
+  has_review: boolean;
+  coupon_code: string;
+  cancellation_reason?: string;
   payment_method: string;
   payment_status: "paid" | "pending" | "failed";
   review: Review | null;

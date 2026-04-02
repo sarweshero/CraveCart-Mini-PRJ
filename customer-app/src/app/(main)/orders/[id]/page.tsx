@@ -7,12 +7,12 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Package, CheckCircle2, Clock, Truck, Home, X, Star, Send, Sparkles, Mail, RefreshCw, Phone, MapPin } from "lucide-react";
 import { orderApi, reviewApi } from "@/lib/api";
-import type { OrderDetail, TrackingStep } from "@/lib/types";
+import type { OrderDetail, OrderStatus, TrackingStep } from "@/lib/types";
 import { cn, formatCurrency, formatDate, formatTime, getOrderStatusLabel, getOrderStatusColor } from "@/lib/utils";
 import toast from "react-hot-toast";
 
 const TRACK_ICONS = { placed: Package, confirmed: CheckCircle2, preparing: Clock, out_for_delivery: Truck, delivered: Home, cancelled: X };
-const TERMINAL_STATUSES = ["delivered", "cancelled"];
+const TERMINAL_STATUSES: OrderStatus[] = ["delivered", "cancelled"];
 const POLL_INTERVAL_MS  = 8000;
 
 export default function OrderDetailPage() {
@@ -78,7 +78,7 @@ export default function OrderDetailPage() {
   if (loading) return <LoadingSkeleton />;
   if (!order)  return <div className="flex items-center justify-center min-h-screen text-[#9E9080]">Order not found</div>;
 
-  const steps = ["placed","confirmed","preparing","out_for_delivery","delivered"];
+  const steps: OrderStatus[] = ["placed", "confirmed", "preparing", "out_for_delivery", "delivered"];
   const currentStep = steps.indexOf(order.status);
   const isTerminal  = TERMINAL_STATUSES.includes(order.status);
 
@@ -90,7 +90,7 @@ export default function OrderDetailPage() {
             <ChevronLeft size={18} />
           </button>
           <div>
-            <h1 className="text-[#F5EDD8] font-semibold text-xl" className="font-display">Order #{order.id.slice(-6).toUpperCase()}</h1>
+            <h1 className="text-[#F5EDD8] font-semibold text-xl">Order #{order.id.slice(-6).toUpperCase()}</h1>
             <p className="text-[#9E9080] text-sm">{formatDate(order.placed_at)}</p>
           </div>
           {!isTerminal && (

@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
+from django.db import transaction
+from django.db.models import F
 from .models import Cart, CartItem, Order
 from .serializers import CartSerializer, OrderListSerializer, OrderDetailSerializer, PlaceOrderSerializer
 from apps.restaurants.models import MenuItem, Coupon
@@ -105,27 +107,61 @@ class OrderListCreateView(APIView):
         page = p.paginate_queryset(orders, request)
         return p.get_paginated_response(OrderListSerializer(page, many=True).data)
     def post(self, request):
-        s = PlaceOrderSerializer(data=request.data, context={"request":request})
+        s = PlaceOrderSerializer(data=request.data, context={"request": request})
         s.is_valid(raise_exception=True)
         cart = s.validated_data["cart"]
         from apps.accounts.models import Address
         address = get_object_or_404(Address, pk=s.validated_data["delivery_address_id"], user=request.user)
-        items_snapshot = [{"name":ci.menu_item.name,"quantity":ci.quantity,"price":float(ci.menu_item.price),"customizations":ci.customizations,"item_total":float(ci.item_total)} for ci in cart.items.select_related("menu_item").all()]
-        order = Order.objects.create(
-            customer=request.user, restaurant=cart.restaurant, delivery_address=address,
-            items=items_snapshot, subtotal=cart.subtotal, delivery_fee=cart.delivery_fee,
-            platform_fee=cart.platform_fee, discount=cart.discount, taxes=cart.taxes, total=cart.total,
-            coupon_code=cart.coupon.code if cart.coupon else "",
-            payment_method=s.validated_data["payment_method"],
-            payment_status=Order.PaymentStatus.PENDING,  # Always PENDING — set to PAID only after verify endpoint confirms payment
-            instructions=s.validated_data.get("instructions",""),
-        )
-        if cart.coupon:
-            Coupon.objects.filter(pk=cart.coupon.pk).update(used_count=cart.coupon.used_count+1)
-        cart.clear()
+
+        with transaction.atomic():
+            cart = Cart.objects.select_for_update().select_related("coupon", "restaurant").get(pk=cart.pk)
+            if not cart.items.exists():
+                return Response({"message": "Cart is empty."}, status=400)
+
+            # Recompute a consistent snapshot under lock to avoid stale totals from concurrent cart updates.
+            cart_items = list(cart.items.select_related("menu_item").all())
+            items_snapshot = [{
+                "name": ci.menu_item.name,
+                "quantity": ci.quantity,
+                "price": float(ci.menu_item.price),
+                "customizations": ci.customizations,
+                "item_total": float(ci.item_total),
+            } for ci in cart_items]
+
+            applied_coupon = cart.coupon
+            if applied_coupon:
+                coupon = Coupon.objects.select_for_update().get(pk=applied_coupon.pk)
+                if (not coupon.is_active) or (coupon.expires_at <= timezone.now()):
+                    return Response({"message": "Applied coupon is no longer valid."}, status=400)
+                if coupon.max_uses is not None and coupon.used_count >= coupon.max_uses:
+                    return Response({"message": "Coupon usage limit has been reached."}, status=400)
+                if cart.subtotal < coupon.min_order:
+                    return Response({"message": f"Minimum order amount Rs.{coupon.min_order} required."}, status=400)
+
+            order = Order.objects.create(
+                customer=request.user, restaurant=cart.restaurant, delivery_address=address,
+                items=items_snapshot, subtotal=cart.subtotal, delivery_fee=cart.delivery_fee,
+                platform_fee=cart.platform_fee, discount=cart.discount, taxes=cart.taxes, total=cart.total,
+                coupon_code=cart.coupon.code if cart.coupon else "",
+                payment_method=s.validated_data["payment_method"],
+                payment_status=Order.PaymentStatus.PENDING,
+                instructions=s.validated_data.get("instructions", ""),
+            )
+
+            if cart.coupon:
+                Coupon.objects.filter(pk=cart.coupon.pk).update(used_count=F("used_count") + 1)
+
+            cart.clear()
+
         from apps.notifications.tasks import send_new_order_notification
         send_new_order_notification.delay(order.id)
-        return Response({"id":order.id,"status":order.status,"total":float(order.total),"estimated_delivery_time":cart.restaurant.avg_delivery_time,"message":"Order placed successfully!"}, status=201)
+        return Response({
+            "id": order.id,
+            "status": order.status,
+            "total": float(order.total),
+            "estimated_delivery_time": cart.restaurant.avg_delivery_time,
+            "message": "Order placed successfully!",
+        }, status=201)
 
 
 class OrderDetailView(APIView):

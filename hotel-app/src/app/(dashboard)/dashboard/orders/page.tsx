@@ -39,7 +39,7 @@ export default function OrdersPage() {
     setUpdatingId(order.id);
     try {
       await hotelOrderApi.updateStatus(order.id, next);
-      setOrders((prev) => prev.map((o) => o.id === order.id ? { ...o, status: next } : o));
+      await loadOrders();
       toast.success(`Order marked as ${STATUS_LABELS[next]}`);
     } catch {
       toast.error("Failed to update order status");
@@ -60,7 +60,7 @@ export default function OrdersPage() {
           <p className="text-[#71717A] text-sm">Manage incoming and active orders</p>
         </div>
         <button
-          onClick={() => loadOrders(activeTab)}
+          onClick={() => loadOrders()}
           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#111113] border border-[#27272A] text-[#A1A1AA] text-sm hover:text-[#FAFAFA] transition-all"
         >
           <RefreshCw size={13} />

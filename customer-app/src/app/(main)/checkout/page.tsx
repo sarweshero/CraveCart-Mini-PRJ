@@ -121,7 +121,7 @@ export default function CheckoutPage() {
           <Link href="/restaurants" className="w-9 h-9 rounded-xl bg-[#161410] border border-[#2A2620] flex items-center justify-center text-[#BFB49A] hover:text-[#F5EDD8] transition-all">
             <ArrowLeft size={18} />
           </Link>
-          <h1 className="text-[#F5EDD8] font-semibold text-2xl" className="font-display">Checkout</h1>
+          <h1 className="text-[#F5EDD8] font-semibold text-2xl">Checkout</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
