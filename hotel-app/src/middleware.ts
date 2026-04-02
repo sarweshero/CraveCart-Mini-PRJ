@@ -1,16 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import { updateSession } from "./lib/middleware";
 
 const PUBLIC_PATHS = ["/login", "/register", "/_next/", "/favicon", "/health"];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  const supabaseResponse = await updateSession(request);
+
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
-    return NextResponse.next();
+    return supabaseResponse;
   }
 
   if (/\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff2?)$/.test(pathname)) {
-    return NextResponse.next();
+    return supabaseResponse;
   }
 
   const token = request.cookies.get("cravecart_hotel_token")?.value;
@@ -26,7 +29,7 @@ export function middleware(request: NextRequest) {
     return response;
   }
 
-  const response = NextResponse.next();
+  const response = supabaseResponse;
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("X-Frame-Options", "DENY");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");

@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.sarweshero.me";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://vjrfmepmnhgsfstooyik.supabase.co";
 const apiOrigin = (() => {
   try {
     return new URL(apiUrl).origin;
@@ -7,6 +8,22 @@ const apiOrigin = (() => {
     return "https://api.sarweshero.me";
   }
 })();
+const supabaseOrigin = (() => {
+  try {
+    return new URL(supabaseUrl).origin;
+  } catch {
+    return "https://vjrfmepmnhgsfstooyik.supabase.co";
+  }
+})();
+const supabaseHostname = (() => {
+  try {
+    return new URL(supabaseOrigin).hostname;
+  } catch {
+    return "vjrfmepmnhgsfstooyik.supabase.co";
+  }
+})();
+const supabaseStorageHostname = supabaseHostname.replace(".supabase.co", ".storage.supabase.co");
+const supabaseWsOrigin = supabaseOrigin.replace(/^http/i, "ws");
 const connectSrc = Array.from(
   new Set([
     "'self'",
@@ -14,6 +31,8 @@ const connectSrc = Array.from(
     "https://localhost:8000",
     "https://api.sarweshero.me",
     apiOrigin,
+    supabaseOrigin,
+    supabaseWsOrigin,
   ])
 ).join(" ");
 
@@ -25,7 +44,8 @@ const nextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "api.dicebear.com" },
-      { protocol: "https", hostname: "vjrfmepmnhgsfstooyik.storage.supabase.co" },
+      { protocol: "https", hostname: supabaseStorageHostname },
+      { protocol: "https", hostname: supabaseHostname },
     ],
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 3600,
@@ -43,7 +63,7 @@ const nextConfig = {
           "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
           "font-src 'self' https://fonts.gstatic.com",
-          "img-src 'self' data: blob: https://images.unsplash.com https://api.dicebear.com https://vjrfmepmnhgsfstooyik.storage.supabase.co",
+          `img-src 'self' data: blob: https://images.unsplash.com https://api.dicebear.com ${supabaseOrigin} https://${supabaseStorageHostname}`,
           `connect-src ${connectSrc}`,
           "frame-ancestors 'none'",
         ].join("; "),

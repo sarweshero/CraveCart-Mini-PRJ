@@ -1,8 +1,11 @@
 import type { Hotel, HotelOrder, HotelReview, AITemplate, MenuCategory, DashboardStats, ReviewsResponse, OrderStatus } from "./types";
+import { createClient as createSupabaseClient } from "./client";
 
 export const API_MODE: "mock" | "live" =
   (process.env.NEXT_PUBLIC_API_MODE as "mock" | "live") ?? "live";
 export const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const SUPABASE_STORAGE_BUCKET = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET ?? "cravecart-media";
+const MEDIA_UPLOAD_PROVIDER = (process.env.NEXT_PUBLIC_MEDIA_UPLOAD_PROVIDER ?? "backend").toLowerCase();
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const mockData = require("../mock/api.json");
 
@@ -57,6 +60,83 @@ async function request<T>(path: string, options: RequestInit = {}, _retry = true
   return res.json();
 }
 function mock<T>(v: T, delay = 400): Promise<T> { return new Promise(r => setTimeout(() => r(v), delay)); }
+
+function hasSupabaseEnv() {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    (process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY)
+  );
+}
+
+function extensionFromFile(file: File): string {
+  const fromName = file.name.includes(".") ? file.name.split(".").pop()?.toLowerCase() : "";
+  if (fromName && /^[a-z0-9]+$/.test(fromName)) return fromName;
+
+  const fromMime = file.type.split("/")[1]?.toLowerCase();
+  if (fromMime && /^[a-z0-9.+-]+$/.test(fromMime)) {
+    if (fromMime === "jpeg") return "jpg";
+    return fromMime;
+  }
+  return "jpg";
+}
+
+function buildSupabaseObjectKey(file: File, folder = "uploads/general") {
+  const cleanedFolder = folder.replace(/\\/g, "/").replace(/^\/+|\/+$/g, "") || "uploads/general";
+  const now = new Date();
+  const yyyy = now.getUTCFullYear();
+  const mm = String(now.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(now.getUTCDate()).padStart(2, "0");
+  const ext = extensionFromFile(file);
+  const id = (typeof crypto !== "undefined" && "randomUUID" in crypto)
+    ? crypto.randomUUID().replace(/-/g, "")
+    : `${Date.now()}${Math.floor(Math.random() * 100000)}`;
+
+  return `${cleanedFolder}/${yyyy}/${mm}/${dd}/${id}.${ext}`;
+}
+
+function extractSupabaseKey(url: string, bucket = SUPABASE_STORAGE_BUCKET): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    const path = decodeURIComponent(parsed.pathname.replace(/^\/+/, ""));
+    const publicPrefix = `storage/v1/object/public/${bucket}/`;
+    const s3Prefix = `storage/v1/s3/${bucket}/`;
+
+    if (path.startsWith(publicPrefix)) return path.slice(publicPrefix.length);
+    if (path.startsWith(s3Prefix)) return path.slice(s3Prefix.length);
+    if (path.startsWith(`${bucket}/`)) return path.slice(bucket.length + 1);
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+async function uploadImageViaSupabase(file: File, options?: { folder?: string; replaceUrl?: string }): Promise<{ url: string }> {
+  if (!hasSupabaseEnv()) {
+    throw new Error("Supabase environment variables are not configured.");
+  }
+
+  const supabase = createSupabaseClient();
+  const objectKey = buildSupabaseObjectKey(file, options?.folder ?? "uploads/general");
+
+  const { data, error } = await supabase.storage
+    .from(SUPABASE_STORAGE_BUCKET)
+    .upload(objectKey, file, { upsert: false, contentType: file.type || undefined });
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Image upload failed");
+  }
+
+  if (options?.replaceUrl) {
+    const previousKey = extractSupabaseKey(options.replaceUrl, SUPABASE_STORAGE_BUCKET);
+    if (previousKey) {
+      await supabase.storage.from(SUPABASE_STORAGE_BUCKET).remove([previousKey]);
+    }
+  }
+
+  const { data: publicData } = supabase.storage.from(SUPABASE_STORAGE_BUCKET).getPublicUrl(data.path);
+  return { url: publicData.publicUrl };
+}
 
 type HotelLoginRawResponse = {
   token: string;
@@ -239,6 +319,10 @@ export const mediaApi = {
   uploadImage: async (file: File, options?: { folder?: string; replaceUrl?: string }): Promise<{ url: string }> => {
     if (API_MODE === "mock") return mock({ url: URL.createObjectURL(file) });
 
+    if (MEDIA_UPLOAD_PROVIDER === "supabase") {
+      return uploadImageViaSupabase(file, options);
+    }
+
     const token = getToken();
     if (!token) throw new Error("Please login to upload images.");
 
@@ -255,7 +339,11 @@ export const mediaApi = {
 
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      throw new Error(body.message ?? "Image upload failed");
+      const backendError = new Error(body.message ?? "Image upload failed");
+      if (hasSupabaseEnv()) {
+        return uploadImageViaSupabase(file, options);
+      }
+      throw backendError;
     }
 
     return res.json();
