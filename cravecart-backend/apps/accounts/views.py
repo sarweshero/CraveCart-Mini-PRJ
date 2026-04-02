@@ -1,6 +1,6 @@
 """apps/accounts/views.py — All authentication endpoints."""
 
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlparse
 
 from django.conf import settings
 from django.core.files.storage import default_storage
@@ -24,6 +24,20 @@ from .serializers import (
 from utils.media import build_upload_path, delete_storage_file_if_managed, sanitize_folder
 
 User = get_user_model()
+
+
+def _allowed_frontend_origins() -> set[str]:
+    return {origin.rstrip("/") for origin in getattr(settings, "CORS_ALLOWED_ORIGINS", []) if origin}
+
+
+def _validated_frontend_origin(value: str | None) -> str | None:
+    if not value:
+        return None
+    parsed = urlparse(value.strip())
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        return None
+    normalized = f"{parsed.scheme}://{parsed.netloc}".rstrip("/")
+    return normalized if normalized in _allowed_frontend_origins() else None
 
 
 class LoginThrottle(AnonRateThrottle):
@@ -266,7 +280,13 @@ class GoogleOAuthStartView(APIView):
 
     def get(self, request):
         callback_path = "/api/auth/google/callback/"
-        return django_redirect(f"/accounts/google/login/?process=login&next={callback_path}")
+        frontend_origin = _validated_frontend_origin(request.headers.get("Origin"))
+        if not frontend_origin:
+            frontend_origin = _validated_frontend_origin(request.headers.get("Referer"))
+        if frontend_origin:
+            callback_path = f"{callback_path}?{urlencode({'frontend': frontend_origin})}"
+        login_query = urlencode({"process": "login", "next": callback_path})
+        return django_redirect(f"/accounts/google/login/?{login_query}")
 
 
 # ── Google OAuth Callback ─────────────────────────────────────────────────────
@@ -280,10 +300,13 @@ class GoogleOAuthCallbackView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
+        frontend_override = _validated_frontend_origin(request.query_params.get("frontend"))
+
         # By this point, allauth has authenticated the user and set request.user
         user = request.user
         if not user.is_authenticated:
-            login_url = f"{settings.CUSTOMER_FRONTEND_URL.rstrip('/')}/login?error=oauth_failed"
+            customer_frontend = (frontend_override or settings.CUSTOMER_FRONTEND_URL).rstrip("/")
+            login_url = f"{customer_frontend}/login?error=oauth_failed"
             return django_redirect(login_url)
 
         token = AuthToken.create_for_user(user, request)
@@ -294,7 +317,7 @@ class GoogleOAuthCallbackView(APIView):
             User.Role.HOTEL_ADMIN: settings.HOTEL_FRONTEND_URL,
             User.Role.DELIVERY_PARTNER: settings.DELIVERY_FRONTEND_URL,
         }
-        frontend_url = role_to_frontend.get(user.role, settings.CUSTOMER_FRONTEND_URL).rstrip("/")
+        frontend_url = (frontend_override or role_to_frontend.get(user.role, settings.CUSTOMER_FRONTEND_URL)).rstrip("/")
         query = urlencode({
             "token": token.access_token,
             "refresh": token.refresh_token,

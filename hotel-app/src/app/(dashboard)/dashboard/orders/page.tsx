@@ -26,6 +26,7 @@ const STATUS_TABS: { value: string; label: string }[] = [
   { value: "preparing", label: "Preparing" },
   { value: "out_for_delivery", label: "Out for Delivery" },
   { value: "delivered", label: "Delivered" },
+  { value: "cancelled", label: "Cancelled" },
 ];
 
 export default function OrdersPage() {
@@ -43,6 +44,20 @@ export default function OrdersPage() {
       toast.success(`Order marked as ${STATUS_LABELS[next]}`);
     } catch {
       toast.error("Failed to update order status");
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleCancelOrder = async (order: HotelOrder) => {
+    if (order.status === "delivered" || order.status === "cancelled") return;
+    setUpdatingId(order.id);
+    try {
+      await hotelOrderApi.updateStatus(order.id, "cancelled");
+      await loadOrders();
+      toast.success("Order cancelled successfully");
+    } catch {
+      toast.error("Failed to cancel order");
     } finally {
       setUpdatingId(null);
     }
@@ -171,24 +186,42 @@ export default function OrdersPage() {
               </div>
 
               {/* Action button */}
-              {STATUS_TRANSITIONS[order.status] && (
+              {(STATUS_TRANSITIONS[order.status] || (order.status !== "delivered" && order.status !== "cancelled")) && (
                 <div className="px-5 py-3 border-t border-[#27272A]">
-                  <button
-                    onClick={() => handleStatusUpdate(order)}
-                    disabled={updatingId === order.id}
-                    className={cn(
-                      "w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all",
-                      order.status === "placed"
-                        ? "bg-[#7C3AED] text-white hover:bg-[#6D28D9]"
-                        : "bg-[#18181B] border border-[#27272A] text-[#A1A1AA] hover:text-[#FAFAFA] hover:border-[#7C3AED]/40"
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {STATUS_TRANSITIONS[order.status] && (
+                      <button
+                        onClick={() => handleStatusUpdate(order)}
+                        disabled={updatingId === order.id}
+                        className={cn(
+                          "w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all",
+                          order.status === "placed"
+                            ? "bg-[#7C3AED] text-white hover:bg-[#6D28D9]"
+                            : "bg-[#18181B] border border-[#27272A] text-[#A1A1AA] hover:text-[#FAFAFA] hover:border-[#7C3AED]/40"
+                        )}
+                      >
+                        {updatingId === order.id ? (
+                          <><RefreshCw size={13} className="animate-spin" />Updating...</>
+                        ) : (
+                          <>{STATUS_NEXT_LABEL[order.status]} <ChevronRight size={13} /></>
+                        )}
+                      </button>
                     )}
-                  >
-                    {updatingId === order.id ? (
-                      <><RefreshCw size={13} className="animate-spin" />Updating...</>
-                    ) : (
-                      <>{STATUS_NEXT_LABEL[order.status]} <ChevronRight size={13} /></>
+
+                    {order.status !== "delivered" && order.status !== "cancelled" && (
+                      <button
+                        onClick={() => handleCancelOrder(order)}
+                        disabled={updatingId === order.id}
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium border border-[#F87171]/35 text-[#FCA5A5] hover:bg-[#F87171]/10 transition-all disabled:opacity-60"
+                      >
+                        {updatingId === order.id ? (
+                          <><RefreshCw size={13} className="animate-spin" />Cancelling...</>
+                        ) : (
+                          <>Cancel Order</>
+                        )}
+                      </button>
                     )}
-                  </button>
+                  </div>
                 </div>
               )}
             </motion.div>

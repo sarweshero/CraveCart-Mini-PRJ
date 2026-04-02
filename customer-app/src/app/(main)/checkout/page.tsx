@@ -3,13 +3,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { MapPin, CreditCard, Wallet, Banknote, Tag, ChevronRight, Plus, Check, ArrowLeft, Loader2, Building2 } from "lucide-react";
+import { MapPin, CreditCard, Wallet, Banknote, Tag, ChevronRight, Plus, Check, ArrowLeft, Loader2, Building2, AlertTriangle, X } from "lucide-react";
 import { useCartStore, useAuthStore } from "@/lib/store";
-import { orderApi, cartApi } from "@/lib/api";
+import { orderApi, cartApi, restaurantApi } from "@/lib/api";
 import { calculateTax, cn, formatCurrency, roundMoney } from "@/lib/utils";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import type { Address } from "@/lib/types";
+
+type ShopCheckModalState = {
+  closedItems: Array<{ id: string; name: string; quantity: number; restaurantName: string }>;
+  openItems: Array<{ id: string; name: string; quantity: number; restaurantName: string }>;
+} | null;
 
 const PAYMENT_METHODS = [
   { id: "upi",        label: "UPI",                icon: Wallet,    description: "Google Pay, PhonePe, Paytm, BHIM" },
@@ -29,6 +34,7 @@ export default function CheckoutPage() {
   const [couponLoading, setCouponLoading]     = useState(false);
   const [instructions, setInstructions]       = useState("");
   const [placing, setPlacing]                 = useState(false);
+  const [shopCheckModal, setShopCheckModal]   = useState<ShopCheckModalState>(null);
 
   const subtotal   = getSubtotal();
   const delivery   = getDeliveryFee();
@@ -36,6 +42,91 @@ export default function CheckoutPage() {
   const platformFee = 5;
   const discount   = appliedCoupon?.discount ?? 0;
   const total      = getTotal();
+
+  const filterToOpenShopItems = async (): Promise<boolean> => {
+    const uniqueRestaurantIds = Array.from(new Set(items.map((i) => i.restaurantId).filter(Boolean)));
+    if (uniqueRestaurantIds.length === 0) return true;
+
+    const statusByRestaurant = new Map<string, boolean>();
+
+    await Promise.all(
+      uniqueRestaurantIds.map(async (rid) => {
+        try {
+          const data = await restaurantApi.get(String(rid));
+          statusByRestaurant.set(String(rid), Boolean(data.is_open));
+        } catch {
+          // If fetch fails, treat as closed to avoid failed checkout.
+          statusByRestaurant.set(String(rid), false);
+        }
+      })
+    );
+
+    const open = items.filter((i) => statusByRestaurant.get(String(i.restaurantId)) === true);
+    const closed = items.filter((i) => statusByRestaurant.get(String(i.restaurantId)) !== true);
+
+    if (closed.length === 0) {
+      return true;
+    }
+
+    setShopCheckModal({
+      openItems: open.map((i) => ({
+        id: i.id,
+        name: i.menu_item.name,
+        quantity: i.quantity,
+        restaurantName: i.restaurantName,
+      })),
+      closedItems: closed.map((i) => ({
+        id: i.id,
+        name: i.menu_item.name,
+        quantity: i.quantity,
+        restaurantName: i.restaurantName,
+      })),
+    });
+    return false;
+  };
+
+  const keepOpenShopItemsAndContinue = () => {
+    if (!shopCheckModal) return;
+
+    const keepIds = new Set(shopCheckModal.openItems.map((i) => i.id));
+    const retained = items.filter((i) => keepIds.has(i.id));
+
+    if (retained.length === 0) {
+      useCartStore.setState({ items: [], restaurantId: null, restaurantName: null, appliedCoupon: null, conflictPending: null });
+      setShopCheckModal(null);
+      toast.error("All selected shops are closed. Please choose items from open shops.");
+      router.push("/restaurants");
+      return;
+    }
+
+    const groupedByRestaurant = retained.reduce<Record<string, typeof retained>>((acc, item) => {
+      const key = String(item.restaurantId);
+      acc[key] = acc[key] ? [...acc[key], item] : [item];
+      return acc;
+    }, {});
+
+    // Current backend checkout supports one restaurant per order.
+    const bestRestaurantItems = Object.values(groupedByRestaurant)
+      .sort((a, b) => b.length - a.length)[0] ?? [];
+
+    const nextRestaurantId = bestRestaurantItems[0]?.restaurantId ?? null;
+    const nextRestaurantName = bestRestaurantItems[0]?.restaurantName ?? null;
+
+    useCartStore.setState({
+      items: bestRestaurantItems,
+      restaurantId: nextRestaurantId,
+      restaurantName: nextRestaurantName,
+      appliedCoupon: null,
+      conflictPending: null,
+    });
+    setShopCheckModal(null);
+
+    if (retained.length !== bestRestaurantItems.length) {
+      toast("We kept items from one open shop for checkout.");
+    } else {
+      toast.success("Closed-shop items removed. You can continue checkout.");
+    }
+  };
 
   const syncBackendCartSnapshot = async () => {
     await cartApi.clear();
@@ -73,6 +164,9 @@ export default function CheckoutPage() {
     if (!selectedAddress) { toast.error("Please select a delivery address"); return; }
     if (!paymentMethod)   { toast.error("Please select a payment method"); return; }
     if (items.length === 0) { toast.error("Your cart is empty"); return; }
+
+    const canProceed = await filterToOpenShopItems();
+    if (!canProceed) return;
 
     setPlacing(true);
     try {
@@ -240,6 +334,72 @@ export default function CheckoutPage() {
       </div>
 
     </div>
+
+      {shopCheckModal && (
+        <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm flex items-center justify-center px-4">
+          <div className="w-full max-w-xl bg-[#161410] border border-[#2A2620] rounded-2xl p-5">
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div className="flex items-start gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#FBBF24]/15 flex items-center justify-center mt-0.5">
+                  <AlertTriangle size={16} className="text-[#FBBF24]" />
+                </div>
+                <div>
+                  <h3 className="text-[#F5EDD8] font-semibold">Some shops are closed right now</h3>
+                  <p className="text-[#9E9080] text-sm mt-1">You can continue with items from open shops.</p>
+                </div>
+              </div>
+              <button onClick={() => setShopCheckModal(null)} className="text-[#9E9080] hover:text-[#F5EDD8]">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-1">
+              <div>
+                <p className="text-[#FCA5A5] text-xs uppercase tracking-wider mb-2">Closed shop items</p>
+                <div className="space-y-2">
+                  {shopCheckModal.closedItems.map((item) => (
+                    <div key={item.id} className="flex justify-between text-sm rounded-lg border border-[#F87171]/25 bg-[#F87171]/8 px-3 py-2">
+                      <span className="text-[#F5CDD2]">{item.quantity}× {item.name}</span>
+                      <span className="text-[#FCA5A5] text-xs">{item.restaurantName}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <p className="text-[#4ADE80] text-xs uppercase tracking-wider mb-2">Open shop items</p>
+                <div className="space-y-2">
+                  {shopCheckModal.openItems.length === 0 ? (
+                    <div className="text-[#9E9080] text-sm rounded-lg border border-[#2A2620] px-3 py-2">No selected items are from open shops.</div>
+                  ) : (
+                    shopCheckModal.openItems.map((item) => (
+                      <div key={item.id} className="flex justify-between text-sm rounded-lg border border-[#4ADE80]/20 bg-[#4ADE80]/8 px-3 py-2">
+                        <span className="text-[#C8F4D8]">{item.quantity}× {item.name}</span>
+                        <span className="text-[#86EFAC] text-xs">{item.restaurantName}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                onClick={() => setShopCheckModal(null)}
+                className="px-4 py-2.5 rounded-xl border border-[#2A2620] text-[#9E9080] hover:text-[#F5EDD8]"
+              >
+                Review Cart
+              </button>
+              <button
+                onClick={keepOpenShopItemsAndContinue}
+                className="px-4 py-2.5 rounded-xl bg-[#E8A830] text-[#0C0B09] font-semibold hover:bg-[#F5C842]"
+              >
+                Continue with Open Shops
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
   );
 }
 
