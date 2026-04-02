@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight, Tag } from "lucide-react";
 import { useCartStore, useUIStore } from "@/lib/store";
-import { cn, formatCurrency } from "@/lib/utils";
+import { calculateTax, cn, formatCurrency } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -17,7 +17,7 @@ export function CartDrawer() {
 
   const subtotal = getSubtotal();
   const delivery = getDeliveryFee();
-  const taxes = Math.round(subtotal * 0.05);
+  const taxes = calculateTax(subtotal);
   const platformFee = 5;
   const discount = appliedCoupon?.discount ?? 0;
   const total = getTotal();

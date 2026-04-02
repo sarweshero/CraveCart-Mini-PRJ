@@ -75,3 +75,27 @@ class MenuItemUpdateSerializer(serializers.ModelSerializer):
             "image", "is_veg", "is_bestseller", "is_available",
             "spice_level", "customizations", "order",
         ]
+
+
+class MenuItemCreateSerializer(serializers.ModelSerializer):
+    """For hotel admins to create menu items under their categories."""
+    category_id = serializers.IntegerField(write_only=True)
+
+    class Meta:
+        model = MenuItem
+        fields = [
+            "category_id", "name", "description", "price", "original_price",
+            "image", "is_veg", "is_bestseller", "is_available",
+            "spice_level", "customizations", "order",
+        ]
+
+    def validate_category_id(self, value):
+        restaurant = self.context["restaurant"]
+        if not MenuCategory.objects.filter(pk=value, restaurant=restaurant).exists():
+            raise serializers.ValidationError("Invalid category for this restaurant.")
+        return value
+
+    def create(self, validated_data):
+        category_id = validated_data.pop("category_id")
+        validated_data["category"] = MenuCategory.objects.get(pk=category_id)
+        return super().create(validated_data)

@@ -11,7 +11,7 @@ from datetime import timedelta
 from .models import Restaurant, MenuItem, MenuCategory, CuisineCategory, Coupon
 from .serializers import (
     RestaurantListSerializer, RestaurantDetailSerializer,
-    MenuItemSerializer, MenuItemUpdateSerializer,
+    MenuItemSerializer, MenuItemUpdateSerializer, MenuItemCreateSerializer,
     CuisineCategorySerializer, CouponSerializer,
 )
 from utils.permissions import IsHotelAdmin
@@ -110,6 +110,13 @@ class HotelMenuView(APIView):
         cats = MenuCategory.objects.filter(restaurant=restaurant).prefetch_related("items")
         return Response({"categories":[{"id":c.id,"name":c.name,"icon":c.icon,"items_count":c.items.count(),"available_count":c.items.filter(is_available=True).count(),"items":MenuItemSerializer(c.items.all(),many=True).data} for c in cats]})
 
+    def post(self, request):
+        restaurant = request.user.restaurant
+        serializer = MenuItemCreateSerializer(data=request.data, context={"restaurant": restaurant})
+        serializer.is_valid(raise_exception=True)
+        item = serializer.save()
+        return Response(MenuItemSerializer(item).data, status=status.HTTP_201_CREATED)
+
 
 class HotelMenuItemToggleView(APIView):
     permission_classes = [IsAuthenticated, IsHotelAdmin]
@@ -134,3 +141,11 @@ class HotelMenuItemView(APIView):
         s.is_valid(raise_exception=True)
         s.save()
         return Response(MenuItemSerializer(item).data)
+
+    def delete(self, request, pk):
+        try:
+            item = MenuItem.objects.get(pk=pk, category__restaurant=request.user.restaurant)
+        except MenuItem.DoesNotExist:
+            return Response({"message": "Item not found."}, status=404)
+        item.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

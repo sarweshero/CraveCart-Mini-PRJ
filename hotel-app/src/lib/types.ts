@@ -95,7 +95,12 @@ export interface MenuItem {
   name: string;
   description?: string;
   price: number;
+  original_price?: number | null;
+  image?: string;
   is_available: boolean;
+  is_veg?: boolean;
+  is_bestseller?: boolean;
+  spice_level?: "mild" | "medium" | "hot" | "extra-hot" | null;
 }
 
 export interface MenuCategory {

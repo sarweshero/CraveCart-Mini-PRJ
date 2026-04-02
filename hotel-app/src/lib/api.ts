@@ -195,13 +195,38 @@ export const menuApi = {
     if (API_MODE === "mock") return mock(mockData.menu["GET /api/hotel/menu"]);
     return request("/api/hotel/menu/");
   },
-  toggleAvailability: async (itemId: string, is_available: boolean): Promise<void> => {
+  createItem: async (payload: {
+    category_id: string;
+    name: string;
+    description?: string;
+    price: number;
+    image?: string;
+    is_veg?: boolean;
+    is_bestseller?: boolean;
+    is_available?: boolean;
+  }): Promise<void> => {
+    if (API_MODE === "mock") return mock(undefined);
+    return request("/api/hotel/menu/", { method: "POST", body: JSON.stringify(payload) });
+  },
+  toggleAvailability: async (itemId: string): Promise<void> => {
     if (API_MODE === "mock") return mock(undefined);
     return request(`/api/hotel/menu/items/${itemId}/toggle/`, { method: "PATCH" });
   },
-  updatePrice: async (itemId: string, price: number): Promise<void> => {
+  updateItem: async (itemId: string, payload: {
+    name?: string;
+    description?: string;
+    price?: number;
+    image?: string;
+    is_veg?: boolean;
+    is_bestseller?: boolean;
+    is_available?: boolean;
+  }): Promise<void> => {
     if (API_MODE === "mock") return mock(undefined);
-    return request(`/api/hotel/menu/items/${itemId}/`, { method: "PATCH", body: JSON.stringify({ price }) });
+    return request(`/api/hotel/menu/items/${itemId}/`, { method: "PATCH", body: JSON.stringify(payload) });
+  },
+  deleteItem: async (itemId: string): Promise<void> => {
+    if (API_MODE === "mock") return mock(undefined);
+    return request(`/api/hotel/menu/items/${itemId}/`, { method: "DELETE" });
   },
 };
 

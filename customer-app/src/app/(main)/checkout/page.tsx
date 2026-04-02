@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { MapPin, CreditCard, Wallet, Banknote, Tag, ChevronRight, Plus, Check, ArrowLeft, Loader2, Building2 } from "lucide-react";
 import { useCartStore, useAuthStore } from "@/lib/store";
 import { orderApi, cartApi } from "@/lib/api";
-import { cn, formatCurrency } from "@/lib/utils";
+import { calculateTax, cn, formatCurrency, roundMoney } from "@/lib/utils";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import type { Address } from "@/lib/types";
@@ -34,10 +34,22 @@ export default function CheckoutPage() {
 
   const subtotal   = getSubtotal();
   const delivery   = getDeliveryFee();
-  const taxes      = Math.round(subtotal * 0.05);
+  const taxes      = calculateTax(subtotal);
   const platformFee = 5;
   const discount   = appliedCoupon?.discount ?? 0;
   const total      = getTotal();
+
+  const syncBackendCartSnapshot = async () => {
+    await cartApi.clear();
+
+    for (const item of items) {
+      await cartApi.addItem(String(item.menu_item.id), item.quantity, item.customizations);
+    }
+
+    if (appliedCoupon?.code) {
+      await cartApi.applyCoupon(appliedCoupon.code);
+    }
+  };
 
   const handleCoupon = async () => {
     if (!couponInput.trim()) return;
@@ -66,6 +78,9 @@ export default function CheckoutPage() {
 
     setPlacing(true);
     try {
+      // Rebuild backend cart from the client snapshot to avoid stale server-side totals.
+      await syncBackendCartSnapshot();
+
       const res = await orderApi.place({
         delivery_address_id: selectedAddress,
         payment_method: paymentMethod,
@@ -229,7 +244,7 @@ export default function CheckoutPage() {
               <button onClick={handlePlaceOrder} disabled={placing}
                 className={cn("w-full flex items-center justify-center gap-2 mt-5 py-4 rounded-xl font-semibold transition-all",
                   placing ? "bg-[#2A2620] text-[#9E9080] cursor-not-allowed" : "bg-[#E8A830] text-[#0C0B09] hover:bg-[#F5C842] shadow-[0_0_25px_rgba(232,168,48,0.25)]")}>
-                {placing ? (<><Loader2 size={16} className="animate-spin" /> Placing Order...</>) : (<>Place Order · {formatCurrency(total)}<ChevronRight size={16} /></>)}
+                {placing ? (<><Loader2 size={16} className="animate-spin" /> Placing Order...</>) : (<>Place Order · {formatCurrency(roundMoney(total))}<ChevronRight size={16} /></>)}
               </button>
               <p className="text-[#9E9080] text-xs text-center mt-3">By placing order you agree to our Terms & Conditions</p>
             </div>

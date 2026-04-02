@@ -114,7 +114,10 @@ class OrderListCreateView(APIView):
         address = get_object_or_404(Address, pk=s.validated_data["delivery_address_id"], user=request.user)
 
         with transaction.atomic():
-            cart = Cart.objects.select_for_update().select_related("coupon", "restaurant").get(pk=cart.pk)
+            # Lock only the cart row first. Joining nullable FK rows with FOR UPDATE
+            # can fail on PostgreSQL when the join becomes an outer join.
+            cart = Cart.objects.select_for_update().get(pk=cart.pk)
+            cart = Cart.objects.select_related("coupon", "restaurant").get(pk=cart.pk)
             if not cart.items.exists():
                 return Response({"message": "Cart is empty."}, status=400)
 

@@ -5,6 +5,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { User, CartItem } from "./types";
+import { calculateTax, roundMoney } from "./utils";
 
 // ─────────────────────────────────────────────────────────────
 // Cart Store
@@ -138,9 +139,9 @@ export const useCartStore = create<CartState>()(
         const subtotal = state.getSubtotal();
         const delivery = state.getDeliveryFee();
         const discount = state.appliedCoupon?.discount ?? 0;
-        const taxes = Math.round(subtotal * 0.05);
+        const taxes = calculateTax(subtotal);
         const platform = 5;
-        return Math.max(0, subtotal + delivery + taxes + platform - discount);
+        return roundMoney(Math.max(0, subtotal + delivery + taxes + platform - discount));
       },
 
       hasItem: (menuItemId) => get().items.some((i) => i.menu_item.id === menuItemId),

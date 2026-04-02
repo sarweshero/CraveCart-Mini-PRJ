@@ -19,6 +19,14 @@ export function formatCurrency(amount: number): string {
   }).format(amount);
 }
 
+export function roundMoney(amount: number): number {
+  return Math.round(amount * 100) / 100;
+}
+
+export function calculateTax(subtotal: number, rate = 0.05): number {
+  return roundMoney(subtotal * rate);
+}
+
 export function formatDate(dateString: string): string {
   return new Intl.DateTimeFormat("en-IN", {
     day: "numeric",
