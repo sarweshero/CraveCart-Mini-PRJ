@@ -173,6 +173,7 @@ ACCOUNT_USERNAME_REQUIRED  = False
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 SOCIALACCOUNT_AUTO_SIGNUP  = True
 SOCIALACCOUNT_LOGIN_ON_GET = True
+SOCIALACCOUNT_ADAPTER      = "apps.accounts.adapters.CraveCartSocialAccountAdapter"
 SOCIALACCOUNT_PROVIDERS = {"google": {
     "SCOPE": ["profile","email"],
     "AUTH_PARAMS": {"access_type": "online"},
@@ -205,7 +206,7 @@ CELERY_TASK_SERIALIZER   = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE          = TIME_ZONE
 CELERY_BEAT_SCHEDULE = {
-    "flush-emails":      {"task": "apps.notifications.tasks.flush_email_batch",      "schedule": crontab(minute="*/5")},
+    "flush-emails":      {"task": "notifications.flush_email_batch",                 "schedule": crontab(minute="*/5")},
     "cleanup-tokens":    {"task": "apps.accounts.tasks.cleanup_expired_tokens",      "schedule": crontab(hour=2, minute=0)},
     "process-deletions": {"task": "apps.accounts.tasks.process_permanent_deletions", "schedule": crontab(hour=3, minute=0)},
 }

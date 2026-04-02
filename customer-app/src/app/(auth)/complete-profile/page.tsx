@@ -10,7 +10,7 @@ import toast from "react-hot-toast";
 
 export default function CompleteProfilePage() {
   const router = useRouter();
-  const { user, setAuth, updateUser } = useAuthStore();
+  const { user, setAuth } = useAuthStore();
   const [form, setForm] = useState({ name: "", phone: "", line1: "", city: "", state: "", pincode: "" });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -92,10 +92,13 @@ export default function CompleteProfilePage() {
         };
       }
 
-      await authApi.completeProfile(payload);
-      updateUser({ name: form.name, phone: form.phone, is_profile_complete: true });
-      toast.success("Profile complete! Welcome to CraveCart 🎉");
-      router.push("/");
+      const response = await authApi.completeProfile(payload);
+      const token = typeof window !== "undefined" ? localStorage.getItem("cravecart_token") : null;
+      if (token) {
+        setAuth(response.user, token);
+      }
+      toast.success("Profile complete! Welcome to CraveCart");
+      router.replace("/");
     } catch (err: unknown) { toast.error(err instanceof Error ? err.message : "Failed to save profile"); }
     finally { setLoading(false); }
   };
@@ -110,6 +113,15 @@ export default function CompleteProfilePage() {
           <div className="flex items-center gap-2 mb-2"><div className="flex gap-1">{[1,2].map(i=><div key={i} className="h-1 w-8 rounded-full" style={{background:i===1?"#E8A830":"#2A2620"}}/>)}</div><span className="text-[#9E9080] text-xs">Step 1 of 2</span></div>
           <h1 className="text-[#F5EDD8] font-display font-semibold text-3xl">Complete your profile</h1>
           <p className="text-[#9E9080] text-sm mt-2">We need a few more details to get you started</p>
+          {user?.avatar && (
+            <div className="mt-4 flex items-center gap-3 rounded-2xl border border-[#2A2620] bg-[#161410] px-4 py-3">
+              <img src={user.avatar} alt={user.name || "Google profile"} className="h-12 w-12 rounded-full object-cover" />
+              <div>
+                <p className="text-[#F5EDD8] text-sm font-medium">{user.name || "Google account"}</p>
+                <p className="text-[#9E9080] text-xs">Imported from Google</p>
+              </div>
+            </div>
+          )}
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           {[{k:"name",label:"Full Name",type:"text",ph:"Arjun Kumar",Icon:User},{k:"phone",label:"Phone Number",type:"tel",ph:"+91 98765 43210",Icon:Phone}].map(({k,label,type,ph,Icon})=>(

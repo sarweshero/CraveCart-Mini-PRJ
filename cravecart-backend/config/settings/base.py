@@ -213,6 +213,7 @@ ACCOUNT_UNIQUE_EMAIL         = True
 SOCIALACCOUNT_AUTO_SIGNUP    = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
 SOCIALACCOUNT_LOGIN_ON_GET   = True
+SOCIALACCOUNT_ADAPTER        = "apps.accounts.adapters.CraveCartSocialAccountAdapter"
 SOCIALACCOUNT_PROVIDERS = {
     "google": {
         "SCOPE": ["profile", "email"],
@@ -251,7 +252,7 @@ CELERY_TASK_TIME_LIMIT     = 30 * 60
 from celery.schedules import crontab  # noqa: E402
 CELERY_BEAT_SCHEDULE = {
     "flush-email-batch-every-5-minutes": {
-        "task":     "apps.notifications.tasks.flush_email_batch",
+        "task":     "notifications.flush_email_batch",
         "schedule": crontab(minute="*/5"),
     },
     "cleanup-expired-tokens-daily": {

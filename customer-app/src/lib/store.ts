@@ -234,9 +234,15 @@ export const useAuthStore = create<AuthState>()(
       },
 
       updateUser: (updates) =>
-        set((s) => ({
-          user: s.user ? { ...s.user, ...updates } : null,
-        })),
+        set((s) => {
+          const nextUser = s.user ? { ...s.user, ...updates } : null;
+          if (typeof window !== "undefined" && nextUser) {
+            document.cookie = `cravecart_profile_complete=${nextUser.is_profile_complete}; path=/; max-age=86400; SameSite=Lax`;
+          }
+          return {
+            user: nextUser,
+          };
+        }),
     }),
     {
       name: "cravecart-auth",

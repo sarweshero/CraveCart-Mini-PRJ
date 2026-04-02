@@ -464,21 +464,23 @@ export default function MenuPage() {
             <div className="space-y-3">
               <label className="block">
                 <span className="text-[#A1A1AA] text-xs mb-1.5 block">Category</span>
-                <input
-                  list="menu-categories"
+                <select
                   value={form.category}
                   onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
                   disabled={Boolean(editingItemId)}
                   className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-3 py-2.5 text-sm text-[#FAFAFA] outline-none focus:border-[#7C3AED]/50 transition-colors"
-                  placeholder="Type or select category"
-                />
-                <datalist id="menu-categories">
+                >
+                  <option value="" disabled>
+                    Select an existing category
+                  </option>
                   {categories.map((cat) => (
-                    <option key={cat.id} value={cat.name} />
+                    <option key={cat.id} value={cat.name}>
+                      {cat.name}
+                    </option>
                   ))}
-                </datalist>
+                </select>
                 {!editingItemId && (
-                  <p className="text-[#71717A] text-[11px] mt-1">Type to see matching categories. A new one is created automatically if needed.</p>
+                  <p className="text-[#71717A] text-[11px] mt-1">Showing categories already available in the database.</p>
                 )}
               </label>
 
