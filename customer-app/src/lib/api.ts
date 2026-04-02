@@ -21,6 +21,11 @@ function mock<T>(v: T, delay = 400): Promise<T> {
   return new Promise((r) => setTimeout(() => r(v), delay));
 }
 
+const toNum = (value: unknown, fallback = 0): number => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
 // ── Error class ─────────────────────────────────────────────
 export class ApiError extends Error {
   constructor(
@@ -273,7 +278,25 @@ export const restaurantApi = {
 export const cartApi = {
   get: async (): Promise<Cart> => {
     if (API_MODE === "mock") return mock(mockData.cart["GET /api/cart"]);
-    return request("/api/cart/");
+    const cart = await request<Cart>("/api/cart/");
+    return {
+      ...cart,
+      items: (cart.items ?? []).map((item) => ({
+        ...item,
+        quantity: toNum(item.quantity, 1),
+        item_total: toNum(item.item_total),
+        menu_item: {
+          ...item.menu_item,
+          price: toNum(item.menu_item.price),
+        },
+      })),
+      subtotal: toNum(cart.subtotal),
+      delivery_fee: toNum(cart.delivery_fee),
+      platform_fee: toNum(cart.platform_fee),
+      discount: toNum(cart.discount),
+      taxes: toNum(cart.taxes),
+      total: toNum(cart.total),
+    };
   },
 
   addItem: async (
@@ -329,12 +352,34 @@ export const cartApi = {
 export const orderApi = {
   list: async (page = 1): Promise<PaginatedResponse<Order>> => {
     if (API_MODE === "mock") return mock(mockData.orders["GET /api/orders"]);
-    return request(`/api/orders/?page=${page}`);
+    const data = await request<PaginatedResponse<Order>>(`/api/orders/?page=${page}`);
+    return {
+      ...data,
+      results: (data.results ?? []).map((order) => ({
+        ...order,
+        total: toNum(order.total),
+      })),
+    };
   },
 
   get: async (id: string): Promise<OrderDetail> => {
     if (API_MODE === "mock") return mock(mockData.orders["GET /api/orders/:id"]);
-    return request(`/api/orders/${id}/`);
+    const order = await request<OrderDetail>(`/api/orders/${id}/`);
+    return {
+      ...order,
+      subtotal: toNum(order.subtotal),
+      delivery_fee: toNum(order.delivery_fee),
+      platform_fee: toNum(order.platform_fee),
+      discount: toNum(order.discount),
+      taxes: toNum(order.taxes),
+      total: toNum(order.total),
+      items: (order.items ?? []).map((item) => ({
+        ...item,
+        quantity: toNum(item.quantity, 1),
+        price: toNum(item.price),
+        item_total: toNum(item.item_total),
+      })),
+    };
   },
 
   place: async (payload: {
@@ -343,7 +388,15 @@ export const orderApi = {
     instructions?: string;
   }): Promise<{ id: string; status: string; total: number; estimated_delivery_time: number; message: string }> => {
     if (API_MODE === "mock") return mock(mockData.orders["POST /api/orders"]);
-    return request("/api/orders/", { method: "POST", body: JSON.stringify(payload) });
+    const res = await request<{ id: string; status: string; total: number; estimated_delivery_time: number; message: string }>(
+      "/api/orders/",
+      { method: "POST", body: JSON.stringify(payload) }
+    );
+    return {
+      ...res,
+      total: toNum(res.total),
+      estimated_delivery_time: toNum(res.estimated_delivery_time),
+    };
   },
 
   cancel: async (orderId: string, reason?: string): Promise<{ message: string }> => {

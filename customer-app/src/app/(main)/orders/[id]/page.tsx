@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useOrderPolling } from "@/hooks/useOrderPolling";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Package, CheckCircle2, Clock, Truck, Home, X, Star, Send, Sparkles, Mail, RefreshCw, Phone, MapPin } from "lucide-react";
@@ -18,8 +18,11 @@ const POLL_INTERVAL_MS  = 8000;
 export default function OrderDetailPage() {
   const { id }   = useParams<{ id: string }>();
   const router   = useRouter();
+  const searchParams = useSearchParams();
+  const paymentResult = searchParams.get("payment");
   const [order, setOrder]           = useState<OrderDetail | null>(null);
   const [loading, setLoading]       = useState(true);
+  const [showPaymentBanner, setShowPaymentBanner] = useState(true);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [rating, setRating]         = useState(0);
   const [comment, setComment]       = useState("");
@@ -85,6 +88,24 @@ export default function OrderDetailPage() {
   return (
     <div className="min-h-screen">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+        {showPaymentBanner && paymentResult === "success" && (
+          <div className="mb-5 bg-[#4ADE80]/10 border border-[#4ADE80]/25 rounded-2xl p-3.5 flex items-center justify-between gap-3">
+            <p className="text-[#4ADE80] text-sm font-medium">Payment successful. Your order is confirmed.</p>
+            <button onClick={() => setShowPaymentBanner(false)} className="text-[#9E9080] hover:text-[#F5EDD8]">
+              <X size={14} />
+            </button>
+          </div>
+        )}
+
+        {showPaymentBanner && paymentResult === "failed" && (
+          <div className="mb-5 bg-[#F87171]/10 border border-[#F87171]/25 rounded-2xl p-3.5 flex items-center justify-between gap-3">
+            <p className="text-[#FCA5A5] text-sm font-medium">Payment failed. The order is saved, and you can retry payment.</p>
+            <button onClick={() => setShowPaymentBanner(false)} className="text-[#9E9080] hover:text-[#F5EDD8]">
+              <X size={14} />
+            </button>
+          </div>
+        )}
+
         <div className="flex items-center gap-4 mb-8">
           <button onClick={() => router.back()} className="w-9 h-9 rounded-xl bg-[#161410] border border-[#2A2620] flex items-center justify-center text-[#BFB49A] hover:text-[#F5EDD8] transition-all">
             <ChevronLeft size={18} />

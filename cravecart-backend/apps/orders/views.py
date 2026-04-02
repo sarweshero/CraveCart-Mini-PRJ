@@ -150,6 +150,7 @@ class OrderListCreateView(APIView):
                 payment_status=Order.PaymentStatus.PENDING,
                 instructions=s.validated_data.get("instructions", ""),
             )
+            estimated_delivery_time = order.restaurant.avg_delivery_time
 
             if cart.coupon:
                 Coupon.objects.filter(pk=cart.coupon.pk).update(used_count=F("used_count") + 1)
@@ -162,7 +163,7 @@ class OrderListCreateView(APIView):
             "id": order.id,
             "status": order.status,
             "total": float(order.total),
-            "estimated_delivery_time": cart.restaurant.avg_delivery_time,
+            "estimated_delivery_time": estimated_delivery_time,
             "message": "Order placed successfully!",
         }, status=201)
 

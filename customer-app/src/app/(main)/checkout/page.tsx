@@ -10,7 +10,6 @@ import { calculateTax, cn, formatCurrency, roundMoney } from "@/lib/utils";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import type { Address } from "@/lib/types";
-import { RazorpayModal, useRazorpayPayment, type PaymentPayload } from "@/components/payment/RazorpayPayment";
 
 const PAYMENT_METHODS = [
   { id: "upi",        label: "UPI",                icon: Wallet,    description: "Google Pay, PhonePe, Paytm, BHIM" },
@@ -22,8 +21,7 @@ const PAYMENT_METHODS = [
 export default function CheckoutPage() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { items, restaurantId, restaurantName, getSubtotal, getDeliveryFee, getTotal, applyCoupon, removeCoupon, appliedCoupon, clearCart } = useCartStore();
-  const { paymentPayload, initiate, dismiss } = useRazorpayPayment();
+  const { items, restaurantName, getSubtotal, getDeliveryFee, getTotal, applyCoupon, removeCoupon, appliedCoupon, clearCart } = useCartStore();
 
   const [selectedAddress, setSelectedAddress] = useState<string>(user?.addresses.find((a) => a.is_default)?.id ?? "");
   const [paymentMethod, setPaymentMethod]     = useState("upi");
@@ -93,23 +91,12 @@ export default function CheckoutPage() {
         toast.success("Order placed! Pay on delivery. 🎉");
         router.push(`/orders/${res.id}`);
       } else {
-        // Show Razorpay payment modal
-        initiate({
+        const params = new URLSearchParams({
           order_id: res.id,
-          amount: res.total,
-          restaurant_name: restaurantName ?? "",
-          payment_method: paymentMethod as PaymentPayload["payment_method"],
-          on_success: (_paymentId) => {
-            clearCart();
-            cartApi.clear().catch(() => {}); // sync backend cart clear
-            toast.success("Payment successful! Order confirmed. 🎉");
-            router.push(`/orders/${res.id}`);
-          },
-          on_fail: () => {
-            toast.error("Payment failed. Your order is saved — retry from Orders.");
-            router.push(`/orders/${res.id}`);
-          },
+          amount: String(res.total),
+          method: paymentMethod,
         });
+        router.push(`/checkout/payment?${params.toString()}`);
       }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to place order. Please try again.");
@@ -252,7 +239,6 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-      {paymentPayload && <RazorpayModal payload={paymentPayload} onClose={dismiss} />}
     </div>
   );
 }

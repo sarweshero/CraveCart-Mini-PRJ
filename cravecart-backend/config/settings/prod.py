@@ -114,10 +114,21 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-# Add http://localhost:3002 for local delivery app dev
-CORS_ALLOWED_ORIGINS = env.list("CORS_ALLOWED_ORIGINS", default=["http://localhost:3000","http://localhost:3001"])
+# Allow deployed frontends by default while still supporting local development.
+CORS_ALLOWED_ORIGINS = env.list(
+    "CORS_ALLOWED_ORIGINS",
+    default=[
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "https://cravecart.sarweshero.me",
+        "https://hotel.sarweshero.me",
+        "https://delivery.sarweshero.me",
+    ],
+)
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = ["accept","accept-encoding","authorization","content-type","dnt","origin","user-agent","x-csrftoken","x-requested-with"]
+CORS_ALLOWED_ORIGIN_REGEXES = env.list("CORS_ALLOWED_ORIGIN_REGEXES", default=[])
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ["apps.accounts.authentication.CraveCartTokenAuthentication"],
@@ -146,7 +157,9 @@ ACCOUNT_LOGIN_METHODS      = {"email"}
 ACCOUNT_EMAIL_REQUIRED     = True
 ACCOUNT_EMAIL_VERIFICATION = "optional"
 ACCOUNT_USERNAME_REQUIRED  = False
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 SOCIALACCOUNT_AUTO_SIGNUP  = True
+SOCIALACCOUNT_LOGIN_ON_GET = True
 SOCIALACCOUNT_PROVIDERS = {"google": {
     "SCOPE": ["profile","email"],
     "AUTH_PARAMS": {"access_type": "online"},
@@ -188,6 +201,9 @@ GEMINI_API_KEY           = env("GEMINI_API_KEY", default="")
 GEMINI_MODEL             = "gemini-1.5-flash"
 GEMINI_MAX_OUTPUT_TOKENS = 300
 
+CUSTOMER_FRONTEND_URL        = env("CUSTOMER_FRONTEND_URL", default="http://localhost:3000")
+HOTEL_FRONTEND_URL           = env("HOTEL_FRONTEND_URL", default="http://localhost:3001")
+DELIVERY_FRONTEND_URL        = env("DELIVERY_FRONTEND_URL", default="http://localhost:3002")
 CRAVECART_TOKEN_EXPIRY_DAYS   = 1
 CRAVECART_REFRESH_EXPIRY_DAYS = 30
 MIN_ORDER_AMOUNT              = 50
@@ -223,4 +239,3 @@ RAZORPAY_KEY_SECRET = env("RAZORPAY_KEY_SECRET", default="")
 DELIVERY_BASE_EARNING  = 25
 DELIVERY_PER_KM_BONUS  = 5
 DELIVERY_ACCEPT_WINDOW = 60
-CORS_ALLOWED_ORIGINS_REGEX = None

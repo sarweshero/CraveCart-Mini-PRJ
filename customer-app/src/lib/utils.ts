@@ -11,20 +11,24 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(amount: number): string {
+  const safeAmount = Number.isFinite(Number(amount)) ? Number(amount) : 0;
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount);
+  }).format(safeAmount);
 }
 
 export function roundMoney(amount: number): number {
-  return Math.round(amount * 100) / 100;
+  const value = Number(amount);
+  if (!Number.isFinite(value)) return 0;
+  return Math.round(value * 100) / 100;
 }
 
 export function calculateTax(subtotal: number, rate = 0.05): number {
-  return roundMoney(subtotal * rate);
+  const base = Number(subtotal);
+  return roundMoney((Number.isFinite(base) ? base : 0) * rate);
 }
 
 export function formatDate(dateString: string): string {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Save, Loader2, AlertTriangle, Trash2, Mail, Phone, Clock, Globe, Camera, User } from "lucide-react";
 import { useHotelAuthStore } from "@/lib/store";
@@ -20,9 +20,19 @@ export default function SettingsPage() {
   });
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarPendingFile, setAvatarPendingFile] = useState<File | null>(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteType, setDeleteType] = useState<"temporary" | "permanent" | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState("");
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreviewUrl) {
+        URL.revokeObjectURL(avatarPreviewUrl);
+      }
+    };
+  }, [avatarPreviewUrl]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -40,21 +50,40 @@ export default function SettingsPage() {
     }
   };
 
-  const handleAvatarUpload = async (file: File | null) => {
+  const handleAvatarSelected = (file: File | null) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
       return;
     }
 
+    if (avatarPreviewUrl) {
+      URL.revokeObjectURL(avatarPreviewUrl);
+    }
+    setAvatarPendingFile(file);
+    setAvatarPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const clearAvatarDraft = () => {
+    if (avatarPreviewUrl) {
+      URL.revokeObjectURL(avatarPreviewUrl);
+    }
+    setAvatarPreviewUrl(null);
+    setAvatarPendingFile(null);
+  };
+
+  const handleAvatarUpload = async () => {
+    if (!avatarPendingFile) return;
+
     setUploadingAvatar(true);
     try {
-      const upload = await mediaApi.uploadImage(file, {
+      const upload = await mediaApi.uploadImage(avatarPendingFile, {
         folder: "uploads/avatars/hotels",
         replaceUrl: hotel?.avatar || undefined,
       });
       await hotelAuthApi.updateProfile({ avatar: upload.url });
       updateHotel({ avatar: upload.url });
+      clearAvatarDraft();
       toast.success("Profile photo updated");
     } catch {
       toast.error("Failed to upload profile photo");
@@ -90,25 +119,66 @@ export default function SettingsPage() {
         <h2 className="text-[#FAFAFA] font-semibold mb-5">Restaurant Profile</h2>
         <div className="mb-5 flex items-center gap-4">
           <div className="w-16 h-16 rounded-full overflow-hidden border border-[#27272A] bg-[#18181B] flex items-center justify-center">
-            {hotel?.avatar ? (
+            {avatarPreviewUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={avatarPreviewUrl} alt="Avatar preview" className="w-full h-full object-cover" />
+            ) : hotel?.avatar ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={hotel.avatar} alt="Hotel avatar" className="w-full h-full object-cover" />
             ) : (
               <User size={22} className="text-[#71717A]" />
             )}
           </div>
-          <div>
-            <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[#27272A] text-[#A1A1AA] text-sm cursor-pointer hover:text-[#FAFAFA] transition-colors">
-              <Camera size={14} className="text-[#7C3AED]" />
-              {uploadingAvatar ? "Uploading..." : "Change avatar"}
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                disabled={uploadingAvatar}
-                onChange={(e) => handleAvatarUpload(e.target.files?.[0] ?? null)}
-              />
-            </label>
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[#27272A] text-[#A1A1AA] text-sm cursor-pointer hover:text-[#FAFAFA] transition-colors">
+                <Camera size={14} className="text-[#7C3AED]" />
+                Choose image
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={uploadingAvatar}
+                  onChange={(e) => {
+                    handleAvatarSelected(e.target.files?.[0] ?? null);
+                    e.currentTarget.value = "";
+                  }}
+                />
+              </label>
+              <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[#27272A] text-[#A1A1AA] text-sm cursor-pointer hover:text-[#FAFAFA] transition-colors">
+                <Camera size={14} className="text-[#7C3AED]" />
+                Use camera
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  disabled={uploadingAvatar}
+                  onChange={(e) => {
+                    handleAvatarSelected(e.target.files?.[0] ?? null);
+                    e.currentTarget.value = "";
+                  }}
+                />
+              </label>
+            </div>
+            {avatarPendingFile && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleAvatarUpload}
+                  disabled={uploadingAvatar}
+                  className="px-3 py-1.5 rounded-lg bg-[#7C3AED] text-white text-xs font-medium hover:bg-[#6D28D9] disabled:opacity-70"
+                >
+                  {uploadingAvatar ? "Uploading..." : "Upload selected"}
+                </button>
+                <button
+                  onClick={clearAvatarDraft}
+                  disabled={uploadingAvatar}
+                  className="px-3 py-1.5 rounded-lg border border-[#27272A] text-[#A1A1AA] text-xs hover:text-[#FAFAFA]"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
           </div>
         </div>
         <div className="space-y-4">

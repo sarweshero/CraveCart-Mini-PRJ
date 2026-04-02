@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Camera, MapPin, Plus, Save, User as UserIcon, X } from "lucide-react";
 import { authApi, mediaApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
@@ -26,11 +26,21 @@ export default function ProfilePage() {
   const [phone, setPhone] = useState(user?.phone ?? "");
   const [savingProfile, setSavingProfile] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarPendingFile, setAvatarPendingFile] = useState<File | null>(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
 
   const [addresses, setAddresses] = useState<Address[]>((user?.addresses ?? []).map((addr) => ({ ...addr, id: String(addr.id) })));
   const [addressForm, setAddressForm] = useState<AddressForm>(EMPTY_ADDRESS);
   const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
   const [savingAddress, setSavingAddress] = useState(false);
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreviewUrl) {
+        URL.revokeObjectURL(avatarPreviewUrl);
+      }
+    };
+  }, [avatarPreviewUrl]);
 
   const refreshAddresses = async () => {
     const latest = await authApi.me();
@@ -78,21 +88,40 @@ export default function ProfilePage() {
     }
   };
 
-  const handleAvatarChange = async (file: File | null) => {
+  const handleAvatarSelected = (file: File | null) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       toast.error("Please select an image file");
       return;
     }
 
+    if (avatarPreviewUrl) {
+      URL.revokeObjectURL(avatarPreviewUrl);
+    }
+    setAvatarPendingFile(file);
+    setAvatarPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const clearAvatarDraft = () => {
+    if (avatarPreviewUrl) {
+      URL.revokeObjectURL(avatarPreviewUrl);
+    }
+    setAvatarPreviewUrl(null);
+    setAvatarPendingFile(null);
+  };
+
+  const handleUploadAvatar = async () => {
+    if (!avatarPendingFile) return;
+
     setUploadingAvatar(true);
     try {
-      const upload = await mediaApi.uploadImage(file, {
+      const upload = await mediaApi.uploadImage(avatarPendingFile, {
         folder: "uploads/avatars/customers",
         replaceUrl: user?.avatar || undefined,
       });
       const updated = await authApi.updateProfile({ avatar: upload.url });
       updateUser(updated);
+      clearAvatarDraft();
       toast.success("Profile photo updated");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed to upload profile photo");
@@ -180,26 +209,67 @@ export default function ProfilePage() {
 
           <div className="mb-5 flex items-center gap-4">
             <div className="w-20 h-20 rounded-full overflow-hidden border border-[#2A2620] bg-[#1E1B16] flex items-center justify-center">
-              {user.avatar ? (
+              {avatarPreviewUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarPreviewUrl} alt="Avatar preview" className="w-full h-full object-cover" />
+              ) : user.avatar ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
               ) : (
                 <UserIcon size={28} className="text-[#9E9080]" />
               )}
             </div>
-            <div>
-              <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[#2A2620] text-[#F5EDD8] text-sm cursor-pointer hover:border-[#E8A830]/40 transition-colors">
-                <Camera size={14} className="text-[#E8A830]" />
-                {uploadingAvatar ? "Uploading..." : "Change Photo"}
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleAvatarChange(e.target.files?.[0] ?? null)}
-                  className="hidden"
-                  disabled={uploadingAvatar}
-                />
-              </label>
-              <p className="text-[#9E9080] text-xs mt-1.5">JPG, PNG, WEBP up to 10MB</p>
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[#2A2620] text-[#F5EDD8] text-sm cursor-pointer hover:border-[#E8A830]/40 transition-colors">
+                  <Camera size={14} className="text-[#E8A830]" />
+                  Choose Photo
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      handleAvatarSelected(e.target.files?.[0] ?? null);
+                      e.currentTarget.value = "";
+                    }}
+                    className="hidden"
+                    disabled={uploadingAvatar}
+                  />
+                </label>
+                <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[#2A2620] text-[#F5EDD8] text-sm cursor-pointer hover:border-[#E8A830]/40 transition-colors">
+                  <Camera size={14} className="text-[#E8A830]" />
+                  Use Camera
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={(e) => {
+                      handleAvatarSelected(e.target.files?.[0] ?? null);
+                      e.currentTarget.value = "";
+                    }}
+                    className="hidden"
+                    disabled={uploadingAvatar}
+                  />
+                </label>
+              </div>
+              {avatarPendingFile && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleUploadAvatar}
+                    disabled={uploadingAvatar}
+                    className="px-3 py-1.5 rounded-lg bg-[#E8A830] text-[#0C0B09] text-xs font-semibold hover:bg-[#F5C842] transition-colors disabled:opacity-70"
+                  >
+                    {uploadingAvatar ? "Uploading..." : "Upload Selected Photo"}
+                  </button>
+                  <button
+                    onClick={clearAvatarDraft}
+                    disabled={uploadingAvatar}
+                    className="px-3 py-1.5 rounded-lg border border-[#2A2620] text-[#BFB49A] text-xs hover:text-[#F5EDD8] transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+              <p className="text-[#9E9080] text-xs">JPG, PNG, WEBP up to 10MB</p>
             </div>
           </div>
 

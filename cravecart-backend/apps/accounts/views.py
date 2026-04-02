@@ -1,5 +1,7 @@
 """apps/accounts/views.py — All authentication endpoints."""
 
+from urllib.parse import urlencode
+
 from django.conf import settings
 from django.core.files.storage import default_storage
 from django.shortcuts import redirect as django_redirect
@@ -281,20 +283,22 @@ class GoogleOAuthCallbackView(APIView):
         # By this point, allauth has authenticated the user and set request.user
         user = request.user
         if not user.is_authenticated:
-            from django.shortcuts import redirect
-            return redirect("/login?error=oauth_failed")
+            login_url = f"{settings.CUSTOMER_FRONTEND_URL.rstrip('/')}/login?error=oauth_failed"
+            return django_redirect(login_url)
 
         token = AuthToken.create_for_user(user, request)
 
-        # Redirect to frontend with token in query params (or set cookie)
-        frontend_url = "http://localhost:3000"
-        if user.role == User.Role.HOTEL_ADMIN:
-            frontend_url = "http://localhost:3001"
-
-        redirect_url = (
-            f"{frontend_url}/auth/callback"
-            f"?token={token.access_token}"
-            f"&refresh={token.refresh_token}"
-            f"&complete={str(user.is_profile_complete).lower()}"
-        )
+        # Redirect to the correct frontend based on account role.
+        role_to_frontend = {
+            User.Role.CUSTOMER: settings.CUSTOMER_FRONTEND_URL,
+            User.Role.HOTEL_ADMIN: settings.HOTEL_FRONTEND_URL,
+            User.Role.DELIVERY_PARTNER: settings.DELIVERY_FRONTEND_URL,
+        }
+        frontend_url = role_to_frontend.get(user.role, settings.CUSTOMER_FRONTEND_URL).rstrip("/")
+        query = urlencode({
+            "token": token.access_token,
+            "refresh": token.refresh_token,
+            "complete": str(user.is_profile_complete).lower(),
+        })
+        redirect_url = f"{frontend_url}/auth/callback?{query}"
         return django_redirect(redirect_url)

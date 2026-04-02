@@ -83,9 +83,10 @@ class Order(models.Model):
         CANCELLED        = "cancelled","Cancelled"
 
     class PaymentMethod(models.TextChoices):
-        UPI  = "upi","UPI"
-        CARD = "card","Card"
-        COD  = "cod","Cash on Delivery"
+        UPI        = "upi","UPI"
+        CARD       = "card","Card"
+        NETBANKING = "netbanking","Net Banking"
+        COD        = "cod","Cash on Delivery"
 
     class PaymentStatus(models.TextChoices):
         PENDING  = "pending","Pending"

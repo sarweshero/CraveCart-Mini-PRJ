@@ -22,6 +22,26 @@ interface ConflictPending {
   restaurantName: string;
 }
 
+const toNumber = (value: unknown, fallback = 0): number => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const normalizeCartItem = (item: CartStoreItem): CartStoreItem => {
+  const quantity = Math.max(1, Math.trunc(toNumber(item.quantity, 1)));
+  const unitPrice = toNumber(item.menu_item?.price, 0);
+  const itemTotal = toNumber(item.item_total, quantity * unitPrice);
+  return {
+    ...item,
+    quantity,
+    item_total: itemTotal,
+    menu_item: {
+      ...item.menu_item,
+      price: unitPrice,
+    },
+  };
+};
+
 interface CartState {
   items: CartStoreItem[];
   restaurantId: string | null;
@@ -73,13 +93,17 @@ export const useCartStore = create<CartState>()(
           set((s) => ({
             items: s.items.map((i) =>
               i.menu_item.id === item.menu_item.id
-                ? { ...i, quantity: i.quantity + item.quantity, item_total: (i.quantity + item.quantity) * i.menu_item.price }
+                ? {
+                    ...i,
+                    quantity: toNumber(i.quantity) + toNumber(item.quantity),
+                    item_total: (toNumber(i.quantity) + toNumber(item.quantity)) * toNumber(i.menu_item.price),
+                  }
                 : i
             ),
           }));
         } else {
           set((s) => ({
-            items: [...s.items, { ...item, restaurantId, restaurantName }],
+            items: [...s.items, normalizeCartItem({ ...item, restaurantId, restaurantName })],
             restaurantId,
             restaurantName,
           }));
@@ -105,7 +129,7 @@ export const useCartStore = create<CartState>()(
         set((s) => ({
           items: s.items.map((i) =>
             i.id === itemId
-              ? { ...i, quantity, item_total: quantity * i.menu_item.price }
+              ? { ...i, quantity: toNumber(quantity, 1), item_total: toNumber(quantity, 1) * toNumber(i.menu_item.price) }
               : i
           ),
         }));
@@ -120,7 +144,7 @@ export const useCartStore = create<CartState>()(
 
       clearCartAndAdd: (item, restaurantId, restaurantName) => {
         // Clear old cart, apply new restaurant, add the item
-        const cartItem: CartStoreItem = { ...item, restaurantId, restaurantName };
+        const cartItem: CartStoreItem = normalizeCartItem({ ...item, restaurantId, restaurantName });
         set({
           items: [cartItem],
           restaurantId,
@@ -130,8 +154,8 @@ export const useCartStore = create<CartState>()(
         });
       },
 
-      getSubtotal: () => get().items.reduce((acc, i) => acc + i.item_total, 0),
-      getItemCount: () => get().items.reduce((acc, i) => acc + i.quantity, 0),
+      getSubtotal: () => get().items.reduce((acc, i) => acc + toNumber(i.item_total), 0),
+      getItemCount: () => get().items.reduce((acc, i) => acc + toNumber(i.quantity), 0),
       getDeliveryFee: () => (get().items.length === 0 ? 0 : 30),
 
       getTotal: () => {
@@ -154,6 +178,17 @@ export const useCartStore = create<CartState>()(
     {
       name: "cravecart-cart",
       storage: createJSONStorage(() => localStorage),
+      version: 2,
+      migrate: (persistedState) => {
+        const state = persistedState as CartState;
+        if (!state || !Array.isArray(state.items)) {
+          return persistedState;
+        }
+        return {
+          ...state,
+          items: state.items.map((item) => normalizeCartItem(item as CartStoreItem)),
+        };
+      },
     }
   )
 );

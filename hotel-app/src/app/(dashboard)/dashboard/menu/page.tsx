@@ -70,6 +70,8 @@ export default function MenuPage() {
   const [formOpen, setFormOpen] = useState(false);
   const [formSaving, setFormSaving] = useState(false);
   const [imageUploading, setImageUploading] = useState(false);
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [form, setForm] = useState<ItemFormState>(EMPTY_FORM);
 
@@ -93,6 +95,14 @@ export default function MenuPage() {
     loadMenu();
   }, [loadMenu]);
 
+  useEffect(() => {
+    return () => {
+      if (imagePreviewUrl) {
+        URL.revokeObjectURL(imagePreviewUrl);
+      }
+    };
+  }, [imagePreviewUrl]);
+
   const totalItems = categories.reduce((acc, c) => acc + c.items.length, 0);
   const availableItems = categories.reduce((acc, c) => acc + c.items.filter((i) => i.is_available).length, 0);
   const activecat = categories.find((c) => c.id === activeCategory);
@@ -101,6 +111,11 @@ export default function MenuPage() {
 
   const resetForm = (categoryId?: string) => {
     setEditingItemId(null);
+    if (imagePreviewUrl) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+    setImagePreviewUrl(null);
+    setPendingImageFile(null);
     const categoryName = categories.find((c) => c.id === (categoryId ?? activeCategory))?.name ?? "";
     setForm({ ...EMPTY_FORM, category: categoryName });
   };
@@ -113,6 +128,11 @@ export default function MenuPage() {
   const openEditForm = (item: MenuItem) => {
     const categoryName = categories.find((cat) => cat.id === activeCategory)?.name ?? "";
     setEditingItemId(item.id);
+    if (imagePreviewUrl) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+    setImagePreviewUrl(null);
+    setPendingImageFile(null);
     setForm({
       category: categoryName,
       name: item.name,
@@ -216,20 +236,39 @@ export default function MenuPage() {
     }
   };
 
-  const handleImageUpload = async (file: File | null) => {
+  const handleImageSelected = (file: File | null) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) {
       toast.error("Please select a valid image file");
       return;
     }
 
+    if (imagePreviewUrl) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+    setPendingImageFile(file);
+    setImagePreviewUrl(URL.createObjectURL(file));
+  };
+
+  const clearSelectedImage = () => {
+    if (imagePreviewUrl) {
+      URL.revokeObjectURL(imagePreviewUrl);
+    }
+    setPendingImageFile(null);
+    setImagePreviewUrl(null);
+  };
+
+  const handleImageUpload = async () => {
+    if (!pendingImageFile) return;
+
     setImageUploading(true);
     try {
-      const uploaded = await mediaApi.uploadImage(file, {
+      const uploaded = await mediaApi.uploadImage(pendingImageFile, {
         folder: "uploads/menu-items",
         replaceUrl: form.image || undefined,
       });
       setForm((prev) => ({ ...prev, image: uploaded.url }));
+      clearSelectedImage();
       toast.success("Image uploaded");
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Image upload failed");
@@ -471,19 +510,63 @@ export default function MenuPage() {
                     className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-3 py-2.5 text-sm text-[#FAFAFA] outline-none"
                     placeholder="https://..."
                   />
-                  <div className="mt-2 flex items-center gap-2">
-                    <label className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#27272A] text-[#A1A1AA] text-xs cursor-pointer hover:text-[#FAFAFA] transition-colors">
-                      <Camera size={12} />
-                      {imageUploading ? "Uploading..." : "Upload image"}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        disabled={imageUploading}
-                        onChange={(e) => handleImageUpload(e.target.files?.[0] ?? null)}
-                      />
-                    </label>
-                    {form.image && <span className="text-[#71717A] text-xs truncate">Image ready</span>}
+                  <div className="mt-2 space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#27272A] text-[#A1A1AA] text-xs cursor-pointer hover:text-[#FAFAFA] transition-colors">
+                        <Camera size={12} />
+                        Choose image
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={imageUploading}
+                          onChange={(e) => {
+                            handleImageSelected(e.target.files?.[0] ?? null);
+                            e.currentTarget.value = "";
+                          }}
+                        />
+                      </label>
+                      <label className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#27272A] text-[#A1A1AA] text-xs cursor-pointer hover:text-[#FAFAFA] transition-colors">
+                        <Camera size={12} />
+                        Use camera
+                        <input
+                          type="file"
+                          accept="image/*"
+                          capture="environment"
+                          className="hidden"
+                          disabled={imageUploading}
+                          onChange={(e) => {
+                            handleImageSelected(e.target.files?.[0] ?? null);
+                            e.currentTarget.value = "";
+                          }}
+                        />
+                      </label>
+                    </div>
+
+                    {imagePreviewUrl && (
+                      <div className="flex items-center gap-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={imagePreviewUrl} alt="Menu preview" className="w-11 h-11 rounded-lg object-cover border border-[#27272A]" />
+                        <button
+                          type="button"
+                          onClick={handleImageUpload}
+                          disabled={imageUploading}
+                          className="px-2.5 py-1.5 rounded-lg bg-[#7C3AED] text-white text-xs hover:bg-[#6D28D9] disabled:opacity-70"
+                        >
+                          {imageUploading ? "Uploading..." : "Upload selected"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={clearSelectedImage}
+                          disabled={imageUploading}
+                          className="px-2.5 py-1.5 rounded-lg border border-[#27272A] text-[#A1A1AA] text-xs hover:text-[#FAFAFA]"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+
+                    {form.image && !imagePreviewUrl && <span className="text-[#71717A] text-xs truncate">Image ready</span>}
                   </div>
                 </label>
               </div>
