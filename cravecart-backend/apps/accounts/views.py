@@ -338,8 +338,13 @@ class GoogleOAuthCallbackView(APIView):
     def get(self, request):
         frontend_override = _validated_frontend_origin(request.query_params.get("frontend"))
 
-        # By this point, allauth has authenticated the user and set request.user
-        user = request.user
+        # DRF request.user uses API authenticators (token auth here) and may miss
+        # the session login created by allauth during this redirect flow.
+        django_request = getattr(request, "_request", request)
+        user = getattr(django_request, "user", None)
+        if not getattr(user, "is_authenticated", False):
+            user = request.user
+
         if not user.is_authenticated:
             customer_frontend = (frontend_override or settings.CUSTOMER_FRONTEND_URL).rstrip("/")
             login_url = f"{customer_frontend}/login?error=oauth_failed"
@@ -349,6 +354,8 @@ class GoogleOAuthCallbackView(APIView):
                     "frontend_override": frontend_override,
                     "redirect_url": login_url,
                     "path": request.path,
+                    "drf_user_authenticated": getattr(request.user, "is_authenticated", False),
+                    "session_user_authenticated": getattr(getattr(django_request, "user", None), "is_authenticated", False),
                 },
             )
             return django_redirect(login_url)
