@@ -41,6 +41,11 @@ systemctl restart redis-server
 
 # 4. Python virtualenv (if not exists)
 echo "[4/7] Setting up Python environment..."
+if [ ! -d "$APP_DIR" ]; then
+  echo "ERROR: App directory not found at $APP_DIR"
+  exit 1
+fi
+
 if [ ! -d "$VENV_DIR" ]; then
   sudo -u ubuntu python3.12 -m venv "$VENV_DIR"
 fi

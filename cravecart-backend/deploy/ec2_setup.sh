@@ -22,7 +22,7 @@ IFS=$'\n\t'
 
 # ── Configurable variables ────────────────────────────────────────────────────
 APP_DIR="/home/ubuntu/Projects/CraveCart-Mini-PRJ/cravecart-backend"
-VENV_DIR="$APP_DIR/.venv"
+VENV_DIR="/home/ubuntu/.genv"
 APP_USER="ubuntu"
 DOMAIN="api.cravecart.app"    # ← replace with your domain BEFORE running
 
@@ -71,6 +71,11 @@ chown ubuntu:ubuntu /var/log/cravecart
 
 # Add ubuntu user to www-data group so Nginx can read socket
 usermod -aG www-data ubuntu
+
+if [ ! -d "$APP_DIR" ]; then
+  echo "ERROR: App directory not found at $APP_DIR"
+  exit 1
+fi
 
 # ── 6. Virtualenv and Python dependencies ────────────────────────────────────
 echo "[6/9] Setting up Python virtualenv..."

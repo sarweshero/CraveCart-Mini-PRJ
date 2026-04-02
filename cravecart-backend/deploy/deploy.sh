@@ -2,7 +2,7 @@
 # CraveCart deploy script — run on EC2 after git pull
 set -euo pipefail
 
-APP=/home/ubuntu/cravecart-backend
+APP=/home/ubuntu/Projects/CraveCart-Mini-PRJ/cravecart-backend
 VENV=/home/ubuntu/.genv
 
 echo "=== CraveCart Deploy $(date) ==="
