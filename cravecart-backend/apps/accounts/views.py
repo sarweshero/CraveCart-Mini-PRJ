@@ -13,7 +13,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.throttling import AnonRateThrottle
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user, get_user_model
 from django.utils import timezone
 
 from .models import AuthToken, Address
@@ -313,6 +313,7 @@ class MediaUploadView(APIView):
 class GoogleOAuthStartView(APIView):
     """GET /api/auth/google/ — Redirect to allauth Google login entrypoint."""
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def get(self, request):
         callback_path = "/api/auth/google/callback/"
@@ -334,14 +335,17 @@ class GoogleOAuthCallbackView(APIView):
     Issues our custom token and redirects to frontend.
     """
     permission_classes = [AllowAny]
+    authentication_classes = []
 
     def get(self, request):
         frontend_override = _validated_frontend_origin(request.query_params.get("frontend"))
 
-        # DRF request.user uses API authenticators (token auth here) and may miss
-        # the session login created by allauth during this redirect flow.
         django_request = getattr(request, "_request", request)
-        user = getattr(django_request, "user", None)
+        # Pull the user from Django's session auth first so this callback is not
+        # dependent on DRF token authentication during the redirect chain.
+        user = get_user(django_request)
+        if not getattr(user, "is_authenticated", False):
+            user = getattr(django_request, "user", None)
         if not getattr(user, "is_authenticated", False):
             user = request.user
 
@@ -354,6 +358,8 @@ class GoogleOAuthCallbackView(APIView):
                     "frontend_override": frontend_override,
                     "redirect_url": login_url,
                     "path": request.path,
+                    "session_key": getattr(getattr(django_request, "session", None), "session_key", None),
+                    "cookie_names": sorted(list(request.COOKIES.keys())),
                     "drf_user_authenticated": getattr(request.user, "is_authenticated", False),
                     "session_user_authenticated": getattr(getattr(django_request, "user", None), "is_authenticated", False),
                 },

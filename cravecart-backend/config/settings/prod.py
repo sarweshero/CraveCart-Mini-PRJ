@@ -107,6 +107,17 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS             = "DENY"
 SESSION_COOKIE_SECURE       = True
 CSRF_COOKIE_SECURE          = True
+SESSION_COOKIE_SAMESITE     = "None"
+CSRF_COOKIE_SAMESITE        = "None"
+CSRF_TRUSTED_ORIGINS = env.list(
+    "CSRF_TRUSTED_ORIGINS",
+    default=[
+        "https://cravecart.sarweshero.me",
+        "https://hotels-cravecart.sarweshero.me",
+        "https://delivery-cravecart.sarweshero.me",
+        "https://api.sarweshero.me",
+    ],
+)
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
