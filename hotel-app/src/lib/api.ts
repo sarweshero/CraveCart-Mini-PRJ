@@ -111,6 +111,10 @@ export const hotelAuthApi = {
     };
   },
   logout: async () => { if (API_MODE === "mock") return mock(undefined); return request("/api/hotel/auth/logout/", { method: "POST" }); },
+  updateProfile: async (payload: { name?: string; phone?: string; avatar?: string }): Promise<{ name?: string; phone?: string; avatar?: string }> => {
+    if (API_MODE === "mock") return mock(payload);
+    return request("/api/hotel/auth/me/", { method: "PATCH", body: JSON.stringify(payload) });
+  },
   toggleOpen: async (is_open: boolean) => {
     if (API_MODE === "mock") return mock({ is_open });
     return request<{ is_open: boolean }>("/api/hotel/dashboard/toggle-open/", { method: "PATCH", body: JSON.stringify({ is_open }) });
@@ -196,7 +200,8 @@ export const menuApi = {
     return request("/api/hotel/menu/");
   },
   createItem: async (payload: {
-    category_id: string;
+    category_id?: string;
+    category_name?: string;
     name: string;
     description?: string;
     price: number;
@@ -227,6 +232,33 @@ export const menuApi = {
   deleteItem: async (itemId: string): Promise<void> => {
     if (API_MODE === "mock") return mock(undefined);
     return request(`/api/hotel/menu/items/${itemId}/`, { method: "DELETE" });
+  },
+};
+
+export const mediaApi = {
+  uploadImage: async (file: File, options?: { folder?: string; replaceUrl?: string }): Promise<{ url: string }> => {
+    if (API_MODE === "mock") return mock({ url: URL.createObjectURL(file) });
+
+    const token = getToken();
+    if (!token) throw new Error("Please login to upload images.");
+
+    const formData = new FormData();
+    formData.append("file", file);
+    if (options?.folder) formData.append("folder", options.folder);
+    if (options?.replaceUrl) formData.append("replace_url", options.replaceUrl);
+
+    const res = await fetch(`${BASE_URL}/api/hotel/auth/media/upload/`, {
+      method: "POST",
+      headers: { Authorization: `Token ${token}` },
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.message ?? "Image upload failed");
+    }
+
+    return res.json();
   },
 };
 

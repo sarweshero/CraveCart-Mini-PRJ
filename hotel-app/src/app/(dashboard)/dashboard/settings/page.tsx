@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Save, Loader2, AlertTriangle, Trash2, Mail, Phone, Clock, Globe } from "lucide-react";
+import { Save, Loader2, AlertTriangle, Trash2, Mail, Phone, Clock, Globe, Camera, User } from "lucide-react";
 import { useHotelAuthStore } from "@/lib/store";
-import { hotelAuthApi } from "@/lib/api";
+import { hotelAuthApi, mediaApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -19,6 +19,7 @@ export default function SettingsPage() {
     website: "",
   });
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteType, setDeleteType] = useState<"temporary" | "permanent" | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState("");
@@ -26,14 +27,39 @@ export default function SettingsPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Optimistically update local state; in production wire to PATCH /api/hotel/auth/me/
-      updateHotel({ restaurant_name: form.restaurant_name, owner_name: form.owner_name });
-      await new Promise((r) => setTimeout(r, 300)); // brief debounce
+      await hotelAuthApi.updateProfile({ name: form.owner_name });
+      updateHotel({
+        restaurant_name: form.restaurant_name,
+        owner_name: form.owner_name,
+      });
       toast.success("Settings saved successfully!");
     } catch {
       toast.error("Failed to save settings. Please try again.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAvatarUpload = async (file: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const upload = await mediaApi.uploadImage(file, {
+        folder: "uploads/avatars/hotels",
+        replaceUrl: hotel?.avatar || undefined,
+      });
+      await hotelAuthApi.updateProfile({ avatar: upload.url });
+      updateHotel({ avatar: upload.url });
+      toast.success("Profile photo updated");
+    } catch {
+      toast.error("Failed to upload profile photo");
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -62,6 +88,29 @@ export default function SettingsPage() {
       {/* Restaurant Profile */}
       <div className="bg-[#111113] border border-[#27272A] rounded-2xl p-6 mb-5">
         <h2 className="text-[#FAFAFA] font-semibold mb-5">Restaurant Profile</h2>
+        <div className="mb-5 flex items-center gap-4">
+          <div className="w-16 h-16 rounded-full overflow-hidden border border-[#27272A] bg-[#18181B] flex items-center justify-center">
+            {hotel?.avatar ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={hotel.avatar} alt="Hotel avatar" className="w-full h-full object-cover" />
+            ) : (
+              <User size={22} className="text-[#71717A]" />
+            )}
+          </div>
+          <div>
+            <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[#27272A] text-[#A1A1AA] text-sm cursor-pointer hover:text-[#FAFAFA] transition-colors">
+              <Camera size={14} className="text-[#7C3AED]" />
+              {uploadingAvatar ? "Uploading..." : "Change avatar"}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                disabled={uploadingAvatar}
+                onChange={(e) => handleAvatarUpload(e.target.files?.[0] ?? null)}
+              />
+            </label>
+          </div>
+        </div>
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[

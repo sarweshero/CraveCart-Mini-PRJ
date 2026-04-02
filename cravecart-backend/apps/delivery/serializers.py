@@ -2,6 +2,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from .models import DeliveryPartner, DeliveryAssignment, EarningsSummary
+from utils.media import delete_storage_file_if_managed
 
 User = get_user_model()
 
@@ -57,6 +58,16 @@ class DeliveryPartnerProfileSerializer(serializers.ModelSerializer):
             "total_earnings", "rating_avg", "rating_count",
             "today_deliveries", "today_earnings", "joined_at",
         ]
+
+    def update(self, instance, validated_data):
+        old_avatar = instance.avatar
+        instance = super().update(instance, validated_data)
+
+        new_avatar = instance.avatar
+        if "avatar" in validated_data and old_avatar and old_avatar != new_avatar:
+            delete_storage_file_if_managed(old_avatar)
+
+        return instance
 
 
 class AssignmentOrderSerializer(serializers.Serializer):

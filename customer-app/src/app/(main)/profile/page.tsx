@@ -1,8 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { MapPin, Plus, Save, User as UserIcon, X } from "lucide-react";
-import { authApi } from "@/lib/api";
+import { Camera, MapPin, Plus, Save, User as UserIcon, X } from "lucide-react";
+import { authApi, mediaApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 import type { Address } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -25,6 +25,7 @@ export default function ProfilePage() {
   const [name, setName] = useState(user?.name ?? "");
   const [phone, setPhone] = useState(user?.phone ?? "");
   const [savingProfile, setSavingProfile] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   const [addresses, setAddresses] = useState<Address[]>((user?.addresses ?? []).map((addr) => ({ ...addr, id: String(addr.id) })));
   const [addressForm, setAddressForm] = useState<AddressForm>(EMPTY_ADDRESS);
@@ -74,6 +75,29 @@ export default function ProfilePage() {
       toast.error(err instanceof Error ? err.message : "Failed to update profile");
     } finally {
       setSavingProfile(false);
+    }
+  };
+
+  const handleAvatarChange = async (file: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const upload = await mediaApi.uploadImage(file, {
+        folder: "uploads/avatars/customers",
+        replaceUrl: user?.avatar || undefined,
+      });
+      const updated = await authApi.updateProfile({ avatar: upload.url });
+      updateUser(updated);
+      toast.success("Profile photo updated");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to upload profile photo");
+    } finally {
+      setUploadingAvatar(false);
     }
   };
 
@@ -152,6 +176,31 @@ export default function ProfilePage() {
           <div className="flex items-center gap-2 mb-4">
             <UserIcon size={16} className="text-[#E8A830]" />
             <h2 className="text-[#F5EDD8] font-semibold">Personal Information</h2>
+          </div>
+
+          <div className="mb-5 flex items-center gap-4">
+            <div className="w-20 h-20 rounded-full overflow-hidden border border-[#2A2620] bg-[#1E1B16] flex items-center justify-center">
+              {user.avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <UserIcon size={28} className="text-[#9E9080]" />
+              )}
+            </div>
+            <div>
+              <label className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-[#2A2620] text-[#F5EDD8] text-sm cursor-pointer hover:border-[#E8A830]/40 transition-colors">
+                <Camera size={14} className="text-[#E8A830]" />
+                {uploadingAvatar ? "Uploading..." : "Change Photo"}
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleAvatarChange(e.target.files?.[0] ?? null)}
+                  className="hidden"
+                  disabled={uploadingAvatar}
+                />
+              </label>
+              <p className="text-[#9E9080] text-xs mt-1.5">JPG, PNG, WEBP up to 10MB</p>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -1,6 +1,7 @@
 """apps/restaurants/serializers.py"""
 from rest_framework import serializers
 from .models import Restaurant, MenuCategory, MenuItem, CuisineCategory, Coupon
+from utils.media import delete_storage_file_if_managed
 
 
 class CuisineCategorySerializer(serializers.ModelSerializer):
@@ -76,18 +77,36 @@ class MenuItemUpdateSerializer(serializers.ModelSerializer):
             "spice_level", "customizations", "order",
         ]
 
+    def update(self, instance, validated_data):
+        old_image = instance.image
+        instance = super().update(instance, validated_data)
+
+        new_image = instance.image
+        if "image" in validated_data and old_image and old_image != new_image:
+            delete_storage_file_if_managed(old_image)
+
+        return instance
+
 
 class MenuItemCreateSerializer(serializers.ModelSerializer):
     """For hotel admins to create menu items under their categories."""
-    category_id = serializers.IntegerField(write_only=True)
+    category_id = serializers.IntegerField(write_only=True, required=False)
+    category_name = serializers.CharField(write_only=True, required=False, allow_blank=False, max_length=100)
 
     class Meta:
         model = MenuItem
         fields = [
-            "category_id", "name", "description", "price", "original_price",
+            "category_id", "category_name", "name", "description", "price", "original_price",
             "image", "is_veg", "is_bestseller", "is_available",
             "spice_level", "customizations", "order",
         ]
+
+    def validate(self, attrs):
+        category_id = attrs.get("category_id")
+        category_name = attrs.get("category_name")
+        if not category_id and not category_name:
+            raise serializers.ValidationError("Provide either category_id or category_name.")
+        return attrs
 
     def validate_category_id(self, value):
         restaurant = self.context["restaurant"]
@@ -96,6 +115,20 @@ class MenuItemCreateSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        category_id = validated_data.pop("category_id")
-        validated_data["category"] = MenuCategory.objects.get(pk=category_id)
+        restaurant = self.context["restaurant"]
+        category_id = validated_data.pop("category_id", None)
+        category_name = validated_data.pop("category_name", "")
+
+        if category_id:
+            category = MenuCategory.objects.get(pk=category_id)
+        else:
+            normalized_name = category_name.strip()
+            category = MenuCategory.objects.filter(
+                restaurant=restaurant,
+                name__iexact=normalized_name,
+            ).first()
+            if not category:
+                category = MenuCategory.objects.create(restaurant=restaurant, name=normalized_name)
+
+        validated_data["category"] = category
         return super().create(validated_data)

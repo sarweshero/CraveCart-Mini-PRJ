@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from .models import User, AuthToken, Address
+from utils.media import delete_storage_file_if_managed
 
 
 # ── Token Output ──────────────────────────────────────────────────────────────
@@ -161,6 +162,16 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
         if value and not re.match(r"^[6-9]\d{9}$", cleaned):
             raise serializers.ValidationError("Enter a valid 10-digit Indian mobile number.")
         return cleaned
+
+    def update(self, instance, validated_data):
+        old_avatar = instance.avatar
+        instance = super().update(instance, validated_data)
+
+        new_avatar = instance.avatar
+        if "avatar" in validated_data and old_avatar and old_avatar != new_avatar:
+            delete_storage_file_if_managed(old_avatar)
+
+        return instance
 
 
 # ── Account Deletion ──────────────────────────────────────────────────────────

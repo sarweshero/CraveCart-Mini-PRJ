@@ -1,5 +1,10 @@
 """apps/accounts/views.py — All authentication endpoints."""
+
+from django.conf import settings
+from django.core.files.storage import default_storage
+from django.shortcuts import redirect as django_redirect
 from rest_framework import status
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -14,6 +19,7 @@ from .serializers import (
     DeleteAccountSerializer, UserPublicSerializer, AddressSerializer,
     AuthTokenSerializer,
 )
+from utils.media import build_upload_path, delete_storage_file_if_managed, sanitize_folder
 
 User = get_user_model()
 
@@ -218,6 +224,49 @@ class DeleteAccountView(APIView):
         return Response({"message": message, "type": deletion_type})
 
 
+class MediaUploadView(APIView):
+    """POST /api/auth/media/upload/ — Upload image to configured storage and return URL."""
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        image_file = request.FILES.get("file")
+        if not image_file:
+            return Response({"message": "No image file provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        content_type = (getattr(image_file, "content_type", "") or "").lower()
+        if not content_type.startswith("image/"):
+            return Response({"message": "Only image files are allowed."}, status=status.HTTP_400_BAD_REQUEST)
+
+        max_upload_mb = getattr(settings, "MEDIA_UPLOAD_MAX_MB", 10)
+        if image_file.size > max_upload_mb * 1024 * 1024:
+            return Response(
+                {"message": f"Image too large. Maximum allowed size is {max_upload_mb}MB."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        folder = sanitize_folder(request.data.get("folder") or "uploads/general")
+        old_url = (request.data.get("replace_url") or "").strip()
+
+        upload_path = build_upload_path(image_file.name, folder=folder)
+        saved_key = default_storage.save(upload_path, image_file)
+        file_url = default_storage.url(saved_key)
+
+        if old_url:
+            delete_storage_file_if_managed(old_url)
+
+        return Response({"url": file_url}, status=status.HTTP_201_CREATED)
+
+
+class GoogleOAuthStartView(APIView):
+    """GET /api/auth/google/ — Redirect to allauth Google login entrypoint."""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        callback_path = "/api/auth/google/callback/"
+        return django_redirect(f"/accounts/google/login/?process=login&next={callback_path}")
+
+
 # ── Google OAuth Callback ─────────────────────────────────────────────────────
 
 class GoogleOAuthCallbackView(APIView):
@@ -248,5 +297,4 @@ class GoogleOAuthCallbackView(APIView):
             f"&refresh={token.refresh_token}"
             f"&complete={str(user.is_profile_complete).lower()}"
         )
-        from django.shortcuts import redirect as django_redirect
         return django_redirect(redirect_url)

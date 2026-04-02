@@ -15,6 +15,7 @@ from .serializers import (
     CuisineCategorySerializer, CouponSerializer,
 )
 from utils.permissions import IsHotelAdmin
+from utils.media import delete_storage_file_if_managed
 
 
 class RestaurantListView(generics.ListAPIView):
@@ -147,5 +148,7 @@ class HotelMenuItemView(APIView):
             item = MenuItem.objects.get(pk=pk, category__restaurant=request.user.restaurant)
         except MenuItem.DoesNotExist:
             return Response({"message": "Item not found."}, status=404)
+        if item.image:
+            delete_storage_file_if_managed(item.image)
         item.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

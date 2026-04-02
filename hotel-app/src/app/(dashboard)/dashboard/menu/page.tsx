@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import {
+  Camera,
   Plus,
   ToggleLeft,
   ToggleRight,
@@ -17,7 +18,7 @@ import {
   X,
 } from "lucide-react";
 import { cn, formatCurrency } from "@/lib/utils";
-import { menuApi } from "@/lib/api";
+import { mediaApi, menuApi } from "@/lib/api";
 import toast from "react-hot-toast";
 
 interface MenuItem {
@@ -39,7 +40,7 @@ interface MenuCategory {
 }
 
 interface ItemFormState {
-  category_id: string;
+  category: string;
   name: string;
   description: string;
   price: string;
@@ -50,7 +51,7 @@ interface ItemFormState {
 }
 
 const EMPTY_FORM: ItemFormState = {
-  category_id: "",
+  category: "",
   name: "",
   description: "",
   price: "",
@@ -68,6 +69,7 @@ export default function MenuPage() {
 
   const [formOpen, setFormOpen] = useState(false);
   const [formSaving, setFormSaving] = useState(false);
+  const [imageUploading, setImageUploading] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [form, setForm] = useState<ItemFormState>(EMPTY_FORM);
 
@@ -99,7 +101,8 @@ export default function MenuPage() {
 
   const resetForm = (categoryId?: string) => {
     setEditingItemId(null);
-    setForm({ ...EMPTY_FORM, category_id: categoryId ?? activeCategory ?? "" });
+    const categoryName = categories.find((c) => c.id === (categoryId ?? activeCategory))?.name ?? "";
+    setForm({ ...EMPTY_FORM, category: categoryName });
   };
 
   const openCreateForm = () => {
@@ -108,9 +111,10 @@ export default function MenuPage() {
   };
 
   const openEditForm = (item: MenuItem) => {
+    const categoryName = categories.find((cat) => cat.id === activeCategory)?.name ?? "";
     setEditingItemId(item.id);
     setForm({
-      category_id: activeCategory,
+      category: categoryName,
       name: item.name,
       description: item.description ?? "",
       price: String(item.price),
@@ -158,7 +162,7 @@ export default function MenuPage() {
   };
 
   const handleSaveItem = async () => {
-    if (!form.category_id || !form.name.trim() || !form.price.trim()) {
+    if (!form.category.trim() || !form.name.trim() || !form.price.trim()) {
       toast.error("Category, item name and price are required");
       return;
     }
@@ -183,8 +187,14 @@ export default function MenuPage() {
         });
         toast.success("Menu item updated");
       } else {
+        const categoryInput = form.category.trim();
+        const matchedCategory = categories.find(
+          (c) => c.name.trim().toLowerCase() === categoryInput.toLowerCase()
+        );
+
         await menuApi.createItem({
-          category_id: form.category_id,
+          category_id: matchedCategory?.id,
+          category_name: matchedCategory ? undefined : categoryInput,
           name: form.name.trim(),
           description: form.description.trim(),
           price: parsedPrice,
@@ -203,6 +213,28 @@ export default function MenuPage() {
       toast.error("Failed to save menu item");
     } finally {
       setFormSaving(false);
+    }
+  };
+
+  const handleImageUpload = async (file: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select a valid image file");
+      return;
+    }
+
+    setImageUploading(true);
+    try {
+      const uploaded = await mediaApi.uploadImage(file, {
+        folder: "uploads/menu-items",
+        replaceUrl: form.image || undefined,
+      });
+      setForm((prev) => ({ ...prev, image: uploaded.url }));
+      toast.success("Image uploaded");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Image upload failed");
+    } finally {
+      setImageUploading(false);
     }
   };
 
@@ -379,16 +411,22 @@ export default function MenuPage() {
             <div className="space-y-3">
               <label className="block">
                 <span className="text-[#A1A1AA] text-xs mb-1.5 block">Category</span>
-                <select
-                  value={form.category_id}
-                  onChange={(e) => setForm((prev) => ({ ...prev, category_id: e.target.value }))}
+                <input
+                  list="menu-categories"
+                  value={form.category}
+                  onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
+                  disabled={Boolean(editingItemId)}
                   className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-3 py-2.5 text-sm text-[#FAFAFA] outline-none"
-                >
-                  <option value="">Select category</option>
+                  placeholder="Type or select category"
+                />
+                <datalist id="menu-categories">
                   {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    <option key={cat.id} value={cat.name} />
                   ))}
-                </select>
+                </datalist>
+                {!editingItemId && (
+                  <p className="text-[#71717A] text-[11px] mt-1">Type to see matching categories. A new one is created automatically if needed.</p>
+                )}
               </label>
 
               <label className="block">
@@ -433,6 +471,20 @@ export default function MenuPage() {
                     className="w-full bg-[#18181B] border border-[#27272A] rounded-xl px-3 py-2.5 text-sm text-[#FAFAFA] outline-none"
                     placeholder="https://..."
                   />
+                  <div className="mt-2 flex items-center gap-2">
+                    <label className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#27272A] text-[#A1A1AA] text-xs cursor-pointer hover:text-[#FAFAFA] transition-colors">
+                      <Camera size={12} />
+                      {imageUploading ? "Uploading..." : "Upload image"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={imageUploading}
+                        onChange={(e) => handleImageUpload(e.target.files?.[0] ?? null)}
+                      />
+                    </label>
+                    {form.image && <span className="text-[#71717A] text-xs truncate">Image ready</span>}
+                  </div>
                 </label>
               </div>
 

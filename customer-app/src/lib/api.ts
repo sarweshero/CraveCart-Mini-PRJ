@@ -201,6 +201,33 @@ export const authApi = {
   },
 };
 
+export const mediaApi = {
+  uploadImage: async (file: File, options?: { folder?: string; replaceUrl?: string }): Promise<{ url: string }> => {
+    if (API_MODE === "mock") return mock({ url: URL.createObjectURL(file) });
+
+    const token = getToken();
+    if (!token) throw new ApiError("Please login to upload images.", 401);
+
+    const formData = new FormData();
+    formData.append("file", file);
+    if (options?.folder) formData.append("folder", options.folder);
+    if (options?.replaceUrl) formData.append("replace_url", options.replaceUrl);
+
+    const res = await fetch(`${BASE_URL}/api/auth/media/upload/`, {
+      method: "POST",
+      headers: { Authorization: `Token ${token}` },
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new ApiError(body.message ?? "Image upload failed", res.status, body.errors);
+    }
+
+    return res.json();
+  },
+};
+
 // ─────────────────────────────────────────────────────────────
 // RESTAURANTS
 // ─────────────────────────────────────────────────────────────

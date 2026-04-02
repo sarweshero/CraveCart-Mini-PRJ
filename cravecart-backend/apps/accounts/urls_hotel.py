@@ -10,4 +10,5 @@ urlpatterns = [
     path("login/",    views.LoginView.as_view(),   name="hotel_login"),
     path("logout/",   views.LogoutView.as_view(),  name="hotel_logout"),
     path("me/",       views.MeView.as_view(),       name="hotel_me"),
+    path("media/upload/", views.MediaUploadView.as_view(), name="hotel_media_upload"),
 ]
