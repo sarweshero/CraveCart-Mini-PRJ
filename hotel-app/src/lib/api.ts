@@ -159,6 +159,23 @@ type HotelLoginResponse = {
   hotel: Hotel;
 };
 
+type HotelDashboardProfile = {
+  id: string;
+  restaurant_name?: string;
+  owner_name?: string;
+  owner_email?: string;
+  owner_phone?: string;
+  description?: string;
+  phone?: string;
+  timings?: string;
+  thumbnail?: string;
+  cover_image?: string;
+  address?: string;
+  city?: string;
+  area?: string;
+  is_open?: boolean;
+};
+
 function normalizeHotel(raw: HotelLoginRawResponse): Hotel {
   const hotel = raw.hotel ?? {};
   const user = raw.user;
@@ -170,6 +187,10 @@ function normalizeHotel(raw: HotelLoginRawResponse): Hotel {
     email: hotel.email ?? user?.email ?? "",
     restaurant_name: hotel.restaurant_name ?? `${fallbackName}'s Restaurant`,
     avatar: hotel.avatar ?? user?.avatar,
+    thumbnail: hotel.thumbnail,
+    cover_image: hotel.cover_image,
+    phone: hotel.phone,
+    timings: hotel.timings,
     is_profile_complete: hotel.is_profile_complete ?? user?.is_profile_complete,
     role: hotel.role ?? (user?.role === "hotel_admin" ? "hotel_admin" : "hotel_admin"),
     is_open: hotel.is_open,
@@ -205,6 +226,27 @@ export const dashboardApi = {
   stats: async (): Promise<DashboardStats> => {
     if (API_MODE === "mock") return mock(mockData.dashboard["GET /api/hotel/dashboard/stats"]);
     return request("/api/hotel/dashboard/stats/");
+  },
+  profile: async (): Promise<HotelDashboardProfile> => {
+    if (API_MODE === "mock") {
+      const auth = mockData.auth["POST /api/hotel/auth/login"];
+      return mock({
+        id: auth.hotel?.id ?? auth.user?.id,
+        restaurant_name: auth.hotel?.restaurant_name,
+        owner_name: auth.hotel?.owner_name,
+        owner_email: auth.hotel?.email,
+        phone: auth.hotel?.phone,
+        timings: auth.hotel?.timings,
+        thumbnail: auth.hotel?.thumbnail,
+        cover_image: auth.hotel?.cover_image,
+        is_open: auth.hotel?.is_open,
+      });
+    }
+    return request("/api/hotel/dashboard/profile/");
+  },
+  updateProfile: async (payload: Partial<HotelDashboardProfile>): Promise<HotelDashboardProfile> => {
+    if (API_MODE === "mock") return mock(payload as HotelDashboardProfile);
+    return request("/api/hotel/dashboard/profile/", { method: "PATCH", body: JSON.stringify(payload) });
   },
 };
 

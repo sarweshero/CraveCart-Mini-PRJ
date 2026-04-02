@@ -1,11 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Package, ChevronRight } from "lucide-react";
 import { orderApi } from "@/lib/api";
 import type { Order } from "@/lib/types";
 import { cn, formatCurrency, formatRelativeDate, getOrderStatusLabel, getOrderStatusColor } from "@/lib/utils";
+import RestaurantMediaImage from "@/components/ui/RestaurantMediaImage";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -33,7 +33,14 @@ export default function OrdersPage() {
             <Link key={order.id} href={`/orders/${order.id}`} className="group block">
               <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#161410] border border-[#2A2620] hover:border-[#E8A830]/30 transition-all">
                 <div className="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0">
-                  <Image src={order.restaurant.thumbnail} alt={order.restaurant.name} fill className="object-cover" sizes="56px"/>
+                  <RestaurantMediaImage
+                    src={order.restaurant.thumbnail}
+                    alt={order.restaurant.name}
+                    seed={`${order.restaurant.id}-${order.restaurant.name}`}
+                    variant="card"
+                    className="object-cover"
+                    sizes="56px"
+                  />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">

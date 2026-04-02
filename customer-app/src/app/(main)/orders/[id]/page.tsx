@@ -3,13 +3,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useOrderPolling } from "@/hooks/useOrderPolling";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, Package, CheckCircle2, Clock, Truck, Home, X, Star, Send, Sparkles, Mail, RefreshCw, Phone, MapPin } from "lucide-react";
 import { orderApi, reviewApi } from "@/lib/api";
 import type { OrderDetail, OrderStatus, TrackingStep } from "@/lib/types";
 import { cn, formatCurrency, formatDate, formatTime, getOrderStatusLabel, getOrderStatusColor } from "@/lib/utils";
 import toast from "react-hot-toast";
+import RestaurantMediaImage from "@/components/ui/RestaurantMediaImage";
 
 const TRACK_ICONS = { placed: Package, confirmed: CheckCircle2, preparing: Clock, out_for_delivery: Truck, delivered: Home, cancelled: X };
 const TERMINAL_STATUSES: OrderStatus[] = ["delivered", "cancelled"];
@@ -180,11 +180,16 @@ export default function OrderDetailPage() {
             {/* Restaurant info */}
             <div className="bg-[#161410] border border-[#2A2620] rounded-2xl p-5">
               <div className="flex items-center gap-3 mb-4">
-                {order.restaurant?.thumbnail && (
-                  <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
-                    <Image src={order.restaurant.thumbnail} alt={order.restaurant.name} fill className="object-cover" sizes="48px" />
-                  </div>
-                )}
+                <div className="relative w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                  <RestaurantMediaImage
+                    src={order.restaurant?.thumbnail}
+                    alt={order.restaurant?.name ?? "Restaurant"}
+                    seed={`${order.restaurant?.id ?? "order"}-${order.restaurant?.name ?? "restaurant"}`}
+                    variant="card"
+                    className="object-cover"
+                    sizes="48px"
+                  />
+                </div>
                 <div className="flex-1">
                   <p className="text-[#F5EDD8] font-semibold">{order.restaurant?.name}</p>
                   {order.restaurant?.address && <p className="text-[#9E9080] text-xs mt-0.5 flex items-center gap-1"><MapPin size={10} /> {order.restaurant.address}</p>}

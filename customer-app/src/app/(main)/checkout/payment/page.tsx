@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { AlertCircle, CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
@@ -15,6 +15,24 @@ function getToken(): string | null {
 }
 
 export default function CheckoutPaymentPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="w-full max-w-md bg-[#161410] border border-[#2A2620] rounded-3xl p-6 text-center shadow-[0_30px_80px_rgba(0,0,0,0.45)]">
+          <div className="mx-auto w-20 h-20 rounded-full border-2 border-[#2A2620] flex items-center justify-center mb-4">
+            <Loader2 className="w-9 h-9 text-[#E8A830] animate-spin" />
+          </div>
+          <h1 className="text-[#F5EDD8] text-xl font-semibold">Preparing Payment</h1>
+          <p className="text-[#9E9080] text-sm mt-2">Please wait while we load your payment details.</p>
+        </div>
+      </div>
+    }>
+      <CheckoutPaymentContent />
+    </Suspense>
+  );
+}
+
+function CheckoutPaymentContent() {
   const router = useRouter();
   const search = useSearchParams();
   const clearCart = useCartStore((s) => s.clearCart);

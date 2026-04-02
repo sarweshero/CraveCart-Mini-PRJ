@@ -13,6 +13,7 @@ import type { RestaurantDetail, MenuItem } from "@/lib/types";
 import { cn, formatCurrency } from "@/lib/utils";
 import { useCartStore, useUIStore } from "@/lib/store";
 import toast from "react-hot-toast";
+import RestaurantMediaImage from "@/components/ui/RestaurantMediaImage";
 
 export default function RestaurantDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -84,7 +85,15 @@ export default function RestaurantDetailPage() {
     <div className="min-h-screen">
       {/* ── Cover image ── */}
       <div className="relative h-56 md:h-72 overflow-hidden">
-        <Image src={restaurant.cover_image} alt={restaurant.name} fill className="object-cover" priority sizes="100vw" />
+        <RestaurantMediaImage
+          src={restaurant.cover_image}
+          alt={restaurant.name}
+          seed={`${restaurant.id}-${restaurant.name}`}
+          variant="cover"
+          className="object-cover"
+          priority
+          sizes="100vw"
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-[#0C0B09] via-[#0C0B09]/40 to-transparent" />
         <button
           onClick={() => router.back()}
@@ -99,7 +108,14 @@ export default function RestaurantDetailPage() {
         <div className="bg-[#161410] border border-[#2A2620] rounded-2xl p-5 mb-6">
           <div className="flex items-start gap-4">
             <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-[#2A2620] flex-shrink-0">
-              <Image src={restaurant.thumbnail} alt={restaurant.name} fill className="object-cover" sizes="64px" />
+              <RestaurantMediaImage
+                src={restaurant.thumbnail}
+                alt={restaurant.name}
+                seed={`${restaurant.id}-${restaurant.name}`}
+                variant="card"
+                className="object-cover"
+                sizes="64px"
+              />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">

@@ -4,6 +4,10 @@ export interface Hotel {
   email: string;
   restaurant_name: string;
   avatar?: string;
+  thumbnail?: string;
+  cover_image?: string;
+  phone?: string;
+  timings?: string;
   is_profile_complete?: boolean;
   role?: "hotel_admin";
   is_open?: boolean;

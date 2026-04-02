@@ -9,6 +9,7 @@ import { restaurantApi } from "@/lib/api";
 import type { Restaurant, FoodCategory } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { cn, extractList, formatCurrency } from "@/lib/utils";
+import RestaurantMediaImage from "@/components/ui/RestaurantMediaImage";
 
 const stagger = {
   visible: { transition: { staggerChildren: 0.07 } },
@@ -248,10 +249,11 @@ function RestaurantCard({ restaurant: r }: { restaurant: Restaurant }) {
       <div className="rounded-2xl overflow-hidden bg-[#161410] border border-[#2A2620] transition-all duration-300 hover:border-[#E8A830]/30 hover:shadow-[0_8px_40px_rgba(0,0,0,0.5)] hover:-translate-y-1">
         {/* Image */}
         <div className="relative h-44 overflow-hidden">
-          <Image
+          <RestaurantMediaImage
             src={r.thumbnail}
             alt={r.name}
-            fill
+            seed={`${r.id}-${r.name}`}
+            variant="card"
             className="object-cover transition-transform duration-500 group-hover:scale-105"
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           />

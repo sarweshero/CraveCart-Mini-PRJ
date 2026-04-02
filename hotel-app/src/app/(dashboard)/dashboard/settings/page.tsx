@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Save, Loader2, AlertTriangle, Trash2, Mail, Phone, Clock, Globe, Camera, User } from "lucide-react";
+import { Save, Loader2, AlertTriangle, Trash2, Mail, Phone, Clock, Globe, Camera, User, Image as ImageIcon } from "lucide-react";
 import { useHotelAuthStore } from "@/lib/store";
-import { hotelAuthApi, mediaApi } from "@/lib/api";
+import { dashboardApi, hotelAuthApi, mediaApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
 
@@ -20,28 +20,100 @@ export default function SettingsPage() {
   });
   const [saving, setSaving] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingThumbnail, setUploadingThumbnail] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const [avatarPendingFile, setAvatarPendingFile] = useState<File | null>(null);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
+  const [thumbnailPendingFile, setThumbnailPendingFile] = useState<File | null>(null);
+  const [thumbnailPreviewUrl, setThumbnailPreviewUrl] = useState<string | null>(null);
+  const [coverPendingFile, setCoverPendingFile] = useState<File | null>(null);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteType, setDeleteType] = useState<"temporary" | "permanent" | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState("");
+
+  useEffect(() => {
+    setForm((prev) => ({
+      ...prev,
+      restaurant_name: hotel?.restaurant_name ?? "",
+      owner_name: hotel?.owner_name ?? "",
+      email: hotel?.email ?? "",
+      phone: hotel?.phone ?? prev.phone,
+      timings: hotel?.timings ?? prev.timings,
+    }));
+  }, [hotel?.restaurant_name, hotel?.owner_name, hotel?.email, hotel?.phone, hotel?.timings]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadHotelProfile = async () => {
+      try {
+        const profile = await dashboardApi.profile();
+        if (!active) return;
+
+        setForm((prev) => ({
+          ...prev,
+          restaurant_name: profile.restaurant_name ?? prev.restaurant_name,
+          owner_name: profile.owner_name ?? prev.owner_name,
+          email: profile.owner_email ?? prev.email,
+          phone: profile.phone ?? profile.owner_phone ?? prev.phone,
+          timings: profile.timings ?? prev.timings,
+        }));
+
+        updateHotel({
+          restaurant_name: profile.restaurant_name,
+          owner_name: profile.owner_name,
+          email: profile.owner_email ?? hotel?.email,
+          phone: profile.phone ?? profile.owner_phone,
+          timings: profile.timings,
+          thumbnail: profile.thumbnail,
+          cover_image: profile.cover_image,
+          is_open: profile.is_open,
+        });
+      } catch {
+        // Keep existing local state if profile request fails.
+      }
+    };
+
+    loadHotelProfile();
+    return () => {
+      active = false;
+    };
+  }, [updateHotel, hotel?.email]);
 
   useEffect(() => {
     return () => {
       if (avatarPreviewUrl) {
         URL.revokeObjectURL(avatarPreviewUrl);
       }
+      if (thumbnailPreviewUrl) {
+        URL.revokeObjectURL(thumbnailPreviewUrl);
+      }
+      if (coverPreviewUrl) {
+        URL.revokeObjectURL(coverPreviewUrl);
+      }
     };
-  }, [avatarPreviewUrl]);
+  }, [avatarPreviewUrl, thumbnailPreviewUrl, coverPreviewUrl]);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await hotelAuthApi.updateProfile({ name: form.owner_name });
-      updateHotel({
+      const profile = await dashboardApi.updateProfile({
         restaurant_name: form.restaurant_name,
         owner_name: form.owner_name,
+        owner_phone: form.phone,
+        phone: form.phone,
+        timings: form.timings,
       });
+
+      updateHotel({
+        restaurant_name: profile.restaurant_name ?? form.restaurant_name,
+        owner_name: profile.owner_name ?? form.owner_name,
+        email: profile.owner_email ?? hotel?.email,
+        phone: profile.phone ?? profile.owner_phone ?? form.phone,
+        timings: profile.timings ?? form.timings,
+      });
+
       toast.success("Settings saved successfully!");
     } catch {
       toast.error("Failed to save settings. Please try again.");
@@ -64,12 +136,56 @@ export default function SettingsPage() {
     setAvatarPreviewUrl(URL.createObjectURL(file));
   };
 
+  const handleThumbnailSelected = (file: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    if (thumbnailPreviewUrl) {
+      URL.revokeObjectURL(thumbnailPreviewUrl);
+    }
+    setThumbnailPendingFile(file);
+    setThumbnailPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const handleCoverSelected = (file: File | null) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    if (coverPreviewUrl) {
+      URL.revokeObjectURL(coverPreviewUrl);
+    }
+    setCoverPendingFile(file);
+    setCoverPreviewUrl(URL.createObjectURL(file));
+  };
+
   const clearAvatarDraft = () => {
     if (avatarPreviewUrl) {
       URL.revokeObjectURL(avatarPreviewUrl);
     }
     setAvatarPreviewUrl(null);
     setAvatarPendingFile(null);
+  };
+
+  const clearThumbnailDraft = () => {
+    if (thumbnailPreviewUrl) {
+      URL.revokeObjectURL(thumbnailPreviewUrl);
+    }
+    setThumbnailPreviewUrl(null);
+    setThumbnailPendingFile(null);
+  };
+
+  const clearCoverDraft = () => {
+    if (coverPreviewUrl) {
+      URL.revokeObjectURL(coverPreviewUrl);
+    }
+    setCoverPreviewUrl(null);
+    setCoverPendingFile(null);
   };
 
   const handleAvatarUpload = async () => {
@@ -89,6 +205,46 @@ export default function SettingsPage() {
       toast.error("Failed to upload profile photo");
     } finally {
       setUploadingAvatar(false);
+    }
+  };
+
+  const handleThumbnailUpload = async () => {
+    if (!thumbnailPendingFile) return;
+
+    setUploadingThumbnail(true);
+    try {
+      const upload = await mediaApi.uploadImage(thumbnailPendingFile, {
+        folder: "uploads/restaurants/thumbnail",
+        replaceUrl: hotel?.thumbnail || undefined,
+      });
+      const profile = await dashboardApi.updateProfile({ thumbnail: upload.url });
+      updateHotel({ thumbnail: profile.thumbnail ?? upload.url });
+      clearThumbnailDraft();
+      toast.success("Card thumbnail updated");
+    } catch {
+      toast.error("Failed to upload card thumbnail");
+    } finally {
+      setUploadingThumbnail(false);
+    }
+  };
+
+  const handleCoverUpload = async () => {
+    if (!coverPendingFile) return;
+
+    setUploadingCover(true);
+    try {
+      const upload = await mediaApi.uploadImage(coverPendingFile, {
+        folder: "uploads/restaurants/cover",
+        replaceUrl: hotel?.cover_image || undefined,
+      });
+      const profile = await dashboardApi.updateProfile({ cover_image: upload.url });
+      updateHotel({ cover_image: profile.cover_image ?? upload.url });
+      clearCoverDraft();
+      toast.success("Cover photo updated");
+    } catch {
+      toast.error("Failed to upload cover photo");
+    } finally {
+      setUploadingCover(false);
     }
   };
 
@@ -181,6 +337,111 @@ export default function SettingsPage() {
             )}
           </div>
         </div>
+
+        <div className="mb-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="rounded-2xl border border-[#27272A] bg-[#18181B] p-3.5">
+            <p className="text-[#FAFAFA] text-sm font-medium mb-2">Card Thumbnail</p>
+            <div className="relative w-full h-32 rounded-xl overflow-hidden border border-[#27272A] bg-[#111113]">
+              {thumbnailPreviewUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={thumbnailPreviewUrl} alt="Thumbnail preview" className="w-full h-full object-cover" />
+              ) : hotel?.thumbnail ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={hotel.thumbnail} alt="Restaurant thumbnail" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-[radial-gradient(circle_at_25%_20%,#FB7185_0%,transparent_45%),radial-gradient(circle_at_85%_80%,#22D3EE_0%,transparent_48%),linear-gradient(135deg,#1F2937_0%,#111827_100%)] flex items-center justify-center">
+                  <ImageIcon size={22} className="text-[#D4D4D8]" />
+                </div>
+              )}
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <label className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#27272A] text-[#A1A1AA] text-xs cursor-pointer hover:text-[#FAFAFA] transition-colors">
+                <Camera size={12} className="text-[#7C3AED]" />
+                Choose
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={uploadingThumbnail}
+                  onChange={(e) => {
+                    handleThumbnailSelected(e.target.files?.[0] ?? null);
+                    e.currentTarget.value = "";
+                  }}
+                />
+              </label>
+              {thumbnailPendingFile && (
+                <>
+                  <button
+                    onClick={handleThumbnailUpload}
+                    disabled={uploadingThumbnail}
+                    className="px-2.5 py-1.5 rounded-lg bg-[#7C3AED] text-white text-xs font-medium disabled:opacity-70"
+                  >
+                    {uploadingThumbnail ? "Uploading..." : "Upload"}
+                  </button>
+                  <button
+                    onClick={clearThumbnailDraft}
+                    disabled={uploadingThumbnail}
+                    className="px-2.5 py-1.5 rounded-lg border border-[#27272A] text-[#A1A1AA] text-xs hover:text-[#FAFAFA]"
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-2xl border border-[#27272A] bg-[#18181B] p-3.5">
+            <p className="text-[#FAFAFA] text-sm font-medium mb-2">Cover Photo</p>
+            <div className="relative w-full h-32 rounded-xl overflow-hidden border border-[#27272A] bg-[#111113]">
+              {coverPreviewUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={coverPreviewUrl} alt="Cover preview" className="w-full h-full object-cover" />
+              ) : hotel?.cover_image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={hotel.cover_image} alt="Restaurant cover" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-[radial-gradient(circle_at_15%_25%,#F59E0B_0%,transparent_45%),radial-gradient(circle_at_80%_70%,#A78BFA_0%,transparent_45%),linear-gradient(120deg,#111827_0%,#172554_100%)] flex items-center justify-center">
+                  <ImageIcon size={22} className="text-[#D4D4D8]" />
+                </div>
+              )}
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <label className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#27272A] text-[#A1A1AA] text-xs cursor-pointer hover:text-[#FAFAFA] transition-colors">
+                <Camera size={12} className="text-[#7C3AED]" />
+                Choose
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={uploadingCover}
+                  onChange={(e) => {
+                    handleCoverSelected(e.target.files?.[0] ?? null);
+                    e.currentTarget.value = "";
+                  }}
+                />
+              </label>
+              {coverPendingFile && (
+                <>
+                  <button
+                    onClick={handleCoverUpload}
+                    disabled={uploadingCover}
+                    className="px-2.5 py-1.5 rounded-lg bg-[#7C3AED] text-white text-xs font-medium disabled:opacity-70"
+                  >
+                    {uploadingCover ? "Uploading..." : "Upload"}
+                  </button>
+                  <button
+                    onClick={clearCoverDraft}
+                    disabled={uploadingCover}
+                    className="px-2.5 py-1.5 rounded-lg border border-[#27272A] text-[#A1A1AA] text-xs hover:text-[#FAFAFA]"
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[

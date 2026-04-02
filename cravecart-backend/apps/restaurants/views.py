@@ -12,7 +12,7 @@ from .models import Restaurant, MenuItem, MenuCategory, CuisineCategory, Coupon
 from .serializers import (
     RestaurantListSerializer, RestaurantDetailSerializer,
     MenuItemSerializer, MenuItemUpdateSerializer, MenuItemCreateSerializer,
-    CuisineCategorySerializer, CouponSerializer,
+    CuisineCategorySerializer, CouponSerializer, HotelRestaurantProfileSerializer,
 )
 from utils.permissions import IsHotelAdmin
 from utils.media import delete_storage_file_if_managed
@@ -102,6 +102,21 @@ class HotelDashboardView(APIView):
             "rating_overview": {"average":float(restaurant.rating_avg),"total":restaurant.rating_count,"breakdown":breakdown},
             "recent_orders": [{"id":o.id,"customer_name":o.customer.name,"items":[f"{i['name']} x{i['quantity']}" for i in o.items],"total":float(o.total),"status":o.status,"placed_at":o.placed_at.isoformat()} for o in recent],
         })
+
+
+class HotelProfileView(APIView):
+    permission_classes = [IsAuthenticated, IsHotelAdmin]
+
+    def get(self, request):
+        restaurant = request.user.restaurant
+        return Response(HotelRestaurantProfileSerializer(restaurant).data)
+
+    def patch(self, request):
+        restaurant = request.user.restaurant
+        serializer = HotelRestaurantProfileSerializer(restaurant, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
 
 class HotelMenuView(APIView):

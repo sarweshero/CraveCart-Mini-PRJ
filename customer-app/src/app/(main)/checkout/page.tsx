@@ -211,7 +211,8 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <>
+      <div className="min-h-screen">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         <div className="flex items-center gap-4 mb-8">
           <Link href="/restaurants" className="w-9 h-9 rounded-xl bg-[#161410] border border-[#2A2620] flex items-center justify-center text-[#BFB49A] hover:text-[#F5EDD8] transition-all">
@@ -333,7 +334,7 @@ export default function CheckoutPage() {
         </div>
       </div>
 
-    </div>
+      </div>
 
       {shopCheckModal && (
         <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm flex items-center justify-center px-4">
@@ -400,6 +401,7 @@ export default function CheckoutPage() {
           </div>
         </div>
       )}
+    </>
   );
 }
 

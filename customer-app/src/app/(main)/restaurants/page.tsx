@@ -2,13 +2,13 @@
 
 import { useState, useEffect, Suspense, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { Search, SlidersHorizontal, Star, Clock, X, ChevronDown } from "lucide-react";
 import { restaurantApi } from "@/lib/api";
 import type { Restaurant, RestaurantFilters } from "@/lib/types";
 import { cn, extractList, formatCurrency, debounce } from "@/lib/utils";
+import RestaurantMediaImage from "@/components/ui/RestaurantMediaImage";
 
 const SORT_OPTIONS = [
   { value: "popularity", label: "Popularity" },
@@ -316,7 +316,14 @@ function RestaurantsContent() {
                 <Link href={`/restaurants/${restaurant.id}`} className="group block">
                   <div className="rounded-2xl overflow-hidden bg-[#161410] border border-[#2A2620] transition-all duration-300 hover:border-[#E8A830]/30 hover:shadow-[0_8px_40px_rgba(0,0,0,0.5)] hover:-translate-y-1">
                     <div className="relative h-44 overflow-hidden">
-                      <Image src={restaurant.thumbnail} alt={restaurant.name} fill className="object-cover transition-transform duration-500 group-hover:scale-105" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
+                      <RestaurantMediaImage
+                        src={restaurant.thumbnail}
+                        alt={restaurant.name}
+                        seed={`${restaurant.id}-${restaurant.name}`}
+                        variant="card"
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#161410] via-transparent to-transparent" />
                       <div className="absolute top-3 left-3 flex gap-2">
                         {restaurant.discount && <span className="px-2 py-1 rounded-lg bg-[#E8A830] text-[#0C0B09] text-xs font-bold">{restaurant.discount.label}</span>}

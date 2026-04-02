@@ -23,10 +23,32 @@ from .serializers import (
     DeleteAccountSerializer, UserPublicSerializer, AddressSerializer,
     AuthTokenSerializer,
 )
-from utils.media import build_public_media_url, build_upload_path, delete_storage_file_if_managed, sanitize_folder
+from utils.media import build_public_media_url, build_upload_path, delete_storage_file_if_managed, sanitize_folder, ensure_public_media_url
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
+
+
+def _hotel_payload(user) -> dict | None:
+    if getattr(user, "role", "") != User.Role.HOTEL_ADMIN or not hasattr(user, "restaurant"):
+        return None
+
+    restaurant = user.restaurant
+    return {
+        "id": str(user.id),
+        "restaurant_id": str(restaurant.id),
+        "owner_name": user.name,
+        "email": user.email,
+        "phone": restaurant.phone or user.phone,
+        "restaurant_name": restaurant.name,
+        "thumbnail": ensure_public_media_url(restaurant.thumbnail),
+        "cover_image": ensure_public_media_url(restaurant.cover_image),
+        "avatar": ensure_public_media_url(user.avatar),
+        "timings": restaurant.timings,
+        "is_profile_complete": user.is_profile_complete,
+        "role": user.role,
+        "is_open": restaurant.is_open,
+    }
 
 
 def _allowed_frontend_origins() -> set[str]:
@@ -88,12 +110,17 @@ class LoginView(APIView):
 
         token = AuthToken.create_for_user(user, request)
 
-        return Response({
+        response_payload = {
             "token":         token.access_token,
             "refresh_token": token.refresh_token,
             "expires_in":    AuthTokenSerializer(token).data["expires_in"],
             "user":          UserPublicSerializer(user).data,
-        })
+        }
+        hotel_payload = _hotel_payload(user)
+        if hotel_payload:
+            response_payload["hotel"] = hotel_payload
+
+        return Response(response_payload)
 
 
 # ── Token Refresh ─────────────────────────────────────────────────────────────
@@ -140,6 +167,9 @@ class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        hotel_payload = _hotel_payload(request.user)
+        if hotel_payload:
+            return Response(hotel_payload)
         return Response(UserPublicSerializer(request.user).data)
 
     def patch(self, request):
@@ -148,6 +178,9 @@ class MeView(APIView):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        hotel_payload = _hotel_payload(request.user)
+        if hotel_payload:
+            return Response(hotel_payload)
         return Response(UserPublicSerializer(request.user).data)
 
 
