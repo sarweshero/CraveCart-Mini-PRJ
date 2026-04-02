@@ -1,5 +1,7 @@
 """apps/accounts/views.py — All authentication endpoints."""
 
+import logging
+
 from urllib.parse import urlencode, urlparse
 
 from django.conf import settings
@@ -24,6 +26,7 @@ from .serializers import (
 from utils.media import build_upload_path, delete_storage_file_if_managed, sanitize_folder
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 def _allowed_frontend_origins() -> set[str]:
@@ -307,6 +310,14 @@ class GoogleOAuthCallbackView(APIView):
         if not user.is_authenticated:
             customer_frontend = (frontend_override or settings.CUSTOMER_FRONTEND_URL).rstrip("/")
             login_url = f"{customer_frontend}/login?error=oauth_failed"
+            logger.warning(
+                "OAuth callback ended unauthenticated; redirecting to login.",
+                extra={
+                    "frontend_override": frontend_override,
+                    "redirect_url": login_url,
+                    "path": request.path,
+                },
+            )
             return django_redirect(login_url)
 
         token = AuthToken.create_for_user(user, request)
@@ -324,4 +335,13 @@ class GoogleOAuthCallbackView(APIView):
             "complete": str(user.is_profile_complete).lower(),
         })
         redirect_url = f"{frontend_url}/auth/callback?{query}"
+        logger.info(
+            "OAuth callback succeeded; redirecting to frontend callback.",
+            extra={
+                "user_id": user.id,
+                "user_role": user.role,
+                "frontend_override": frontend_override,
+                "redirect_base": f"{frontend_url}/auth/callback",
+            },
+        )
         return django_redirect(redirect_url)
