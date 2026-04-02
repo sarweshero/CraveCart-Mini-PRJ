@@ -202,6 +202,7 @@ AUTHENTICATION_BACKENDS = [
 # ── Allauth — FIX BUG-17: allauth >= 65 new-style settings ──────────────────
 # Old API (< 65): ACCOUNT_AUTHENTICATION_METHOD, ACCOUNT_EMAIL_REQUIRED etc.
 # New API (>= 65): ACCOUNT_LOGIN_METHODS, ACCOUNT_EMAIL_VERIFICATION etc.
+ACCOUNT_AUTHENTICATION_METHOD = "email"   # Backward compatibility for older allauth
 ACCOUNT_LOGIN_METHODS        = {"email"}      # login via email only (not username)
 ACCOUNT_EMAIL_REQUIRED       = True
 ACCOUNT_EMAIL_VERIFICATION   = "optional"     # don't block login if email not verified
