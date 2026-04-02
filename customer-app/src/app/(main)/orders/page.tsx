@@ -17,7 +17,7 @@ export default function OrdersPage() {
 
   return (
     <div className="min-h-screen max-w-3xl mx-auto px-4 sm:px-6 py-8">
-      <h1 className="text-[#F5EDD8] font-display font-semibold text-3xl mb-8" >My Orders</h1>
+      <h1 className="text-[#F5EDD8] font-display font-semibold text-2xl sm:text-3xl tracking-tight mb-8">My Orders</h1>
       {loading ? (
         <div className="space-y-4">{[...Array(4)].map((_,i)=><div key={i} className="skeleton h-24 rounded-2xl"/>)}</div>
       ) : orders.length === 0 ? (
@@ -25,13 +25,13 @@ export default function OrdersPage() {
           <div className="w-20 h-20 rounded-2xl bg-[#161410] border border-[#2A2620] flex items-center justify-center"><Package size={32} className="text-[#2A2620]"/></div>
           <p className="text-[#F5EDD8] font-semibold text-lg">No orders yet</p>
           <p className="text-[#9E9080] text-sm">Your order history will appear here</p>
-          <Link href="/restaurants" className="px-5 py-2.5 rounded-xl bg-[#E8A830] text-[#0C0B09] font-semibold text-sm hover:bg-[#F5C842] transition-colors">Browse Restaurants</Link>
+          <Link href="/restaurants" className="px-6 py-3 rounded-xl bg-[#E8A830] text-[#0C0B09] font-semibold text-sm hover:bg-[#F5C842] transition-all shadow-[0_0_20px_rgba(232,168,48,0.2)] active:scale-[0.97]">Browse Restaurants</Link>
         </div>
       ) : (
         <div className="space-y-3">
           {orders.map(order=>(
             <Link key={order.id} href={`/orders/${order.id}`} className="group block">
-              <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#161410] border border-[#2A2620] hover:border-[#E8A830]/30 transition-all">
+              <div className="flex items-center gap-4 p-4 rounded-2xl bg-[#161410] border border-[#2A2620] hover:border-[#E8A830]/30 transition-all duration-300 hover:shadow-[0_4px_24px_rgba(0,0,0,0.3)]">
                 <div className="relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0">
                   <RestaurantMediaImage
                     src={order.restaurant.thumbnail}

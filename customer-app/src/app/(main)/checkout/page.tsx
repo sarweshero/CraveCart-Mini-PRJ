@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { MapPin, CreditCard, Wallet, Banknote, Tag, ChevronRight, Plus, Check, ArrowLeft, Loader2, Building2, AlertTriangle, X } from "lucide-react";
 import { useCartStore, useAuthStore } from "@/lib/store";
-import { orderApi, cartApi, restaurantApi } from "@/lib/api";
+import { authApi, orderApi, cartApi, restaurantApi } from "@/lib/api";
 import { calculateTax, cn, formatCurrency, roundMoney } from "@/lib/utils";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -16,6 +16,18 @@ type ShopCheckModalState = {
   openItems: Array<{ id: string; name: string; quantity: number; restaurantName: string }>;
 } | null;
 
+type AddressForm = Omit<Address, "id">;
+
+const EMPTY_ADDRESS_FORM: AddressForm = {
+  label: "Home",
+  line1: "",
+  line2: "",
+  city: "",
+  state: "",
+  pincode: "",
+  is_default: false,
+};
+
 const PAYMENT_METHODS = [
   { id: "upi",        label: "UPI",                icon: Wallet,    description: "Google Pay, PhonePe, Paytm, BHIM" },
   { id: "card",       label: "Credit / Debit Card", icon: CreditCard, description: "Visa, Mastercard, RuPay" },
@@ -25,16 +37,22 @@ const PAYMENT_METHODS = [
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user, updateUser } = useAuthStore();
   const { items, restaurantName, getSubtotal, getDeliveryFee, getTotal, applyCoupon, removeCoupon, appliedCoupon, clearCart } = useCartStore();
 
-  const [selectedAddress, setSelectedAddress] = useState<string>(user?.addresses.find((a) => a.is_default)?.id ?? "");
+  const [selectedAddress, setSelectedAddress] = useState<string>(() => {
+    const defaultAddress = user?.addresses.find((a) => a.is_default);
+    return defaultAddress ? String(defaultAddress.id) : "";
+  });
   const [paymentMethod, setPaymentMethod]     = useState("upi");
   const [couponInput, setCouponInput]         = useState("");
   const [couponLoading, setCouponLoading]     = useState(false);
   const [instructions, setInstructions]       = useState("");
   const [placing, setPlacing]                 = useState(false);
   const [shopCheckModal, setShopCheckModal]   = useState<ShopCheckModalState>(null);
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [savingAddress, setSavingAddress] = useState(false);
+  const [addressForm, setAddressForm] = useState<AddressForm>(EMPTY_ADDRESS_FORM);
 
   const subtotal   = getSubtotal();
   const delivery   = getDeliveryFee();
@@ -160,6 +178,47 @@ export default function CheckoutPage() {
     try { await cartApi.removeCoupon(); } catch { /* non-critical */ }
   };
 
+  const validateAddress = () => {
+    if (!addressForm.line1.trim()) return "Address line is required";
+    if (!addressForm.city.trim()) return "City is required";
+    if (!addressForm.state.trim()) return "State is required";
+    if (!/^\d{6}$/.test(addressForm.pincode.trim())) return "Pincode must be 6 digits";
+    return null;
+  };
+
+  const handleCreateAddress = async () => {
+    const error = validateAddress();
+    if (error) {
+      toast.error(error);
+      return;
+    }
+
+    setSavingAddress(true);
+    try {
+      const created = await authApi.addAddress({
+        ...addressForm,
+        line1: addressForm.line1.trim(),
+        line2: addressForm.line2?.trim() ?? "",
+        city: addressForm.city.trim(),
+        state: addressForm.state.trim(),
+        pincode: addressForm.pincode.trim(),
+      });
+
+      const latest = await authApi.me();
+      const normalizedAddresses = latest.addresses.map((addr) => ({ ...addr, id: String(addr.id) }));
+      updateUser({ addresses: normalizedAddresses });
+
+      setSelectedAddress(String(created.id));
+      setAddressForm(EMPTY_ADDRESS_FORM);
+      setShowAddressModal(false);
+      toast.success("Address added");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to add address");
+    } finally {
+      setSavingAddress(false);
+    }
+  };
+
   const handlePlaceOrder = async () => {
     if (!selectedAddress) { toast.error("Please select a delivery address"); return; }
     if (!paymentMethod)   { toast.error("Please select a payment method"); return; }
@@ -215,10 +274,10 @@ export default function CheckoutPage() {
       <div className="min-h-screen">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         <div className="flex items-center gap-4 mb-8">
-          <Link href="/restaurants" className="w-9 h-9 rounded-xl bg-[#161410] border border-[#2A2620] flex items-center justify-center text-[#BFB49A] hover:text-[#F5EDD8] transition-all">
+          <Link href="/restaurants" className="w-9 h-9 rounded-xl bg-[#161410] border border-[#2A2620] flex items-center justify-center text-[#BFB49A] hover:text-[#F5EDD8] hover:border-[#E8A830]/30 transition-all">
             <ArrowLeft size={18} />
           </Link>
-          <h1 className="text-[#F5EDD8] font-semibold text-2xl">Checkout</h1>
+          <h1 className="text-[#F5EDD8] font-display font-semibold text-2xl tracking-tight">Checkout</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -227,9 +286,18 @@ export default function CheckoutPage() {
             <Section title="Delivery Address" icon={MapPin}>
               <div className="space-y-3">
                 {user?.addresses.map((addr) => (
-                  <AddressOption key={addr.id} address={addr} selected={selectedAddress === addr.id} onSelect={() => setSelectedAddress(addr.id)} />
+                  <AddressOption
+                    key={String(addr.id)}
+                    address={{ ...addr, id: String(addr.id) }}
+                    selected={selectedAddress === String(addr.id)}
+                    onSelect={() => setSelectedAddress(String(addr.id))}
+                  />
                 ))}
-                <button className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-[#2A2620] text-[#9E9080] hover:border-[#E8A830]/40 hover:text-[#E8A830] transition-all text-sm">
+                <button
+                  type="button"
+                  onClick={() => setShowAddressModal(true)}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-[#2A2620] text-[#9E9080] hover:border-[#E8A830]/40 hover:text-[#E8A830] transition-all text-sm"
+                >
                   <Plus size={14} /> Add New Address
                 </button>
               </div>
@@ -324,17 +392,126 @@ export default function CheckoutPage() {
               </div>
 
               <button onClick={handlePlaceOrder} disabled={placing}
-                className={cn("w-full flex items-center justify-center gap-2 mt-5 py-4 rounded-xl font-semibold transition-all",
-                  placing ? "bg-[#2A2620] text-[#9E9080] cursor-not-allowed" : "bg-[#E8A830] text-[#0C0B09] hover:bg-[#F5C842] shadow-[0_0_25px_rgba(232,168,48,0.25)]")}>
+                className={cn("w-full flex items-center justify-center gap-2 mt-5 py-4 rounded-xl font-semibold text-sm transition-all active:scale-[0.98]",
+                  placing ? "bg-[#2A2620] text-[#9E9080] cursor-not-allowed" : "bg-[#E8A830] text-[#0C0B09] hover:bg-[#F5C842] shadow-[0_0_25px_rgba(232,168,48,0.25)] hover:shadow-[0_0_35px_rgba(232,168,48,0.35)]")}>
                 {placing ? (<><Loader2 size={16} className="animate-spin" /> Placing Order...</>) : (<>Place Order · {formatCurrency(roundMoney(total))}<ChevronRight size={16} /></>)}
               </button>
-              <p className="text-[#9E9080] text-xs text-center mt-3">By placing order you agree to our Terms & Conditions</p>
+              <p className="text-[#9E9080] text-[11px] text-center mt-3">By placing order you agree to our Terms & Conditions</p>
             </div>
           </div>
         </div>
       </div>
 
       </div>
+
+      {showAddressModal && (
+        <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm flex items-center justify-center px-4">
+          <div className="w-full max-w-lg bg-[#161410] border border-[#2A2620] rounded-2xl p-5">
+            <div className="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <h3 className="text-[#F5EDD8] font-semibold">Add Delivery Address</h3>
+                <p className="text-[#9E9080] text-sm mt-1">Save an address and continue checkout.</p>
+              </div>
+              <button onClick={() => setShowAddressModal(false)} className="text-[#9E9080] hover:text-[#F5EDD8]">
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                {(["Home", "Work", "Other"] as const).map((label) => (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => setAddressForm((prev) => ({ ...prev, label }))}
+                    className={cn(
+                      "px-3 py-2 rounded-xl border text-sm font-medium transition-all",
+                      addressForm.label === label
+                        ? "border-[#E8A830]/50 bg-[#E8A830]/10 text-[#E8A830]"
+                        : "border-[#2A2620] text-[#BFB49A] hover:border-[#E8A830]/25"
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              <input
+                type="text"
+                value={addressForm.line1}
+                onChange={(e) => setAddressForm((prev) => ({ ...prev, line1: e.target.value }))}
+                placeholder="Flat / Street / Landmark"
+                className="w-full px-4 py-3 rounded-xl border border-[#2A2620] bg-[#1E1B16] text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none focus:border-[#E8A830]/40"
+              />
+
+              <input
+                type="text"
+                value={addressForm.line2 ?? ""}
+                onChange={(e) => setAddressForm((prev) => ({ ...prev, line2: e.target.value }))}
+                placeholder="Area (optional)"
+                className="w-full px-4 py-3 rounded-xl border border-[#2A2620] bg-[#1E1B16] text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none focus:border-[#E8A830]/40"
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <input
+                  type="text"
+                  value={addressForm.city}
+                  onChange={(e) => setAddressForm((prev) => ({ ...prev, city: e.target.value }))}
+                  placeholder="City"
+                  className="w-full px-4 py-3 rounded-xl border border-[#2A2620] bg-[#1E1B16] text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none focus:border-[#E8A830]/40"
+                />
+                <input
+                  type="text"
+                  value={addressForm.state}
+                  onChange={(e) => setAddressForm((prev) => ({ ...prev, state: e.target.value }))}
+                  placeholder="State"
+                  className="w-full px-4 py-3 rounded-xl border border-[#2A2620] bg-[#1E1B16] text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none focus:border-[#E8A830]/40"
+                />
+                <input
+                  type="text"
+                  value={addressForm.pincode}
+                  onChange={(e) => setAddressForm((prev) => ({ ...prev, pincode: e.target.value }))}
+                  placeholder="Pincode"
+                  className="w-full px-4 py-3 rounded-xl border border-[#2A2620] bg-[#1E1B16] text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none focus:border-[#E8A830]/40"
+                />
+              </div>
+
+              <label className="flex items-center gap-2 text-[#BFB49A] text-xs cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={addressForm.is_default}
+                  onChange={(e) => setAddressForm((prev) => ({ ...prev, is_default: e.target.checked }))}
+                  className="accent-[#E8A830]"
+                />
+                Set as default address
+              </label>
+            </div>
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowAddressModal(false)}
+                className="px-4 py-2.5 rounded-xl border border-[#2A2620] text-[#9E9080] hover:text-[#F5EDD8]"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateAddress}
+                disabled={savingAddress}
+                className={cn(
+                  "px-4 py-2.5 rounded-xl font-semibold transition-all",
+                  savingAddress
+                    ? "bg-[#2A2620] text-[#9E9080] cursor-not-allowed"
+                    : "bg-[#E8A830] text-[#0C0B09] hover:bg-[#F5C842]"
+                )}
+              >
+                {savingAddress ? "Saving..." : "Save Address"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {shopCheckModal && (
         <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm flex items-center justify-center px-4">

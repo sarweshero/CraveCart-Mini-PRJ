@@ -203,8 +203,8 @@ export function CartDrawer() {
                   className={cn(
                     "flex items-center justify-center gap-2 w-full py-3.5 rounded-xl",
                     "bg-[#E8A830] text-[#0C0B09] font-semibold text-sm",
-                    "hover:bg-[#F5C842] transition-colors",
-                    "shadow-[0_0_20px_rgba(232,168,48,0.25)]"
+                    "hover:bg-[#F5C842] transition-all active:scale-[0.98]",
+                    "shadow-[0_0_20px_rgba(232,168,48,0.25)] hover:shadow-[0_0_30px_rgba(232,168,48,0.35)]"
                   )}
                 >
                   Proceed to Checkout

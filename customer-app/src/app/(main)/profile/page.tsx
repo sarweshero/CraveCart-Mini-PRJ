@@ -197,8 +197,8 @@ export default function ProfilePage() {
     <div className="min-h-screen">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
         <header>
-          <h1 className="text-[#F5EDD8] font-display font-semibold text-3xl">My Profile</h1>
-          <p className="text-[#9E9080] text-sm mt-1">Manage personal details and delivery addresses.</p>
+          <h1 className="text-[#F5EDD8] font-display font-semibold text-2xl sm:text-3xl tracking-tight">My Profile</h1>
+          <p className="text-[#9E9080] text-sm mt-1.5">Manage personal details and delivery addresses.</p>
         </header>
 
         <section className="bg-[#161410] border border-[#2A2620] rounded-2xl p-5">
@@ -429,7 +429,7 @@ function Input({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full bg-[#1E1B16] border border-[#2A2620] rounded-xl px-3.5 py-2.5 text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none focus:border-[#E8A830]/50 transition-colors"
+        className="w-full bg-[#1E1B16] border border-[#2A2620] rounded-xl px-3.5 py-2.5 text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none focus:border-[#E8A830]/50 focus:shadow-[0_0_0_3px_rgba(232,168,48,0.08)] transition-all"
       />
     </label>
   );

@@ -292,7 +292,7 @@ export default function MenuPage() {
     <div className="p-6 max-w-6xl">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-[#FAFAFA] font-semibold text-3xl mb-1" style={{ fontFamily: "var(--font-fraunces, serif)" }}>
+          <h1 className="text-[#FAFAFA] font-semibold text-2xl sm:text-3xl tracking-tight mb-1" style={{ fontFamily: "var(--font-fraunces, serif)" }}>
             Menu Management
           </h1>
           <p className="text-[#71717A] text-sm">{availableItems}/{totalItems} items available</p>

@@ -86,10 +86,10 @@ export default function DashboardPage() {
       <motion.div initial="hidden" animate="visible" variants={stagger} className="mb-8">
         <motion.div variants={fadeUp}>
           <h1
-            className="text-[#FAFAFA] font-display font-semibold text-3xl mb-1"
+            className="text-[#FAFAFA] font-display font-semibold text-2xl sm:text-3xl tracking-tight mb-1"
             style={{ fontFamily: "var(--font-fraunces, 'Fraunces', serif)" }}
           >
-            Good morning, {hotel?.owner_name?.split(" ")[0] ?? "Chef"} 👋
+            Good morning, {hotel?.owner_name?.split(" ")[0] ?? "Chef"}
           </h1>
           <p className="text-[#71717A] text-sm">{hotel?.restaurant_name} · Live dashboard</p>
         </motion.div>
@@ -124,20 +124,20 @@ export default function DashboardPage() {
             const Icon = card.icon;
             return (
               <motion.div key={card.label} variants={fadeUp}>
-                <div className="p-5 rounded-2xl bg-[#111113] border border-[#27272A] hover:border-[#27272A]/80 transition-all">
+                <div className="p-5 rounded-2xl bg-[#111113] border border-[#27272A] hover:border-[#7C3AED]/20 transition-all duration-300 hover:shadow-[0_4px_24px_rgba(0,0,0,0.3)]">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: card.bg }}>
-                      <Icon size={16} style={{ color: card.color }} />
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: card.bg }}>
+                      <Icon size={17} style={{ color: card.color }} />
                     </div>
                     <div className={cn(
-                      "flex items-center gap-1 text-xs font-semibold",
-                      card.change >= 0 ? "text-[#4ADE80]" : "text-[#F87171]"
+                      "flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full",
+                      card.change >= 0 ? "text-[#4ADE80] bg-[#4ADE80]/8" : "text-[#F87171] bg-[#F87171]/8"
                     )}>
                       {card.change >= 0 ? <ArrowUp size={11} /> : <ArrowDown size={11} />}
                       {Math.abs(card.change)}%
                     </div>
                   </div>
-                  <p className="text-[#FAFAFA] font-bold text-2xl leading-none mb-1">{card.value}</p>
+                  <p className="text-[#FAFAFA] font-bold text-2xl leading-none mb-1 tracking-tight">{card.value}</p>
                   <p className="text-[#71717A] text-xs">{card.label}</p>
                 </div>
               </motion.div>
@@ -151,8 +151,8 @@ export default function DashboardPage() {
         <div className="lg:col-span-2">
           <div className="bg-[#111113] border border-[#27272A] rounded-2xl overflow-hidden">
             <div className="flex items-center justify-between px-5 py-4 border-b border-[#27272A]">
-              <h2 className="text-[#FAFAFA] font-semibold text-sm">Live Orders</h2>
-              <a href="/dashboard/orders" className="text-[#7C3AED] text-xs hover:underline">View all →</a>
+              <h2 className="text-[#FAFAFA] font-semibold text-sm tracking-tight">Live Orders</h2>
+              <a href="/dashboard/orders" className="group text-[#7C3AED] text-xs hover:underline flex items-center gap-1">View all <span className="group-hover:translate-x-0.5 transition-transform">→</span></a>
             </div>
             <div className="divide-y divide-[#27272A]">
               {loading

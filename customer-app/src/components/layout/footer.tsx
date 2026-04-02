@@ -3,7 +3,7 @@ import { UtensilsCrossed, Github, Twitter, Instagram } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="border-t border-[#1E1B16] bg-[#0C0B09] py-12 px-4 sm:px-6">
+    <footer className="border-t border-[#1E1B16] bg-[#0C0B09] py-14 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           <div className="col-span-2 md:col-span-1">
@@ -15,7 +15,7 @@ export function Footer() {
                 Crave<span className="text-[#E8A830]">Cart</span>
               </span>
             </div>
-            <p className="text-[#9E9080] text-sm leading-relaxed max-w-xs">
+            <p className="text-[#9E9080] text-sm leading-relaxed max-w-xs mt-1">
               Food delivered with care. Every review answered with AI-powered intelligence.
             </p>
           </div>
@@ -50,7 +50,7 @@ export function Footer() {
             },
           ].map(({ title, links }) => (
             <div key={title}>
-              <h4 className="text-[#F5EDD8] font-semibold text-sm mb-3">{title}</h4>
+              <h4 className="text-[#F5EDD8] font-semibold text-sm mb-4 tracking-tight">{title}</h4>
               <ul className="space-y-2">
                 {links.map(({ label, href }) => (
                   <li key={label}>

@@ -73,10 +73,10 @@ export function Sidebar() {
       <div className="sticky top-0 flex h-screen flex-col p-5">
         {/* Header */}
         <div className="mb-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[var(--text-faint)]">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-faint)]">
             CraveCart Hotel
           </p>
-          <h1 className="font-[var(--font-fraunces)] text-2xl font-semibold text-[var(--text)]">
+          <h1 className="font-display text-xl font-semibold text-[var(--text)] tracking-tight mt-1 truncate" style={{ fontFamily: "var(--font-fraunces, 'Fraunces', serif)" }}>
             {hotel?.restaurant_name ?? "Control Panel"}
           </h1>
         </div>

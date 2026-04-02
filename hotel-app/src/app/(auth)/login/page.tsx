@@ -48,7 +48,7 @@ function HotelLoginContent() {
             <div className="w-10 h-10 rounded-xl bg-[#D97706] flex items-center justify-center"><UtensilsCrossed size={20} className="text-white" strokeWidth={2.5}/></div>
             <span className="text-white font-display font-semibold text-2xl">Crave<span style={{color:"#D97706"}}>Cart</span></span>
           </div>
-          <h2 className="text-white font-display font-semibold text-4xl leading-tight">Restaurant<br/><span style={{color:"#D97706",fontStyle:"italic"}}>Partner Portal</span></h2>
+          <h2 className="text-white font-display font-semibold text-4xl leading-tight tracking-tight">Restaurant<br/><span style={{color:"#D97706",fontStyle:"italic"}}>Partner Portal</span></h2>
           <p className="text-stone-400 mt-5 text-base leading-relaxed max-w-xs">Manage orders, update menus, and let AI craft personalized responses to every customer review.</p>
         </div>
         <div className="relative space-y-4">
@@ -72,7 +72,7 @@ function HotelLoginContent() {
             <div className="w-8 h-8 rounded-lg" style={{background:"var(--accent-light)",display:"flex",alignItems:"center",justifyContent:"center"}}><Store size={16} style={{color:"var(--accent)"}}/></div>
             <span className="text-sm font-medium" style={{color:"var(--accent)"}}>Hotel Partner Login</span>
           </div>
-          <h1 className="font-display font-semibold text-3xl mb-2">Sign in to dashboard</h1>
+          <h1 className="font-display font-semibold text-3xl mb-2 tracking-tight">Sign in to dashboard</h1>
           <p className="text-sm mb-8" style={{color:"var(--text-muted)"}}>Manage your restaurant from anywhere</p>
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Email */}
@@ -90,8 +90,8 @@ function HotelLoginContent() {
                 <button type="button" onClick={()=>setShowPwd(v=>!v)} style={{color:"var(--text-faint)"}}>{showPwd?<EyeOff size={15}/>:<Eye size={15}/>}</button>
               </div>
             </div>
-            <button type="submit" disabled={loading} className={cn("w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm transition-all text-white",loading?"opacity-60 cursor-not-allowed":"")} style={{background:loading?"var(--border)":"var(--accent)"}}>
-              {loading?<><Loader2 size={15} className="animate-spin"/>Signing in...</>:"Sign In →"}
+            <button type="submit" disabled={loading} className={cn("w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm transition-all text-white active:scale-[0.98]",loading?"opacity-60 cursor-not-allowed":"shadow-[0_0_20px_rgba(124,58,237,0.25)] hover:shadow-[0_0_30px_rgba(124,58,237,0.35)]")} style={{background:loading?"var(--border)":"var(--accent)"}}>
+              {loading?<><Loader2 size={15} className="animate-spin"/>Signing in...</>:"Sign In"}
             </button>
           </form>
           <p className="text-center text-sm mt-4" style={{ color: "var(--text-muted)" }}>

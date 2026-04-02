@@ -67,8 +67,18 @@ const config: Config = {
       boxShadow: {
         amber: "0 0 30px rgba(232, 168, 48, 0.15)",
         "amber-lg": "0 0 60px rgba(232, 168, 48, 0.2)",
+        "amber-btn": "0 0 20px rgba(232, 168, 48, 0.2), inset 0 1px 0 rgba(255,255,255,0.15)",
         card: "0 4px 24px rgba(0, 0, 0, 0.4)",
-        "card-hover": "0 8px 40px rgba(0, 0, 0, 0.6)",
+        "card-hover": "0 12px 48px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(232,168,48,0.08)",
+        glass: "0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.05)",
+      },
+      borderRadius: {
+        "2xl": "16px",
+        "3xl": "20px",
+        "4xl": "24px",
+      },
+      fontSize: {
+        "2xs": ["0.625rem", { lineHeight: "0.875rem" }],
       },
     },
   },

@@ -13,6 +13,35 @@ const config: Config = {
         display: ["var(--font-fraunces)", "Georgia", "serif"],
         body: ["var(--font-dm)", "system-ui", "sans-serif"],
       },
+      boxShadow: {
+        purple: "0 0 20px rgba(124, 58, 237, 0.2)",
+        "purple-lg": "0 0 40px rgba(124, 58, 237, 0.3)",
+        card: "0 4px 24px rgba(0, 0, 0, 0.3)",
+        "card-hover": "0 8px 40px rgba(0, 0, 0, 0.5)",
+      },
+      borderRadius: {
+        "2xl": "16px",
+        "3xl": "20px",
+      },
+      animation: {
+        "fade-up": "fadeUp 0.4s ease forwards",
+        "fade-in": "fadeIn 0.3s ease forwards",
+        shimmer: "shimmer 1.8s infinite linear",
+      },
+      keyframes: {
+        fadeUp: {
+          "0%": { opacity: "0", transform: "translateY(12px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        fadeIn: {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+      },
     },
   },
   plugins: [],

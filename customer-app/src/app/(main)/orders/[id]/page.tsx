@@ -107,11 +107,11 @@ export default function OrderDetailPage() {
         )}
 
         <div className="flex items-center gap-4 mb-8">
-          <button onClick={() => router.back()} className="w-9 h-9 rounded-xl bg-[#161410] border border-[#2A2620] flex items-center justify-center text-[#BFB49A] hover:text-[#F5EDD8] transition-all">
+          <button onClick={() => router.back()} className="w-9 h-9 rounded-xl bg-[#161410] border border-[#2A2620] flex items-center justify-center text-[#BFB49A] hover:text-[#F5EDD8] hover:border-[#E8A830]/30 transition-all">
             <ChevronLeft size={18} />
           </button>
           <div>
-            <h1 className="text-[#F5EDD8] font-semibold text-xl">Order #{order.id.slice(-6).toUpperCase()}</h1>
+            <h1 className="text-[#F5EDD8] font-display font-semibold text-xl tracking-tight">Order #{order.id.slice(-6).toUpperCase()}</h1>
             <p className="text-[#9E9080] text-sm">{formatDate(order.placed_at)}</p>
           </div>
           {!isTerminal && (

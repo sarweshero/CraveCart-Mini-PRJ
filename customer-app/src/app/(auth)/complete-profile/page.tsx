@@ -11,7 +11,7 @@ import toast from "react-hot-toast";
 export default function CompleteProfilePage() {
   const router = useRouter();
   const { updateUser } = useAuthStore();
-  const [form, setForm] = useState({ name: "", phone: "", line1: "", city: "", pincode: "" });
+  const [form, setForm] = useState({ name: "", phone: "", line1: "", city: "", state: "", pincode: "" });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const set = (k: string) => (v: string) => setForm(f => ({ ...f, [k]: v }));
@@ -20,12 +20,39 @@ export default function CompleteProfilePage() {
     if (!form.name.trim()) e.name = "Name is required";
     if (!form.phone.trim()) e.phone = "Phone is required";
     else if (!/^[6-9]\d{9}$/.test(form.phone.replace(/\s/g,""))) e.phone = "Enter a valid Indian mobile number";
+
+    const hasAnyAddressField = [form.line1, form.city, form.state, form.pincode].some((v) => v.trim().length > 0);
+    if (hasAnyAddressField) {
+      if (!form.line1.trim()) e.line1 = "Address line is required";
+      if (!form.city.trim()) e.city = "City is required";
+      if (!form.state.trim()) e.state = "State is required";
+      if (!/^\d{6}$/.test(form.pincode.trim())) e.pincode = "Pincode must be 6 digits";
+    }
+
     setErrors(e); return Object.keys(e).length === 0;
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); if (!validate()) return; setLoading(true);
     try {
-      await authApi.completeProfile({ name: form.name, phone: form.phone });
+      const payload: Parameters<typeof authApi.completeProfile>[0] = {
+        name: form.name,
+        phone: form.phone,
+      };
+
+      const hasCompleteAddress = [form.line1, form.city, form.state, form.pincode].every((v) => v.trim().length > 0);
+      if (hasCompleteAddress) {
+        payload.address = {
+          label: "Home",
+          line1: form.line1.trim(),
+          line2: "",
+          city: form.city.trim(),
+          state: form.state.trim(),
+          pincode: form.pincode.trim(),
+          is_default: true,
+        };
+      }
+
+      await authApi.completeProfile(payload);
       updateUser({ name: form.name, phone: form.phone, is_profile_complete: true });
       toast.success("Profile complete! Welcome to CraveCart 🎉");
       router.push("/");
@@ -58,13 +85,24 @@ export default function CompleteProfilePage() {
           <div>
             <label className="block text-[#BFB49A] text-xs font-medium mb-1.5">Home Address <span className="text-[#9E9080]">(optional)</span></label>
             <div className="space-y-2">
-              <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl border border-[#2A2620] bg-[#161410] focus-within:border-[#E8A830]/50 transition-colors">
+              <div className={cn("flex items-center gap-2.5 px-4 py-3 rounded-xl border bg-[#161410] focus-within:border-[#E8A830]/50 transition-colors", errors.line1 ? "border-[#F87171]/50" : "border-[#2A2620]")}>
                 <MapPin size={15} className="text-[#9E9080]"/>
                 <input type="text" value={form.line1} onChange={e=>set("line1")(e.target.value)} placeholder="Street address" className="flex-1 bg-transparent text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none"/>
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <input type="text" value={form.city} onChange={e=>set("city")(e.target.value)} placeholder="City" className="px-4 py-3 rounded-xl border border-[#2A2620] bg-[#161410] text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none focus:border-[#E8A830]/50 transition-colors"/>
-                <input type="text" value={form.pincode} onChange={e=>set("pincode")(e.target.value)} placeholder="Pincode" className="px-4 py-3 rounded-xl border border-[#2A2620] bg-[#161410] text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none focus:border-[#E8A830]/50 transition-colors"/>
+              {errors.line1 && <p className="text-[#F87171] text-xs mt-1.5">{errors.line1}</p>}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div>
+                  <input type="text" value={form.city} onChange={e=>set("city")(e.target.value)} placeholder="City" className={cn("w-full px-4 py-3 rounded-xl border bg-[#161410] text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none focus:border-[#E8A830]/50 transition-colors", errors.city ? "border-[#F87171]/50" : "border-[#2A2620]")}/>
+                  {errors.city && <p className="text-[#F87171] text-xs mt-1.5">{errors.city}</p>}
+                </div>
+                <div>
+                  <input type="text" value={form.state} onChange={e=>set("state")(e.target.value)} placeholder="State" className={cn("w-full px-4 py-3 rounded-xl border bg-[#161410] text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none focus:border-[#E8A830]/50 transition-colors", errors.state ? "border-[#F87171]/50" : "border-[#2A2620]")}/>
+                  {errors.state && <p className="text-[#F87171] text-xs mt-1.5">{errors.state}</p>}
+                </div>
+                <div>
+                  <input type="text" value={form.pincode} onChange={e=>set("pincode")(e.target.value)} placeholder="Pincode" className={cn("w-full px-4 py-3 rounded-xl border bg-[#161410] text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none focus:border-[#E8A830]/50 transition-colors", errors.pincode ? "border-[#F87171]/50" : "border-[#2A2620]")}/>
+                  {errors.pincode && <p className="text-[#F87171] text-xs mt-1.5">{errors.pincode}</p>}
+                </div>
               </div>
             </div>
           </div>

@@ -69,14 +69,14 @@ export default function OrdersPage() {
     <div className="p-6 max-w-6xl">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-[#FAFAFA] font-display font-semibold text-3xl mb-1" style={{ fontFamily: "var(--font-fraunces, serif)" }}>
+          <h1 className="text-[#FAFAFA] font-display font-semibold text-2xl sm:text-3xl tracking-tight mb-1" style={{ fontFamily: "var(--font-fraunces, serif)" }}>
             Orders
           </h1>
           <p className="text-[#71717A] text-sm">Manage incoming and active orders</p>
         </div>
         <button
           onClick={() => loadOrders()}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#111113] border border-[#27272A] text-[#A1A1AA] text-sm hover:text-[#FAFAFA] transition-all"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#111113] border border-[#27272A] text-[#A1A1AA] text-sm hover:text-[#FAFAFA] hover:border-[#7C3AED]/30 transition-all active:scale-[0.97]"
         >
           <RefreshCw size={13} />
           Refresh
@@ -194,9 +194,9 @@ export default function OrdersPage() {
                         onClick={() => handleStatusUpdate(order)}
                         disabled={updatingId === order.id}
                         className={cn(
-                          "w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all",
+                          "w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium transition-all active:scale-[0.97]",
                           order.status === "placed"
-                            ? "bg-[#7C3AED] text-white hover:bg-[#6D28D9]"
+                            ? "bg-[#7C3AED] text-white hover:bg-[#6D28D9] shadow-[0_0_16px_rgba(124,58,237,0.25)]"
                             : "bg-[#18181B] border border-[#27272A] text-[#A1A1AA] hover:text-[#FAFAFA] hover:border-[#7C3AED]/40"
                         )}
                       >

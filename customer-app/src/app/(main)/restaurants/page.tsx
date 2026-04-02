@@ -138,14 +138,14 @@ function RestaurantsContent() {
     <div className="min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
         <div className="mb-8">
-          <h1 className="text-[#F5EDD8] font-display font-semibold text-3xl mb-1">Restaurants</h1>
+          <h1 className="text-[#F5EDD8] font-display font-semibold text-2xl sm:text-3xl tracking-tight mb-1">Restaurants</h1>
           <p className="text-[#9E9080] text-sm">
             {loading ? "Finding restaurants..." : `${restaurants.length} restaurants available`}
           </p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
-          <div className="flex-1 flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#161410] border border-[#2A2620] focus-within:border-[#E8A830]/50 transition-colors">
+          <div className="flex-1 flex items-center gap-2.5 px-4 py-3.5 rounded-xl bg-[#161410] border border-[#2A2620] focus-within:border-[#E8A830]/50 focus-within:shadow-[0_0_0_3px_rgba(232,168,48,0.08)] transition-all">
             <Search size={16} className="text-[#9E9080] flex-shrink-0" />
             <input
               type="text"
@@ -156,7 +156,7 @@ function RestaurantsContent() {
             />
             {search && (
               <button onClick={() => { setSearch(""); setFilters((f) => ({ ...f, search: "" })); }}>
-                <X size={14} className="text-[#9E9080] hover:text-[#F5EDD8]" />
+                <X size={14} className="text-[#9E9080] hover:text-[#F5EDD8] transition-colors" />
               </button>
             )}
           </div>
@@ -299,12 +299,15 @@ function RestaurantsContent() {
             {Array(6).fill(null).map((_, i) => <div key={i} className="skeleton h-64 rounded-2xl" />)}
           </div>
         ) : restaurants.length === 0 ? (
-          <div className="flex flex-col items-center py-20 gap-3 text-center">
-            <p className="text-[#F5EDD8] font-medium">No restaurants found</p>
-            <p className="text-[#9E9080] text-sm">Try adjusting your filters</p>
+          <div className="flex flex-col items-center py-24 gap-4 text-center">
+            <div className="w-16 h-16 rounded-2xl bg-[#161410] border border-[#2A2620] flex items-center justify-center mb-1">
+              <Search size={24} className="text-[#2A2620]" />
+            </div>
+            <p className="text-[#F5EDD8] font-semibold text-lg">No restaurants found</p>
+            <p className="text-[#9E9080] text-sm max-w-xs">Try adjusting your search or filters to find what you're looking for</p>
             <button
               onClick={() => { setSearch(""); setFilters({ sort_by: "popularity" }); }}
-              className="px-5 py-2.5 rounded-xl bg-[#E8A830] text-[#0C0B09] font-semibold text-sm"
+              className="px-6 py-3 rounded-xl bg-[#E8A830] text-[#0C0B09] font-semibold text-sm hover:bg-[#F5C842] transition-all shadow-[0_0_20px_rgba(232,168,48,0.2)] active:scale-[0.97]"
             >
               Clear Filters
             </button>
@@ -314,7 +317,7 @@ function RestaurantsContent() {
             {restaurants.map((restaurant, index) => (
               <motion.div key={restaurant.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.04 }}>
                 <Link href={`/restaurants/${restaurant.id}`} className="group block">
-                  <div className="rounded-2xl overflow-hidden bg-[#161410] border border-[#2A2620] transition-all duration-300 hover:border-[#E8A830]/30 hover:shadow-[0_8px_40px_rgba(0,0,0,0.5)] hover:-translate-y-1">
+                  <div className="rounded-2xl overflow-hidden bg-[#161410] border border-[#2A2620] transition-all duration-[350ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-[#E8A830]/30 hover:shadow-[0_12px_48px_rgba(0,0,0,0.6),0_0_0_1px_rgba(232,168,48,0.08)] hover:-translate-y-1.5">
                     <div className="relative h-44 overflow-hidden">
                       <RestaurantMediaImage
                         src={restaurant.thumbnail}
@@ -324,22 +327,22 @@ function RestaurantsContent() {
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#161410] via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#161410] via-[#161410]/20 to-transparent" />
                       <div className="absolute top-3 left-3 flex gap-2">
-                        {restaurant.discount && <span className="px-2 py-1 rounded-lg bg-[#E8A830] text-[#0C0B09] text-xs font-bold">{restaurant.discount.label}</span>}
-                        {!restaurant.is_open && <span className="px-2 py-1 rounded-lg bg-black/70 text-white text-xs font-semibold backdrop-blur-sm">Closed</span>}
+                        {restaurant.discount && <span className="px-2.5 py-1 rounded-lg bg-[#E8A830] text-[#0C0B09] text-xs font-bold shadow-[0_2px_8px_rgba(232,168,48,0.3)]">{restaurant.discount.label}</span>}
+                        {!restaurant.is_open && <span className="px-2.5 py-1 rounded-lg bg-black/70 text-white/90 text-xs font-semibold backdrop-blur-sm">Closed</span>}
                       </div>
-                      <div className="absolute bottom-3 right-3 flex items-center gap-1 px-2 py-1 rounded-lg bg-[#0C0B09]/80 backdrop-blur-sm border border-[#2A2620]/50">
+                      <div className="absolute bottom-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#0C0B09]/85 backdrop-blur-sm border border-[#2A2620]/50">
                         <Star size={11} className="text-[#E8A830]" fill="currentColor" />
-                        <span className="text-[#F5EDD8] text-xs font-semibold">{restaurant.rating}</span>
+                        <span className="text-[#F5EDD8] text-xs font-bold">{restaurant.rating}</span>
                       </div>
                     </div>
                     <div className="p-4">
-                      <h3 className="text-[#F5EDD8] font-semibold text-base truncate">{restaurant.name}</h3>
-                      <p className="text-[#9E9080] text-xs mt-0.5 truncate">{normalizeCuisineTags(restaurant.cuisine_tags).join(" • ")}</p>
-                      <div className="flex items-center gap-4 mt-3 text-xs text-[#9E9080]">
+                      <h3 className="text-[#F5EDD8] font-semibold text-[15px] truncate group-hover:text-[#E8A830] transition-colors duration-300">{restaurant.name}</h3>
+                      <p className="text-[#9E9080] text-xs mt-1 truncate">{normalizeCuisineTags(restaurant.cuisine_tags).join(" · ")}</p>
+                      <div className="flex items-center gap-3 mt-3 text-xs text-[#9E9080]">
                         <span className="flex items-center gap-1"><Clock size={11} />{restaurant.avg_delivery_time} min</span>
-                        <span>·</span>
+                        <span className="w-1 h-1 rounded-full bg-[#2A2620]" />
                         <span>Min. {formatCurrency(restaurant.min_order)}</span>
                       </div>
                     </div>

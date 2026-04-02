@@ -89,9 +89,9 @@ export default function LoginPage() {
               Crave<span className="text-[#E8A830]">Cart</span>
             </span>
           </div>
-          <h1 className="text-[#F5EDD8] font-display font-semibold text-3xl mb-2">Welcome back</h1>
+          <h1 className="text-[#F5EDD8] font-display font-semibold text-3xl tracking-tight mb-2">Welcome back</h1>
           <p className="text-[#9E9080] text-sm mb-8">Sign in to continue ordering</p>
-          <button onClick={() => authApi.googleOAuth()} className="w-full flex items-center justify-center gap-3 py-3 rounded-xl border border-[#2A2620] bg-[#161410] text-[#F5EDD8] text-sm font-medium hover:border-[#E8A830]/30 transition-all mb-5">
+          <button onClick={() => authApi.googleOAuth()} className="w-full flex items-center justify-center gap-3 py-3.5 rounded-xl border border-[#2A2620] bg-[#161410] text-[#F5EDD8] text-sm font-medium hover:border-[#E8A830]/30 hover:bg-[#161410]/80 transition-all mb-5 active:scale-[0.98]">
             <Chrome size={16} className="text-[#E8A830]" />Continue with Google
           </button>
           <div className="divider mb-5">or continue with email</div>
@@ -102,7 +102,7 @@ export default function LoginPage() {
                 suffix={<button type="button" onClick={() => setShowPassword(v => !v)} className="text-[#9E9080] hover:text-[#BFB49A]">{showPassword ? <EyeOff size={15}/> : <Eye size={15}/>}</button>} />
               <div className="text-right mt-1.5"><Link href="/forgot-password" className="text-[#E8A830] text-xs hover:underline">Forgot password?</Link></div>
             </div>
-            <button type="submit" disabled={loading} className={cn("w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm transition-all", loading ? "bg-[#2A2620] text-[#9E9080] cursor-not-allowed" : "bg-[#E8A830] text-[#0C0B09] hover:bg-[#F5C842] shadow-[0_0_25px_rgba(232,168,48,0.2)]")}>
+            <button type="submit" disabled={loading} className={cn("w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-sm transition-all active:scale-[0.98]", loading ? "bg-[#2A2620] text-[#9E9080] cursor-not-allowed" : "bg-[#E8A830] text-[#0C0B09] hover:bg-[#F5C842] shadow-[0_0_25px_rgba(232,168,48,0.2)] hover:shadow-[0_0_35px_rgba(232,168,48,0.3)]")}>
               {loading ? <><Loader2 size={15} className="animate-spin"/>Signing in...</> : "Sign In"}
             </button>
           </form>
@@ -119,7 +119,7 @@ function Field({ label, type, value, onChange, placeholder, icon: Icon, error, s
   return (
     <div>
       <label className="block text-[#BFB49A] text-xs font-medium mb-1.5">{label}</label>
-      <div className={cn("flex items-center gap-2.5 px-4 py-3 rounded-xl border bg-[#161410] transition-colors", error ? "border-[#F87171]/50" : "border-[#2A2620] focus-within:border-[#E8A830]/50")}>
+      <div className={cn("flex items-center gap-2.5 px-4 py-3 rounded-xl border bg-[#161410] transition-all", error ? "border-[#F87171]/50 shadow-[0_0_0_3px_rgba(248,113,113,0.08)]" : "border-[#2A2620] focus-within:border-[#E8A830]/50 focus-within:shadow-[0_0_0_3px_rgba(232,168,48,0.08)]")}>
         <Icon size={15} className={error ? "text-[#F87171]" : "text-[#9E9080]"} />
         <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} className="flex-1 bg-transparent text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none" />
         {suffix}
