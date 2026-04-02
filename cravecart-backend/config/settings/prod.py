@@ -130,12 +130,12 @@ AUTH_PASSWORD_VALIDATORS = [
 CORS_ALLOWED_ORIGINS = env.list(
     "CORS_ALLOWED_ORIGINS",
     default=[
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://localhost:3002",
+        # "http://localhost:3000",
+        # "http://localhost:3001",
+        # "http://localhost:3002",
         "https://cravecart.sarweshero.me",
-        "https://hotel.sarweshero.me",
-        "https://delivery.sarweshero.me",
+        "https://hotels-cravecart.sarweshero.me",
+        # "https://delivery-cravecart.sarweshero.me",
     ],
 )
 CORS_ALLOW_CREDENTIALS = True
