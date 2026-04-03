@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { authApi } from "@/lib/api";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -52,28 +53,32 @@ export function Navbar() {
         className={cn(
           "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
           scrolled
-            ? "bg-[#0C0B09]/60 backdrop-blur-xl border-b border-[#2A2620]/70 shadow-[0_4px_24px_rgba(0,0,0,0.25)]"
-            : "bg-transparent"
+            ? "bg-[#100f0d]/88 backdrop-blur-xl border-b border-[#2A2620] shadow-[0_8px_28px_rgba(0,0,0,0.28)]"
+            : "bg-[#100f0d]/74 backdrop-blur-md border-b border-[#2A2620]/65"
         )}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          {/* Desktop nav links */}
-          <nav className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={cn(
-                  "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
-                  pathname === link.href
-                    ? "text-[#E8A830] bg-[#E8A830]/10"
-                    : "text-[#BFB49A] hover:text-[#F5EDD8] hover:bg-white/5"
-                )}
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
+          <div className="flex items-center gap-4 md:gap-8 min-w-0">
+            <BrandLogo href="/" width={130} className="inline-flex shrink-0" />
+
+            {/* Desktop nav links */}
+            <nav className="hidden md:flex items-center gap-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                    pathname === link.href
+                      ? "text-[#E8A830] bg-[#E8A830]/10"
+                      : "text-[#BFB49A] hover:text-[#F5EDD8] hover:bg-white/5"
+                  )}
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
 
           {/* Right actions */}
           <div className="flex items-center gap-2">
@@ -196,7 +201,7 @@ export function Navbar() {
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="md:hidden overflow-hidden border-t border-[#2A2620]/70 bg-[#0C0B09]/70 backdrop-blur-xl"
+              className="md:hidden overflow-hidden border-t border-[#2A2620]/80 bg-[#100f0d]/92 backdrop-blur-xl"
             >
               <nav className="px-4 py-3 flex flex-col gap-1">
                 {navLinks.map((link) => (

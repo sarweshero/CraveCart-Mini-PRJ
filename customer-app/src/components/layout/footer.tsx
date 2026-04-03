@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { Github, Twitter, Instagram } from "lucide-react";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 export function Footer() {
   return (
-    <footer className="border-t border-[#1E1B16]/70 bg-[#0C0B09]/45 backdrop-blur-xl py-14 px-4 sm:px-6">
+    <footer className="border-t border-[#1E1B16]/80 bg-[#100f0d]/82 backdrop-blur-xl py-14 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           <div className="col-span-2 md:col-span-1">
-            <h3 className="text-[#F5EDD8] font-display font-semibold text-xl tracking-tight mb-3">CraveCart</h3>
+            <BrandLogo href="/" width={128} className="inline-flex mb-4" />
             <p className="text-[#9E9080] text-sm leading-relaxed max-w-xs mt-1">
               Food delivered with care. Every review answered with AI-powered intelligence.
             </p>
@@ -63,7 +64,7 @@ export function Footer() {
           </p>
           <div className="flex items-center gap-3">
             {[Github, Twitter, Instagram].map((Icon, i) => (
-              <a key={i} href="#" className="w-8 h-8 rounded-lg bg-[#161410] border border-[#2A2620] flex items-center justify-center text-[#9E9080] hover:text-[#E8A830] hover:border-[#E8A830]/30 transition-all">
+              <a key={i} href="#" className="w-8 h-8 rounded-lg bg-[#161410]/85 border border-[#2A2620] flex items-center justify-center text-[#9E9080] hover:text-[#E8A830] hover:border-[#E8A830]/30 transition-all">
                 <Icon size={14} />
               </a>
             ))}

@@ -4,11 +4,10 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Search, ArrowRight, Star, Clock, Zap } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { restaurantApi } from "@/lib/api";
 import type { Restaurant, FoodCategory } from "@/lib/types";
 import { useRouter } from "next/navigation";
-import { cn, extractList, formatCurrency, isRemoteImageUrl } from "@/lib/utils";
+import { extractList, formatCurrency } from "@/lib/utils";
 import RestaurantMediaImage from "@/components/ui/RestaurantMediaImage";
 
 const stagger = {
@@ -53,18 +52,11 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden pt-8 pb-16 md:pt-16 md:pb-24">
+      <section className="relative overflow-hidden pt-10 pb-14 md:pt-14 md:pb-20">
         {/* Background elements */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] rounded-full bg-[#E8A830]/6 blur-[120px]" />
-          <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-[#E8A830]/4 blur-[80px]" />
-          {/* Decorative food images */}
-          <div className="absolute right-[-60px] top-20 w-[380px] h-[380px] rounded-[40px] overflow-hidden opacity-30 rotate-6 hidden lg:block">
-            <Image src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600" fill alt="" className="object-cover" sizes="380px" unoptimized={isRemoteImageUrl("https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600")} />
-          </div>
-          <div className="absolute right-[200px] top-40 w-[200px] h-[200px] rounded-[30px] overflow-hidden opacity-20 -rotate-3 hidden lg:block">
-            <Image src="https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=400" fill alt="" className="object-cover" sizes="200px" unoptimized={isRemoteImageUrl("https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=400")} />
-          </div>
+          <div className="absolute inset-x-0 top-0 h-44 bg-gradient-to-b from-[#E8A830]/8 to-transparent" />
+          <div className="absolute -top-28 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[#E8A830]/10 blur-[120px]" />
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
@@ -72,10 +64,10 @@ export default function HomePage() {
             initial="hidden"
             animate="visible"
             variants={stagger}
-            className="max-w-2xl"
+            className="max-w-3xl"
           >
             {/* Badge */}
-            <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#E8A830]/10 border border-[#E8A830]/20 text-[#E8A830] text-xs font-semibold mb-6">
+            <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#E8A830]/12 border border-[#E8A830]/25 text-[#E8A830] text-xs font-semibold mb-6">
               <Zap size={12} fill="currentColor" />
               Fast delivery in 20–45 mins
             </motion.div>
@@ -83,28 +75,24 @@ export default function HomePage() {
             {/* Headline */}
             <motion.h1
               variants={fadeUp}
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-display font-semibold text-[#F5EDD8] leading-[1.05] tracking-[-0.03em]"
+              className="text-4xl sm:text-5xl md:text-6xl font-display font-semibold text-[#F5EDD8] leading-[1.05] tracking-[-0.03em]"
             >
-              Craving{" "}
-              <span className="text-[#E8A830] italic relative">
-                something
-                <span className="absolute -bottom-1 left-0 right-0 h-[3px] bg-gradient-to-r from-[#E8A830] to-[#F5C842] rounded-full opacity-60" />
-              </span>
+              Order from top restaurants
               <br />
-              delicious?
+              near <span className="text-[#E8A830] italic">you</span>
             </motion.h1>
 
             <motion.p variants={fadeUp} className="mt-6 text-[#BFB49A] text-base sm:text-lg leading-relaxed max-w-xl">
-              Order from the best restaurants around you. Every bite backed by AI-powered feedback — because great food deserves great conversation.
+              Discover trusted places, quick delivery, and seamless ordering. Clean menus, clear pricing, and AI-powered feedback all in one experience.
             </motion.p>
 
             {/* Location + Search */}
-            <motion.form variants={fadeUp} onSubmit={handleSearch} className="mt-8 flex flex-col sm:flex-row gap-3 max-w-xl">
-              <div className="flex items-center gap-2.5 px-4 py-3.5 rounded-xl bg-[#161410]/80 backdrop-blur-sm border border-[#2A2620] min-w-0 flex-shrink-0 hover:border-[#E8A830]/20 transition-colors">
+            <motion.form variants={fadeUp} onSubmit={handleSearch} className="mt-8 grid grid-cols-1 sm:grid-cols-[220px_1fr_auto] gap-3 max-w-3xl p-3 rounded-2xl bg-[#161410]/86 border border-[#2A2620] shadow-[0_10px_32px_rgba(0,0,0,0.22)]">
+              <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#0F0D0B] border border-[#2A2620] min-w-0">
                 <MapPin size={16} className="text-[#E8A830] flex-shrink-0" />
                 <span className="text-[#BFB49A] text-sm truncate">Coimbatore, Tamil Nadu</span>
               </div>
-              <div className="flex-1 flex items-center gap-2.5 px-4 py-3.5 rounded-xl bg-[#161410]/80 backdrop-blur-sm border border-[#2A2620] focus-within:border-[#E8A830]/50 transition-all">
+              <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#0F0D0B] border border-[#2A2620] focus-within:border-[#E8A830]/45 transition-colors">
                 <Search size={16} className="text-[#9E9080] flex-shrink-0" />
                 <input
                   type="text"
@@ -113,30 +101,27 @@ export default function HomePage() {
                   placeholder="Search for dishes or restaurants..."
                   className="flex-1 bg-transparent text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none"
                 />
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-lg bg-[#E8A830] text-[#0C0B09] text-sm font-semibold hover:bg-[#F5C842] transition-all shadow-[0_0_12px_rgba(232,168,48,0.2)] hover:shadow-[0_0_20px_rgba(232,168,48,0.3)] flex-shrink-0 active:scale-[0.97]"
-                >
-                  Search
-                </button>
               </div>
+              <button
+                type="submit"
+                className="px-6 py-3 rounded-xl bg-[#E8A830] text-[#0C0B09] text-sm font-semibold hover:bg-[#F5C842] transition-colors shadow-[0_8px_20px_rgba(232,168,48,0.24)]"
+              >
+                Search
+              </button>
             </motion.form>
 
             {/* Stats */}
-            <motion.div variants={fadeUp} className="mt-10 flex items-center gap-6 sm:gap-8">
+            <motion.div variants={fadeUp} className="mt-9 grid grid-cols-3 gap-3 max-w-xl">
               {[
                 { value: "200+", label: "Restaurants" },
                 { value: "4.8★", label: "Average Rating" },
                 { value: "25 min", label: "Avg Delivery" },
-              ].map(({ value, label }, i) => (
-                <div key={label} className="flex items-center gap-6 sm:gap-8">
-                  {i > 0 && <div className="w-px h-8 bg-[#2A2620]" />}
-                  <div>
-                    <p className="text-[#F5EDD8] font-display font-semibold text-xl sm:text-2xl tracking-tight">
-                      {value}
-                    </p>
-                    <p className="text-[#9E9080] text-xs mt-0.5">{label}</p>
-                  </div>
+              ].map(({ value, label }) => (
+                <div key={label} className="rounded-xl border border-[#2A2620] bg-[#161410]/86 px-4 py-3">
+                  <p className="text-[#F5EDD8] font-display font-semibold text-xl sm:text-2xl tracking-tight">
+                    {value}
+                  </p>
+                  <p className="text-[#9E9080] text-xs mt-0.5">{label}</p>
                 </div>
               ))}
             </motion.div>
@@ -159,7 +144,7 @@ export default function HomePage() {
               <Link
                 key={cat.id}
                 href={`/restaurants?cuisine=${encodeURIComponent(cat.name)}`}
-                className="group flex flex-col items-center gap-2 p-3 rounded-2xl bg-[#161410] border border-[#2A2620] hover:border-[#E8A830]/40 transition-all duration-300 hover:shadow-[0_0_24px_rgba(232,168,48,0.12)] hover:-translate-y-0.5 active:scale-[0.97]"
+                className="group flex flex-col items-center gap-2 p-3 rounded-2xl bg-[#161410]/88 border border-[#2A2620] hover:border-[#E8A830]/40 transition-all duration-300 hover:shadow-[0_8px_18px_rgba(0,0,0,0.24)] active:scale-[0.98]"
               >
                 <span className="text-2xl group-hover:scale-110 transition-transform duration-300">{cat.icon}</span>
                 <span className="text-[#BFB49A] text-[11px] sm:text-xs font-medium text-center leading-tight group-hover:text-[#F5EDD8] transition-colors">{cat.name}</span>
@@ -213,9 +198,8 @@ export default function HomePage() {
 
       {/* ── AI Feature Callout ── */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-20">
-        <div className="relative rounded-3xl overflow-hidden border border-[#2A2620] bg-[#161410] p-8 md:p-12 lg:p-16">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(232,168,48,0.12),transparent_60%)] pointer-events-none" />
-          <div className="absolute top-0 right-0 w-64 h-64 bg-[radial-gradient(circle,rgba(232,168,48,0.08),transparent_70%)] pointer-events-none" />
+        <div className="relative rounded-3xl overflow-hidden border border-[#2A2620] bg-[#161410]/88 p-8 md:p-12 lg:p-16">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(232,168,48,0.08),transparent_60%)] pointer-events-none" />
           <div className="relative max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full bg-[#E8A830]/10 border border-[#E8A830]/20 text-[#E8A830] text-xs font-semibold mb-5 backdrop-blur-sm">
               Powered by Google Gemini AI
@@ -253,7 +237,7 @@ function RestaurantCard({ restaurant: r }: { restaurant: Restaurant }) {
 
   return (
     <Link href={`/restaurants/${r.id}`} className="group block">
-      <div className="rounded-2xl overflow-hidden bg-[#161410] border border-[#2A2620] transition-all duration-[350ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-[#E8A830]/30 hover:shadow-[0_12px_48px_rgba(0,0,0,0.6),0_0_0_1px_rgba(232,168,48,0.08)] hover:-translate-y-1.5">
+      <div className="rounded-2xl overflow-hidden bg-[#161410]/90 border border-[#2A2620] transition-all duration-[350ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:border-[#E8A830]/30 hover:shadow-[0_10px_28px_rgba(0,0,0,0.34)] hover:-translate-y-1">
         {/* Image */}
         <div className="relative h-44 overflow-hidden">
           <RestaurantMediaImage

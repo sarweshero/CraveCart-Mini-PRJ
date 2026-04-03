@@ -1,20 +1,19 @@
 <svg width="100%" viewBox="0 0 680 340" xmlns="http://www.w3.org/2000/svg">
 <defs>
   <style>
-    .brand-bg { fill: #1A0A00; }
     .flame-outer { fill: #FF6B1A; }
     .flame-mid { fill: #FF9A3C; }
     .flame-inner { fill: #FFD166; }
     .cart-body { fill: none; stroke: #FF6B1A; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
     .cart-fill { fill: #FF6B1A; }
-    .word-crave { fill: #FFFFFF; font-family: Georgia, 'Times New Roman', serif; font-size: 68px; font-weight: 700; letter-spacing: -1px; }
+    .word-crave { fill: #1A0A00; font-family: Georgia, 'Times New Roman', serif; font-size: 68px; font-weight: 700; letter-spacing: -1px; }
     .word-cart { fill: #FF6B1A; font-family: Georgia, 'Times New Roman', serif; font-size: 68px; font-weight: 700; letter-spacing: -1px; }
     .tagline { fill: #B07040; font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 13.5px; font-weight: 400; letter-spacing: 4px; }
     .dot { fill: #FF6B1A; }
     .underline-bar { fill: #FF6B1A; }
   </style>
 </defs>
-<rect width="680" height="340" rx="18" class="brand-bg"/>
+
 <g transform="translate(82, 100)">
   <path class="flame-outer" d="M36,90 C10,75 5,52 14,36 C18,28 24,22 24,22 C22,34 28,38 32,34 C28,50 36,58 42,52 C38,66 44,72 50,68 C46,78 54,86 60,82 C56,90 62,96 68,90 C60,104 46,104 36,90 Z"/>
   <path class="flame-mid" d="M38,80 C20,70 18,52 26,40 C30,34 34,30 34,30 C32,40 38,42 40,38 C38,52 44,58 48,54 C46,66 50,70 54,68 C52,76 56,82 62,78 C60,86 50,88 38,80 Z"/>
