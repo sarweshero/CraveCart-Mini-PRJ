@@ -10,7 +10,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { authApi } from "@/lib/api";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { BrandLogo } from "@/components/brand/brand-logo";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -53,14 +52,11 @@ export function Navbar() {
         className={cn(
           "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
           scrolled
-            ? "bg-[#0C0B09]/95 backdrop-blur-xl border-b border-[#2A2620] shadow-[0_4px_24px_rgba(0,0,0,0.4)]"
+            ? "bg-[#0C0B09]/60 backdrop-blur-xl border-b border-[#2A2620]/70 shadow-[0_4px_24px_rgba(0,0,0,0.25)]"
             : "bg-transparent"
         )}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          {/* Logo */}
-          <BrandLogo href="/" width={128} className="flex-shrink-0" />
-
           {/* Desktop nav links */}
           <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
@@ -138,7 +134,7 @@ export function Navbar() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.96 }}
                       transition={{ duration: 0.15 }}
-                      className="absolute right-0 top-full mt-2 w-52 bg-[#161410] border border-[#2A2620] rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.6)] overflow-hidden py-1 z-50"
+                      className="absolute right-0 top-full mt-2 w-52 bg-[#161410]/78 backdrop-blur-xl border border-[#2A2620]/80 rounded-xl shadow-[0_8px_40px_rgba(0,0,0,0.45)] overflow-hidden py-1 z-50"
                       onMouseLeave={() => setProfileOpen(false)}
                     >
                       <div className="px-4 py-3 border-b border-[#2A2620]">
@@ -200,7 +196,7 @@ export function Navbar() {
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="md:hidden overflow-hidden border-t border-[#2A2620] bg-[#0C0B09]/98 backdrop-blur-xl"
+              className="md:hidden overflow-hidden border-t border-[#2A2620]/70 bg-[#0C0B09]/70 backdrop-blur-xl"
             >
               <nav className="px-4 py-3 flex flex-col gap-1">
                 {navLinks.map((link) => (

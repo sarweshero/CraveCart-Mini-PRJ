@@ -1,14 +1,13 @@
 import Link from "next/link";
 import { Github, Twitter, Instagram } from "lucide-react";
-import { BrandLogo } from "@/components/brand/brand-logo";
 
 export function Footer() {
   return (
-    <footer className="border-t border-[#1E1B16] bg-[#0C0B09] py-14 px-4 sm:px-6">
+    <footer className="border-t border-[#1E1B16]/70 bg-[#0C0B09]/45 backdrop-blur-xl py-14 px-4 sm:px-6">
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           <div className="col-span-2 md:col-span-1">
-            <BrandLogo href="/" width={132} className="inline-flex mb-3" />
+            <h3 className="text-[#F5EDD8] font-display font-semibold text-xl tracking-tight mb-3">CraveCart</h3>
             <p className="text-[#9E9080] text-sm leading-relaxed max-w-xs mt-1">
               Food delivered with care. Every review answered with AI-powered intelligence.
             </p>

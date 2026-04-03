@@ -8,7 +8,7 @@ import Image from "next/image";
 import { restaurantApi } from "@/lib/api";
 import type { Restaurant, FoodCategory } from "@/lib/types";
 import { useRouter } from "next/navigation";
-import { cn, extractList, formatCurrency } from "@/lib/utils";
+import { cn, extractList, formatCurrency, isRemoteImageUrl } from "@/lib/utils";
 import RestaurantMediaImage from "@/components/ui/RestaurantMediaImage";
 
 const stagger = {
@@ -60,10 +60,10 @@ export default function HomePage() {
           <div className="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-[#E8A830]/4 blur-[80px]" />
           {/* Decorative food images */}
           <div className="absolute right-[-60px] top-20 w-[380px] h-[380px] rounded-[40px] overflow-hidden opacity-30 rotate-6 hidden lg:block">
-            <Image src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600" fill alt="" className="object-cover" sizes="380px" />
+            <Image src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600" fill alt="" className="object-cover" sizes="380px" unoptimized={isRemoteImageUrl("https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600")} />
           </div>
           <div className="absolute right-[200px] top-40 w-[200px] h-[200px] rounded-[30px] overflow-hidden opacity-20 -rotate-3 hidden lg:block">
-            <Image src="https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=400" fill alt="" className="object-cover" sizes="200px" />
+            <Image src="https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=400" fill alt="" className="object-cover" sizes="200px" unoptimized={isRemoteImageUrl("https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?w=400")} />
           </div>
         </div>
 

@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight, Tag } from "lucide-react";
 import { useAuthStore, useCartStore, useUIStore } from "@/lib/store";
-import { calculateTax, cn, formatCurrency } from "@/lib/utils";
+import { calculateTax, cn, formatCurrency, isRemoteImageUrl } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -108,6 +108,7 @@ export function CartDrawer() {
                           fill
                           className="object-cover"
                           sizes="56px"
+                          unoptimized={isRemoteImageUrl(item.menu_item.image)}
                         />
                       </div>
 

@@ -157,3 +157,14 @@ export function normalizeTags(value: unknown): string[] {
 export function deepClone<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj));
 }
+
+export function isRemoteImageUrl(src?: string | null): boolean {
+  if (!src) return false;
+
+  try {
+    const url = new URL(src);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}

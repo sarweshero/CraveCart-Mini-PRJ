@@ -10,8 +10,8 @@
 
   /* Core palette */
   --bg: #0C0B09;
-  --bg-card: #161410;
-  --bg-elevated: #1E1B16;
+  --bg-card: rgba(22, 20, 16, 0.72);
+  --bg-elevated: rgba(30, 27, 22, 0.68);
   --accent: #E8A830;
   --accent-muted: #C48918;
   --accent-glow: #F5C842;
@@ -42,11 +42,34 @@ html {
 
 body {
   background-color: var(--bg);
+  background-image:
+    radial-gradient(circle at 12% 15%, rgba(232, 168, 48, 0.12), transparent 36%),
+    radial-gradient(circle at 88% 10%, rgba(232, 168, 48, 0.08), transparent 30%),
+    linear-gradient(rgba(12, 11, 9, 0.58), rgba(12, 11, 9, 0.72)),
+    url("/placeholders/restaurant-cover-2.svg");
+  background-size: auto, auto, auto, cover;
+  background-position: center, center, center, center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: var(--text);
   font-family: var(--font-plus-jakarta);
   line-height: 1.6;
   min-height: 100vh;
   letter-spacing: -0.01em;
+}
+
+[class*="bg-[#0C0B09]"] {
+  background-color: rgba(12, 11, 9, 0.58);
+}
+
+[class*="bg-[#161410]"] {
+  background-color: rgba(22, 20, 16, 0.64);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+[class*="border-[#2A2620]"] {
+  border-color: rgba(42, 38, 32, 0.75);
 }
 
 /* ── Enhanced Typography ── */

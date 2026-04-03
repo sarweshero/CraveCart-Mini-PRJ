@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import { isRemoteImageUrl } from "@/lib/utils";
 
 type RestaurantMediaVariant = "card" | "cover";
 
@@ -51,6 +52,7 @@ export default function RestaurantMediaImage({
 
   const fallbackSrc = useMemo(() => pickPlaceholder(seed ?? alt, variant), [seed, alt, variant]);
   const resolvedSrc = !hasError && normalizedSrc ? normalizedSrc : fallbackSrc;
+  const unoptimized = !hasError && isRemoteImageUrl(resolvedSrc);
 
   return (
     <Image
@@ -60,6 +62,7 @@ export default function RestaurantMediaImage({
       className={className}
       sizes={sizes}
       priority={priority}
+      unoptimized={unoptimized}
       onError={() => setHasError(true)}
     />
   );

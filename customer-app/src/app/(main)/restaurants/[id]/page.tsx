@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { restaurantApi, cartApi } from "@/lib/api";
 import type { RestaurantDetail, MenuItem } from "@/lib/types";
-import { cn, formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency, isRemoteImageUrl } from "@/lib/utils";
 import { useAuthStore, useCartStore, useUIStore } from "@/lib/store";
 import toast from "react-hot-toast";
 import RestaurantMediaImage from "@/components/ui/RestaurantMediaImage";
@@ -321,7 +321,7 @@ const MenuItemRow = memo(function MenuItemRow({
             className="relative w-24 h-20 rounded-xl overflow-hidden cursor-pointer group"
             onClick={onExpand}
           >
-            <Image src={item.image} alt={item.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="96px" />
+            <Image src={item.image} alt={item.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="96px" unoptimized={isRemoteImageUrl(item.image)} />
             {!item.is_available && (
               <div className="absolute inset-0 bg-[#0C0B09]/60 flex items-center justify-center">
                 <span className="text-[10px] text-[#9E9080] font-medium">Unavailable</span>
@@ -381,7 +381,7 @@ function ItemDetailModal({ item, onClose, onAdd }: { item: MenuItem; onClose: ()
         className="w-full max-w-md bg-[#161410] border border-[#2A2620] rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.7)]"
       >
         <div className="relative h-56">
-          <Image src={item.image} alt={item.name} fill className="object-cover" sizes="448px" />
+          <Image src={item.image} alt={item.name} fill className="object-cover" sizes="448px" unoptimized={isRemoteImageUrl(item.image)} />
           <div className="absolute inset-0 bg-gradient-to-t from-[#161410] to-transparent" />
         </div>
         <div className="p-5">
