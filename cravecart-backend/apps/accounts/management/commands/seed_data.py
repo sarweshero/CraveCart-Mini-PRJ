@@ -10,6 +10,7 @@ Seeds the database with:
 """
 from datetime import timedelta
 from decimal import Decimal
+from urllib.parse import quote_plus
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -29,6 +30,10 @@ CUISINE_CATEGORIES = [
 
 DEMO_PASSWORD = "demo1234"
 DEMO_ORDER_PREFIX = "[DEMO-SEED]"
+
+
+def _seed_image_url(query, size="900x700"):
+    return f"https://source.unsplash.com/{size}/?{quote_plus(query)}"
 
 HOTEL_SEED_DATA = [
     {
@@ -432,6 +437,462 @@ HOTEL_SEED_DATA = [
     },
 ]
 
+EXTRA_HOTEL_SPECS = [
+    {
+        "key": "chettinad_flame",
+        "owner": {"email": "admin@chettinadflame.com", "name": "Selvi Rajendran", "phone": "9840011101"},
+        "restaurant": {
+            "name": "Chettinad Flame",
+            "description": "Bold Chettinad spices, pepper roasts, and house-ground masalas.",
+            "cuisine_tags": ["South Indian", "Chettinad", "Spicy"],
+            "address": "11, DB Road, Saibaba Colony",
+            "city": "Coimbatore",
+            "area": "Saibaba Colony",
+            "state": "Tamil Nadu",
+            "pincode": "641038",
+            "phone": "+91 422 301 1101",
+            "timings": "11:30 AM - 11:00 PM",
+            "fssai": "12423011000101",
+            "min_order": 180,
+            "delivery_fee": 35,
+            "avg_delivery_time": 34,
+            "rating_avg": 4.6,
+            "rating_count": 1220,
+            "discount_type": "percentage",
+            "discount_value": 18,
+            "discount_label": "18% OFF on classics",
+        },
+        "menu_name": "Chettinad Classics",
+        "menu_icon": "🍲",
+        "items": [
+            {"name": "Pepper Chicken Fry", "description": "Dry roast chicken with black pepper and curry leaves", "price": 260, "is_veg": False, "spice_level": "hot"},
+            {"name": "Kozhi Curry Meal", "description": "Steamed rice with homestyle chicken curry", "price": 230, "is_veg": False, "spice_level": "medium"},
+            {"name": "Veg Korma Parotta", "description": "Layered parotta served with vegetable korma", "price": 160, "is_veg": True, "spice_level": "medium"},
+            {"name": "Kari Dosa", "description": "Ghee dosa topped with spicy minced mutton masala", "price": 240, "is_veg": False, "spice_level": "hot"},
+            {"name": "Elaneer Payasam", "description": "Tender coconut milk dessert chilled and creamy", "price": 110, "is_veg": True},
+        ],
+        "ai_template": {
+            "name": "Spice Notes",
+            "description": "Warm and descriptive replies focused on spice balance",
+            "tone": "warm",
+            "prompt_instructions": "Acknowledge flavor feedback with warmth. Mention one spice or preparation detail and invite the customer to try another house special.",
+        },
+    },
+    {
+        "key": "wok_story",
+        "owner": {"email": "admin@wokstoryexpress.com", "name": "Liang Prakash", "phone": "9840011102"},
+        "restaurant": {
+            "name": "Wok Story Express",
+            "description": "Fast wok-tossed noodles, gravies, and Indo-Chinese bowls.",
+            "cuisine_tags": ["Chinese", "Asian", "Noodles"],
+            "address": "45, Cross Cut Road, Gandhipuram",
+            "city": "Coimbatore",
+            "area": "Gandhipuram",
+            "state": "Tamil Nadu",
+            "pincode": "641012",
+            "phone": "+91 422 301 1102",
+            "timings": "12:00 PM - 11:30 PM",
+            "fssai": "12423011000102",
+            "min_order": 170,
+            "delivery_fee": 35,
+            "avg_delivery_time": 30,
+            "rating_avg": 4.4,
+            "rating_count": 980,
+            "discount_type": "flat",
+            "discount_value": 60,
+            "discount_label": "Flat ₹60 OFF",
+        },
+        "menu_name": "Wok Specials",
+        "menu_icon": "🥡",
+        "items": [
+            {"name": "Hakka Noodles", "description": "Stir-fried noodles with crunchy vegetables", "price": 170, "is_veg": True, "spice_level": "medium"},
+            {"name": "Chilli Chicken", "description": "Crispy chicken tossed in chilli garlic sauce", "price": 240, "is_veg": False, "spice_level": "hot"},
+            {"name": "Schezwan Fried Rice", "description": "Spicy schezwan rice with spring onions", "price": 190, "is_veg": True, "spice_level": "hot"},
+            {"name": "Veg Manchurian Gravy", "description": "Veg dumplings in tangy soy garlic gravy", "price": 180, "is_veg": True, "spice_level": "medium"},
+            {"name": "Honey Chilli Potato", "description": "Crispy potatoes glazed with sweet chilli", "price": 160, "is_veg": True},
+        ],
+        "ai_template": {
+            "name": "Quick Service Tone",
+            "description": "Energetic and concise response style",
+            "tone": "friendly",
+            "prompt_instructions": "Thank them quickly, reference one texture or flavor, and close with a one-line recommendation.",
+        },
+    },
+    {
+        "key": "burger_barn",
+        "owner": {"email": "admin@burgerbarngrill.com", "name": "Nikhil Arora", "phone": "9840011103"},
+        "restaurant": {
+            "name": "Burger Barn & Grill",
+            "description": "Stacked burgers, loaded fries, and grilled comfort meals.",
+            "cuisine_tags": ["Burgers", "Fast Food", "Grill"],
+            "address": "22, Race Course Road, Gopalapuram",
+            "city": "Coimbatore",
+            "area": "Race Course",
+            "state": "Tamil Nadu",
+            "pincode": "641018",
+            "phone": "+91 422 301 1103",
+            "timings": "12:00 PM - 12:00 AM",
+            "fssai": "12423011000103",
+            "min_order": 220,
+            "delivery_fee": 45,
+            "avg_delivery_time": 29,
+            "rating_avg": 4.3,
+            "rating_count": 1650,
+            "discount_type": "percentage",
+            "discount_value": 20,
+            "discount_label": "20% OFF burgers",
+        },
+        "menu_name": "Barn Favorites",
+        "menu_icon": "🍔",
+        "items": [
+            {"name": "Smoky Chicken Burger", "description": "Grilled chicken patty with smoky mayo", "price": 260, "is_veg": False},
+            {"name": "Crispy Veggie Burger", "description": "Crunchy vegetable patty with house sauce", "price": 220, "is_veg": True},
+            {"name": "BBQ Paneer Melt", "description": "Paneer patty topped with barbecue glaze", "price": 240, "is_veg": True, "spice_level": "medium"},
+            {"name": "Loaded Cheese Fries", "description": "Fries loaded with cheese sauce and herbs", "price": 170, "is_veg": True},
+            {"name": "Peri Peri Chicken Wings", "description": "Juicy wings tossed in peri peri rub", "price": 280, "is_veg": False, "spice_level": "hot"},
+        ],
+        "ai_template": {
+            "name": "Bold Grill Voice",
+            "description": "Confident and upbeat response style",
+            "tone": "friendly",
+            "prompt_instructions": "Keep it bold and fun, thank the customer, and suggest one combo add-on for next order.",
+        },
+    },
+    {
+        "key": "tandoori_nights",
+        "owner": {"email": "admin@tandoorinights.co", "name": "Imran Nawaz", "phone": "9840011104"},
+        "restaurant": {
+            "name": "Tandoori Nights",
+            "description": "North Indian kebabs, curries, and smoky tandoor breads.",
+            "cuisine_tags": ["North Indian", "Kebabs", "Tandoor"],
+            "address": "7, Lakshmi Mills Junction, Avinashi Road",
+            "city": "Coimbatore",
+            "area": "Lakshmi Mills",
+            "state": "Tamil Nadu",
+            "pincode": "641037",
+            "phone": "+91 422 301 1104",
+            "timings": "11:30 AM - 11:45 PM",
+            "fssai": "12423011000104",
+            "min_order": 210,
+            "delivery_fee": 40,
+            "avg_delivery_time": 36,
+            "rating_avg": 4.5,
+            "rating_count": 1430,
+            "discount_type": "flat",
+            "discount_value": 80,
+            "discount_label": "Flat ₹80 OFF",
+        },
+        "menu_name": "Tandoor & Curry",
+        "menu_icon": "🔥",
+        "items": [
+            {"name": "Chicken Tikka", "description": "Char-grilled chicken tikka with mint dip", "price": 290, "is_veg": False, "spice_level": "medium"},
+            {"name": "Paneer Butter Masala", "description": "Paneer cubes in creamy tomato gravy", "price": 240, "is_veg": True, "spice_level": "mild"},
+            {"name": "Butter Chicken", "description": "Tender chicken in rich buttery makhani gravy", "price": 300, "is_veg": False, "spice_level": "medium"},
+            {"name": "Garlic Naan", "description": "Tandoor naan topped with garlic butter", "price": 60, "is_veg": True},
+            {"name": "Jeera Rice", "description": "Aromatic basmati rice tempered with cumin", "price": 140, "is_veg": True},
+        ],
+        "ai_template": {
+            "name": "Classic Courtesy",
+            "description": "Polished and respectful review responses",
+            "tone": "professional",
+            "prompt_instructions": "Acknowledge the meal experience courteously and recommend one tandoor plus curry pairing.",
+        },
+    },
+    {
+        "key": "ramen_republic",
+        "owner": {"email": "admin@ramenrepublic.in", "name": "Aiko Raman", "phone": "9840011105"},
+        "restaurant": {
+            "name": "Ramen Republic",
+            "description": "Asian broth bowls, bao bites, and slurp-worthy noodles.",
+            "cuisine_tags": ["Japanese", "Ramen", "Asian"],
+            "address": "66, Hopes College Road, Peelamedu",
+            "city": "Coimbatore",
+            "area": "Peelamedu",
+            "state": "Tamil Nadu",
+            "pincode": "641004",
+            "phone": "+91 422 301 1105",
+            "timings": "12:00 PM - 11:00 PM",
+            "fssai": "12423011000105",
+            "min_order": 230,
+            "delivery_fee": 45,
+            "avg_delivery_time": 33,
+            "rating_avg": 4.4,
+            "rating_count": 890,
+            "discount_type": "percentage",
+            "discount_value": 15,
+            "discount_label": "15% OFF on bowls",
+        },
+        "menu_name": "Bowl Kitchen",
+        "menu_icon": "🍜",
+        "items": [
+            {"name": "Chicken Shoyu Ramen", "description": "Soy broth ramen with chicken slices and egg", "price": 320, "is_veg": False, "spice_level": "mild"},
+            {"name": "Spicy Miso Ramen", "description": "Miso broth with chilli oil and corn", "price": 300, "is_veg": True, "spice_level": "hot"},
+            {"name": "Teriyaki Chicken Don", "description": "Rice bowl topped with teriyaki glazed chicken", "price": 290, "is_veg": False, "spice_level": "medium"},
+            {"name": "Veg Gyoza", "description": "Pan-seared dumplings with sesame soy dip", "price": 220, "is_veg": True},
+            {"name": "Matcha Cheesecake Cup", "description": "Creamy matcha cheesecake in a dessert cup", "price": 150, "is_veg": True},
+        ],
+        "ai_template": {
+            "name": "Calm Japanese Tone",
+            "description": "Measured and thoughtful response style",
+            "tone": "professional",
+            "prompt_instructions": "Respond calmly, mention broth or texture notes, and thank the guest for detailed feedback.",
+        },
+    },
+    {
+        "key": "shawarma_square",
+        "owner": {"email": "admin@shawarmasquare.com", "name": "Faizal Kareem", "phone": "9840011106"},
+        "restaurant": {
+            "name": "Shawarma Square",
+            "description": "Middle Eastern wraps, rice platters, and grilled skewers.",
+            "cuisine_tags": ["Arabian", "Shawarma", "Grill"],
+            "address": "88, Trichy Road, Ramanathapuram",
+            "city": "Coimbatore",
+            "area": "Ramanathapuram",
+            "state": "Tamil Nadu",
+            "pincode": "641045",
+            "phone": "+91 422 301 1106",
+            "timings": "01:00 PM - 12:00 AM",
+            "fssai": "12423011000106",
+            "min_order": 190,
+            "delivery_fee": 38,
+            "avg_delivery_time": 31,
+            "rating_avg": 4.3,
+            "rating_count": 1110,
+            "discount_type": "flat",
+            "discount_value": 70,
+            "discount_label": "Flat ₹70 OFF",
+        },
+        "menu_name": "Wraps & Platters",
+        "menu_icon": "🥙",
+        "items": [
+            {"name": "Classic Chicken Shawarma", "description": "Roasted chicken wrapped with garlic toum", "price": 180, "is_veg": False},
+            {"name": "Falafel Wrap", "description": "Crispy falafel wrap with tahini sauce", "price": 160, "is_veg": True},
+            {"name": "Chicken Mandi Rice", "description": "Aromatic mandi rice with grilled chicken", "price": 320, "is_veg": False, "spice_level": "medium"},
+            {"name": "Hummus & Pita", "description": "Creamy hummus served with warm pita bread", "price": 170, "is_veg": True},
+            {"name": "Harissa Fries", "description": "Crispy fries with spicy harissa mayo", "price": 140, "is_veg": True, "spice_level": "medium"},
+        ],
+        "ai_template": {
+            "name": "Arabian Hospitality",
+            "description": "Friendly and welcoming tone",
+            "tone": "warm",
+            "prompt_instructions": "Thank warmly, mention freshness or grill quality, and invite them to try a platter next.",
+        },
+    },
+    {
+        "key": "sweet_cravings",
+        "owner": {"email": "admin@sweetcravingsstudio.com", "name": "Meera Dhanush", "phone": "9840011107"},
+        "restaurant": {
+            "name": "Sweet Cravings Studio",
+            "description": "Dessert boxes, waffles, shakes, and baked favorites.",
+            "cuisine_tags": ["Desserts", "Bakery", "Beverages"],
+            "address": "5, Bharathi Park, Tatabad",
+            "city": "Coimbatore",
+            "area": "Tatabad",
+            "state": "Tamil Nadu",
+            "pincode": "641012",
+            "phone": "+91 422 301 1107",
+            "timings": "10:00 AM - 11:00 PM",
+            "fssai": "12423011000107",
+            "min_order": 140,
+            "delivery_fee": 30,
+            "avg_delivery_time": 24,
+            "rating_avg": 4.7,
+            "rating_count": 2050,
+            "discount_type": "percentage",
+            "discount_value": 22,
+            "discount_label": "22% OFF on desserts",
+        },
+        "menu_name": "Dessert Bar",
+        "menu_icon": "🍰",
+        "items": [
+            {"name": "Nutella Waffle", "description": "Belgian waffle drizzled with nutella", "price": 190, "is_veg": True},
+            {"name": "Lotus Biscoff Cheesecake", "description": "Creamy no-bake cheesecake with biscoff", "price": 210, "is_veg": True},
+            {"name": "Brownie Fudge Sundae", "description": "Warm brownie topped with vanilla and fudge", "price": 220, "is_veg": True},
+            {"name": "Mango Tres Leches", "description": "Milk-soaked sponge cake with mango cream", "price": 180, "is_veg": True},
+            {"name": "Cold Coffee Shake", "description": "Thick cold coffee blended with ice cream", "price": 130, "is_veg": True},
+        ],
+        "ai_template": {
+            "name": "Sweet Delight Tone",
+            "description": "Cheerful, thankful dessert-focused replies",
+            "tone": "friendly",
+            "prompt_instructions": "Use a cheerful tone, thank them, and suggest one dessert pairing or shake recommendation.",
+        },
+    },
+    {
+        "key": "street_tadka",
+        "owner": {"email": "admin@streettadkajunction.com", "name": "Ravi Solanki", "phone": "9840011108"},
+        "restaurant": {
+            "name": "Street Tadka Junction",
+            "description": "Popular Indian street snacks, chaat, and quick bites.",
+            "cuisine_tags": ["Street Food", "Chaat", "Snacks"],
+            "address": "39, NSR Road, Saibaba Colony",
+            "city": "Coimbatore",
+            "area": "Saibaba Colony",
+            "state": "Tamil Nadu",
+            "pincode": "641011",
+            "phone": "+91 422 301 1108",
+            "timings": "04:00 PM - 11:30 PM",
+            "fssai": "12423011000108",
+            "min_order": 120,
+            "delivery_fee": 28,
+            "avg_delivery_time": 22,
+            "rating_avg": 4.2,
+            "rating_count": 1750,
+            "discount_type": "flat",
+            "discount_value": 50,
+            "discount_label": "Flat ₹50 OFF",
+        },
+        "menu_name": "Street Stars",
+        "menu_icon": "🌮",
+        "items": [
+            {"name": "Pani Puri", "description": "Crispy puris with tangy pani and masala", "price": 80, "is_veg": True},
+            {"name": "Dahi Papdi Chaat", "description": "Papdi topped with curd, chutneys and sev", "price": 110, "is_veg": True},
+            {"name": "Pav Bhaji", "description": "Buttery pav served with spicy mashed bhaji", "price": 130, "is_veg": True, "spice_level": "medium"},
+            {"name": "Vada Pav", "description": "Mumbai-style potato fritter burger", "price": 70, "is_veg": True},
+            {"name": "Masala Corn Cup", "description": "Steamed sweet corn with masala and butter", "price": 90, "is_veg": True},
+        ],
+        "ai_template": {
+            "name": "Street Friendly",
+            "description": "Casual and upbeat customer acknowledgements",
+            "tone": "friendly",
+            "prompt_instructions": "Keep it short, energetic and warm. Mention one snack highlight and invite them back.",
+        },
+    },
+    {
+        "key": "kerala_boat_house",
+        "owner": {"email": "admin@keralaboathouse.in", "name": "Anu Nair", "phone": "9840011109"},
+        "restaurant": {
+            "name": "Kerala Boat House",
+            "description": "Kerala style curries, appams, and coconut-rich coastal dishes.",
+            "cuisine_tags": ["Kerala", "Seafood", "South Indian"],
+            "address": "17, Sungam Bypass Road, Ukkadam",
+            "city": "Coimbatore",
+            "area": "Ukkadam",
+            "state": "Tamil Nadu",
+            "pincode": "641001",
+            "phone": "+91 422 301 1109",
+            "timings": "12:00 PM - 10:30 PM",
+            "fssai": "12423011000109",
+            "min_order": 200,
+            "delivery_fee": 42,
+            "avg_delivery_time": 35,
+            "rating_avg": 4.5,
+            "rating_count": 1188,
+            "discount_type": "percentage",
+            "discount_value": 16,
+            "discount_label": "16% OFF coastal menu",
+        },
+        "menu_name": "Kerala Kitchen",
+        "menu_icon": "🍛",
+        "items": [
+            {"name": "Malabar Chicken Curry", "description": "Coconut-rich chicken curry with roasted spices", "price": 260, "is_veg": False, "spice_level": "medium"},
+            {"name": "Appam (3 pcs)", "description": "Soft lacy appams made with fermented batter", "price": 95, "is_veg": True},
+            {"name": "Fish Pollichathu", "description": "Banana leaf grilled fish with kerala masala", "price": 320, "is_veg": False, "spice_level": "hot"},
+            {"name": "Avial", "description": "Mixed vegetables in coconut and curd", "price": 170, "is_veg": True, "spice_level": "mild"},
+            {"name": "Parotta with Egg Roast", "description": "Flaky parotta served with spicy egg roast", "price": 180, "is_veg": False, "spice_level": "medium"},
+        ],
+        "ai_template": {
+            "name": "Coastal Warmth",
+            "description": "Warm and homely response style",
+            "tone": "warm",
+            "prompt_instructions": "Thank sincerely, mention authenticity and invite them to try another Kerala favorite.",
+        },
+    },
+    {
+        "key": "tex_mex_cantina",
+        "owner": {"email": "admin@texmexcantina.in", "name": "Daniel Joseph", "phone": "9840011110"},
+        "restaurant": {
+            "name": "Tex-Mex Cantina",
+            "description": "Burritos, tacos, bowls, and loaded nachos with bold sauces.",
+            "cuisine_tags": ["Tex-Mex", "Street Food", "Fast Food"],
+            "address": "29, Thudiyalur Main Road, Saravanampatti",
+            "city": "Coimbatore",
+            "area": "Saravanampatti",
+            "state": "Tamil Nadu",
+            "pincode": "641035",
+            "phone": "+91 422 301 1110",
+            "timings": "12:00 PM - 11:30 PM",
+            "fssai": "12423011000110",
+            "min_order": 210,
+            "delivery_fee": 39,
+            "avg_delivery_time": 30,
+            "rating_avg": 4.3,
+            "rating_count": 960,
+            "discount_type": "flat",
+            "discount_value": 65,
+            "discount_label": "Flat ₹65 OFF",
+        },
+        "menu_name": "Cantina Specials",
+        "menu_icon": "🌯",
+        "items": [
+            {"name": "Chicken Burrito", "description": "Soft tortilla stuffed with rice, beans and chicken", "price": 280, "is_veg": False, "spice_level": "medium"},
+            {"name": "Veg Quesadilla", "description": "Cheesy toasted tortilla with mixed peppers", "price": 230, "is_veg": True, "spice_level": "mild"},
+            {"name": "Loaded Nachos", "description": "Corn chips with salsa, jalapenos and cheese", "price": 210, "is_veg": True, "spice_level": "medium"},
+            {"name": "Chipotle Rice Bowl", "description": "Mexican rice bowl with chipotle dressing", "price": 250, "is_veg": True, "spice_level": "medium"},
+            {"name": "Beef Taco Trio", "description": "Three soft tacos with spiced beef filling", "price": 320, "is_veg": False, "spice_level": "hot"},
+        ],
+        "ai_template": {
+            "name": "Cantina Cheer",
+            "description": "Playful, upbeat acknowledgment style",
+            "tone": "friendly",
+            "prompt_instructions": "Keep tone lively, thank the guest and suggest one salsa level or pairing for next visit.",
+        },
+    },
+]
+
+
+EXTRA_HOTEL_SEED_DATA = []
+for spec in EXTRA_HOTEL_SPECS:
+    restaurant_payload = dict(spec["restaurant"])
+    restaurant_payload.update(
+        {
+            "thumbnail": _seed_image_url(f"{spec['restaurant']['name']} food storefront"),
+            "cover_image": _seed_image_url(f"{spec['restaurant']['name']} restaurant interior"),
+            "is_open": True,
+            "is_featured": False,
+            "is_active": True,
+        }
+    )
+
+    signature_items = []
+    quick_items = []
+    for item_index, item in enumerate(spec["items"], start=1):
+        item_payload = {
+            "name": item["name"],
+            "description": item["description"],
+            "price": item["price"],
+            "is_veg": item["is_veg"],
+            "is_bestseller": item_index <= 2,
+            "is_available": True,
+            "spice_level": item.get("spice_level"),
+            "image": _seed_image_url(f"{item['name']} plated food"),
+        }
+        if item_index <= 3:
+            signature_items.append(item_payload)
+        else:
+            quick_items.append(item_payload)
+
+    EXTRA_HOTEL_SEED_DATA.append(
+        {
+            "key": spec["key"],
+            "owner": spec["owner"],
+            "restaurant": restaurant_payload,
+            "menu": [
+                {
+                    "name": spec["menu_name"],
+                    "icon": spec["menu_icon"],
+                    "items": signature_items,
+                },
+                {
+                    "name": "Quick Bites & Add-ons",
+                    "icon": "🥗",
+                    "items": quick_items,
+                },
+            ],
+            "ai_template": spec["ai_template"],
+        }
+    )
+
 CUSTOMER_SEED_DATA = [
     {
         "key": "arjun",
@@ -561,7 +1022,7 @@ class Command(BaseCommand):
         User = get_user_model()
         restaurants = {}
 
-        for hotel in HOTEL_SEED_DATA:
+        for hotel in HOTEL_SEED_DATA + EXTRA_HOTEL_SEED_DATA:
             owner_defaults = {
                 "name": hotel["owner"]["name"],
                 "phone": hotel["owner"]["phone"],
@@ -601,6 +1062,7 @@ class Command(BaseCommand):
                     item_defaults = {
                         "description": item["description"],
                         "price": item["price"],
+                        "image": item.get("image") or _seed_image_url(f"{item['name']} food plate"),
                         "is_veg": item["is_veg"],
                         "is_bestseller": item["is_bestseller"],
                         "is_available": item["is_available"],
