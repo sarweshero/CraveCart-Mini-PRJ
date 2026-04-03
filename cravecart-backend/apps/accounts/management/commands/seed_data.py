@@ -31,9 +31,24 @@ CUISINE_CATEGORIES = [
 DEMO_PASSWORD = "demo1234"
 DEMO_ORDER_PREFIX = "[DEMO-SEED]"
 
+STABLE_FOOD_IMAGES = [
+    "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w={width}&q=80",
+    "https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?auto=format&fit=crop&w={width}&q=80",
+    "https://images.unsplash.com/photo-1585937421612-70a008356fbe?auto=format&fit=crop&w={width}&q=80",
+    "https://images.unsplash.com/photo-1631515243349-e0cb75fb8d3a?auto=format&fit=crop&w={width}&q=80",
+    "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w={width}&q=80",
+    "https://images.unsplash.com/photo-1551218808-94e220e084d2?auto=format&fit=crop&w={width}&q=80",
+]
+
 
 def _seed_image_url(query, size="900x700"):
-    return f"https://source.unsplash.com/{size}/?{quote_plus(query)}"
+    try:
+        width = max(int(str(size).split("x", 1)[0]), 400)
+    except (TypeError, ValueError):
+        width = 900
+
+    image = STABLE_FOOD_IMAGES[sum(ord(ch) for ch in query) % len(STABLE_FOOD_IMAGES)]
+    return image.format(width=width)
 
 HOTEL_SEED_DATA = [
     {

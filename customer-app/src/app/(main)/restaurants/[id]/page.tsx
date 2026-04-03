@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { restaurantApi, cartApi } from "@/lib/api";
 import type { RestaurantDetail, MenuItem } from "@/lib/types";
-import { cn, formatCurrency, isRemoteImageUrl } from "@/lib/utils";
+import { cn, formatCurrency, getSafeImageSrc, isRemoteImageUrl } from "@/lib/utils";
 import { useAuthStore, useCartStore, useUIStore } from "@/lib/store";
 import toast from "react-hot-toast";
 import RestaurantMediaImage from "@/components/ui/RestaurantMediaImage";
@@ -272,6 +272,8 @@ const MenuItemRow = memo(function MenuItemRow({
   onUpdate: (qty: number) => void;
   onExpand: () => void;
 }) {
+  const imageSrc = getSafeImageSrc(item.image, "/placeholders/restaurant-card-1.svg");
+
   return (
     <div className={cn(
       "flex gap-4 p-4 rounded-2xl bg-[#161410] border transition-all duration-200",
@@ -321,7 +323,7 @@ const MenuItemRow = memo(function MenuItemRow({
             className="relative w-24 h-20 rounded-xl overflow-hidden cursor-pointer group"
             onClick={onExpand}
           >
-            <Image src={item.image} alt={item.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="96px" unoptimized={isRemoteImageUrl(item.image)} />
+            <Image src={imageSrc} alt={item.name} fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="96px" unoptimized={isRemoteImageUrl(imageSrc)} />
             {!item.is_available && (
               <div className="absolute inset-0 bg-[#0C0B09]/60 flex items-center justify-center">
                 <span className="text-[10px] text-[#9E9080] font-medium">Unavailable</span>
@@ -364,6 +366,8 @@ const MenuItemRow = memo(function MenuItemRow({
 // ── Item Detail Modal ──
 
 function ItemDetailModal({ item, onClose, onAdd }: { item: MenuItem; onClose: () => void; onAdd: () => void }) {
+  const imageSrc = getSafeImageSrc(item.image, "/placeholders/restaurant-cover-1.svg");
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -381,7 +385,7 @@ function ItemDetailModal({ item, onClose, onAdd }: { item: MenuItem; onClose: ()
         className="w-full max-w-md bg-[#161410] border border-[#2A2620] rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.7)]"
       >
         <div className="relative h-56">
-          <Image src={item.image} alt={item.name} fill className="object-cover" sizes="448px" unoptimized={isRemoteImageUrl(item.image)} />
+          <Image src={imageSrc} alt={item.name} fill className="object-cover" sizes="448px" unoptimized={isRemoteImageUrl(imageSrc)} />
           <div className="absolute inset-0 bg-gradient-to-t from-[#161410] to-transparent" />
         </div>
         <div className="p-5">

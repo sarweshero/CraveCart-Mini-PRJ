@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight, Tag } from "lucide-react";
 import { useAuthStore, useCartStore, useUIStore } from "@/lib/store";
-import { calculateTax, cn, formatCurrency, isRemoteImageUrl } from "@/lib/utils";
+import { calculateTax, cn, formatCurrency, getSafeImageSrc, isRemoteImageUrl } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -101,16 +101,21 @@ export function CartDrawer() {
                       exit={{ opacity: 0, x: 20 }}
                       className="flex gap-3 p-3 rounded-xl bg-[#161410] border border-[#2A2620]"
                     >
+                      {(() => {
+                        const imageSrc = getSafeImageSrc(item.menu_item.image, "/placeholders/restaurant-card-2.svg");
+                        return (
                       <div className="relative w-14 h-14 rounded-lg overflow-hidden flex-shrink-0">
                         <Image
-                          src={item.menu_item.image}
+                          src={imageSrc}
                           alt={item.menu_item.name}
                           fill
                           className="object-cover"
                           sizes="56px"
-                          unoptimized={isRemoteImageUrl(item.menu_item.image)}
+                          unoptimized={isRemoteImageUrl(imageSrc)}
                         />
                       </div>
+                        );
+                      })()}
 
                       <div className="flex-1 min-w-0">
                         <p className="text-[#F5EDD8] text-sm font-medium truncate">{item.menu_item.name}</p>

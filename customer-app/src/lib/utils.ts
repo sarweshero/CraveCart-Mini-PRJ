@@ -168,3 +168,22 @@ export function isRemoteImageUrl(src?: string | null): boolean {
     return false;
   }
 }
+
+export function isUnsupportedRemoteImageUrl(src?: string | null): boolean {
+  if (!src) return false;
+
+  try {
+    const url = new URL(src);
+    return url.hostname === "source.unsplash.com";
+  } catch {
+    return false;
+  }
+}
+
+export function getSafeImageSrc(src: string | null | undefined, fallbackSrc: string): string {
+  const normalizedSrc = (src ?? "").trim();
+  if (!normalizedSrc || isUnsupportedRemoteImageUrl(normalizedSrc)) {
+    return fallbackSrc;
+  }
+  return normalizedSrc;
+}
