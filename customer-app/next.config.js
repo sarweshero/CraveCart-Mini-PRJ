@@ -48,6 +48,7 @@ const nextConfig = {
     // FIX FE-CUS-6: Added Supabase storage domain for user/food images
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "source.unsplash.com" },
       { protocol: "https", hostname: "api.dicebear.com" },
       { protocol: "https", hostname: supabaseStorageHostname },
       { protocol: "https", hostname: supabaseHostname },
@@ -73,7 +74,7 @@ const nextConfig = {
           "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com",
           "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
           "font-src 'self' https://fonts.gstatic.com",
-          `img-src 'self' data: blob: https://images.unsplash.com https://api.dicebear.com ${supabaseOrigin} https://${supabaseStorageHostname}`,
+          `img-src 'self' data: blob: https://images.unsplash.com https://source.unsplash.com https://api.dicebear.com ${supabaseOrigin} https://${supabaseStorageHostname}`,
           `connect-src ${connectSrc}`,
           "frame-ancestors 'none'",
         ].join("; "),
