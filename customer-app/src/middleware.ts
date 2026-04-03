@@ -12,6 +12,8 @@ import { NextRequest, NextResponse } from "next/server";
  */
 
 const PUBLIC_PATHS = [
+  "/",
+  "/restaurants",
   "/login",
   "/register",
   "/auth/callback",
@@ -21,16 +23,32 @@ const PUBLIC_PATHS = [
   "/health",
 ];
 
+const PROTECTED_PATH_PREFIXES = [
+  "/checkout",
+  "/orders",
+  "/profile",
+];
+
+function matchesPath(pathname: string, route: string) {
+  if (route === "/") return pathname === "/";
+  return pathname === route || pathname.startsWith(`${route}/`) || pathname.startsWith(`${route}?`);
+}
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Always allow Next.js internals and public paths
-  if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+  if (PUBLIC_PATHS.some((p) => matchesPath(pathname, p))) {
     return NextResponse.next();
   }
 
   // Skip middleware for static assets
   if (/\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|woff2?)$/.test(pathname)) {
+    return NextResponse.next();
+  }
+
+  const requiresAuth = PROTECTED_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+  if (!requiresAuth) {
     return NextResponse.next();
   }
 
