@@ -7,6 +7,8 @@
 :root {
   --font-fraunces: 'Fraunces', Georgia, serif;
   --font-plus-jakarta: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --cursor-default: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 28 28'%3E%3Ccircle cx='14' cy='14' r='10.5' fill='%230C0B09' stroke='%23E8A830' stroke-width='2'/%3E%3Ccircle cx='14' cy='14' r='3.5' fill='%23E8A830' fill-opacity='0.9'/%3E%3C/svg%3E") 14 14, auto;
+  --cursor-interactive: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cpath d='M9 6.5c0-.83.67-1.5 1.5-1.5S12 5.67 12 6.5v5.25c0 .41.34.75.75.75s.75-.34.75-.75V4.75c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v7c0 .41.34.75.75.75s.75-.34.75-.75v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v8.82c0 4.17-3.38 7.55-7.55 7.55h-1.24A7.71 7.71 0 0 1 5.5 15.37V9.75c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v2c0 .41.34.75.75.75S10.5 12.16 10.5 11.75V6.5Z' fill='%23F5EDD8' stroke='%23E8A830' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M20.5 22.5l2.5 2.5' stroke='%23E8A830' stroke-width='2' stroke-linecap='round'/%3E%3C/g%3E%3C/svg%3E") 10 6, pointer;
 
   /* Core palette */
   --bg: #0C0B09;
@@ -54,6 +56,30 @@ body {
   line-height: 1.6;
   min-height: 100vh;
   letter-spacing: -0.01em;
+  cursor: var(--cursor-default);
+}
+
+a,
+button,
+[role="button"],
+label[for],
+summary,
+select,
+input[type="checkbox"],
+input[type="radio"],
+input[type="file"] {
+  cursor: var(--cursor-interactive);
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  cursor: text;
+}
+
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
 }
 
 /* ── Enhanced Typography ── */

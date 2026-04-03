@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { MapPin, Search, ArrowRight, Star, Clock, Zap } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { restaurantApi } from "@/lib/api";
 import type { Restaurant, FoodCategory } from "@/lib/types";
 import { useRouter } from "next/navigation";
@@ -64,66 +65,79 @@ export default function HomePage() {
             initial="hidden"
             animate="visible"
             variants={stagger}
-            className="max-w-3xl"
+            className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]"
           >
-            {/* Badge */}
-            <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#E8A830]/12 border border-[#E8A830]/25 text-[#E8A830] text-xs font-semibold mb-6">
-              <Zap size={12} fill="currentColor" />
-              Fast delivery in 20–45 mins
-            </motion.div>
+            <div className="max-w-3xl">
+              {/* Badge */}
+              <motion.div variants={fadeUp} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#E8A830]/12 border border-[#E8A830]/25 text-[#E8A830] text-xs font-semibold mb-6">
+                <Zap size={12} fill="currentColor" />
+                Fast delivery in 20–45 mins
+              </motion.div>
 
-            {/* Headline */}
-            <motion.h1
-              variants={fadeUp}
-              className="text-4xl sm:text-5xl md:text-6xl font-display font-semibold text-[#F5EDD8] leading-[1.05] tracking-[-0.03em]"
-            >
-              Order from top restaurants
-              <br />
-              near <span className="text-[#E8A830] italic">you</span>
-            </motion.h1>
-
-            <motion.p variants={fadeUp} className="mt-6 text-[#BFB49A] text-base sm:text-lg leading-relaxed max-w-xl">
-              Discover trusted places, quick delivery, and seamless ordering. Clean menus, clear pricing, and AI-powered feedback all in one experience.
-            </motion.p>
-
-            {/* Location + Search */}
-            <motion.form variants={fadeUp} onSubmit={handleSearch} className="mt-8 grid grid-cols-1 sm:grid-cols-[220px_1fr_auto] gap-3 max-w-3xl p-3 rounded-2xl bg-[#161410]/86 border border-[#2A2620] shadow-[0_10px_32px_rgba(0,0,0,0.22)]">
-              <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#0F0D0B] border border-[#2A2620] min-w-0">
-                <MapPin size={16} className="text-[#E8A830] flex-shrink-0" />
-                <span className="text-[#BFB49A] text-sm truncate">Coimbatore, Tamil Nadu</span>
-              </div>
-              <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#0F0D0B] border border-[#2A2620] focus-within:border-[#E8A830]/45 transition-colors">
-                <Search size={16} className="text-[#9E9080] flex-shrink-0" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search for dishes or restaurants..."
-                  className="flex-1 bg-transparent text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none"
-                />
-              </div>
-              <button
-                type="submit"
-                className="px-6 py-3 rounded-xl bg-[#E8A830] text-[#0C0B09] text-sm font-semibold hover:bg-[#F5C842] transition-colors shadow-[0_8px_20px_rgba(232,168,48,0.24)]"
+              {/* Headline */}
+              <motion.h1
+                variants={fadeUp}
+                className="text-4xl sm:text-5xl md:text-6xl font-display font-semibold text-[#F5EDD8] leading-[1.05] tracking-[-0.03em]"
               >
-                Search
-              </button>
-            </motion.form>
+                Big cravings,
+                <br />
+                one <span className="text-[#E8A830] italic">tap away</span>
+              </motion.h1>
 
-            {/* Stats */}
-            <motion.div variants={fadeUp} className="mt-9 grid grid-cols-3 gap-3 max-w-xl">
-              {[
-                { value: "200+", label: "Restaurants" },
-                { value: "4.8★", label: "Average Rating" },
-                { value: "25 min", label: "Avg Delivery" },
-              ].map(({ value, label }) => (
-                <div key={label} className="rounded-xl border border-[#2A2620] bg-[#161410]/86 px-4 py-3">
-                  <p className="text-[#F5EDD8] font-display font-semibold text-xl sm:text-2xl tracking-tight">
-                    {value}
-                  </p>
-                  <p className="text-[#9E9080] text-xs mt-0.5">{label}</p>
+              <motion.p variants={fadeUp} className="mt-6 text-[#BFB49A] text-base sm:text-lg leading-relaxed max-w-xl">
+                From local legends to everyday favorites, get great food delivered with smooth ordering, transparent pricing, and a smarter experience at every step.
+              </motion.p>
+
+              {/* Location + Search */}
+              <motion.form variants={fadeUp} onSubmit={handleSearch} className="mt-8 grid grid-cols-1 sm:grid-cols-[220px_1fr_auto] gap-3 max-w-3xl p-3 rounded-2xl bg-[#161410]/86 border border-[#2A2620] shadow-[0_10px_32px_rgba(0,0,0,0.22)]">
+                <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#0F0D0B] border border-[#2A2620] min-w-0">
+                  <MapPin size={16} className="text-[#E8A830] flex-shrink-0" />
+                  <span className="text-[#BFB49A] text-sm truncate">Coimbatore, Tamil Nadu</span>
                 </div>
-              ))}
+                <div className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-[#0F0D0B] border border-[#2A2620] focus-within:border-[#E8A830]/45 transition-colors">
+                  <Search size={16} className="text-[#9E9080] flex-shrink-0" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search for dishes or restaurants..."
+                    className="flex-1 bg-transparent text-[#F5EDD8] text-sm placeholder-[#9E9080] outline-none"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="px-6 py-3 rounded-xl bg-[#E8A830] text-[#0C0B09] text-sm font-semibold hover:bg-[#F5C842] transition-colors shadow-[0_8px_20px_rgba(232,168,48,0.24)]"
+                >
+                  Search
+                </button>
+              </motion.form>
+
+              {/* Stats */}
+              <motion.div variants={fadeUp} className="mt-9 grid grid-cols-3 gap-3 max-w-xl">
+                {[
+                  { value: "200+", label: "Restaurants" },
+                  { value: "4.8★", label: "Average Rating" },
+                  { value: "25 min", label: "Avg Delivery" },
+                ].map(({ value, label }) => (
+                  <div key={label} className="rounded-xl border border-[#2A2620] bg-[#161410]/86 px-4 py-3">
+                    <p className="text-[#F5EDD8] font-display font-semibold text-xl sm:text-2xl tracking-tight">
+                      {value}
+                    </p>
+                    <p className="text-[#9E9080] text-xs mt-0.5">{label}</p>
+                  </div>
+                ))}
+              </motion.div>
+            </div>
+
+            <motion.div variants={fadeUp} className="hidden lg:flex justify-end">
+              <Image
+                src="/cravecart-logo.svg"
+                alt="CraveCart"
+                width={680}
+                height={340}
+                priority
+                className="h-auto w-[360px] xl:w-[430px]"
+              />
             </motion.div>
           </motion.div>
         </div>

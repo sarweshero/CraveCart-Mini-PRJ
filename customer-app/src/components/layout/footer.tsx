@@ -8,7 +8,7 @@ export function Footer() {
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           <div className="col-span-2 md:col-span-1">
-            <BrandLogo href="/" width={128} className="inline-flex mb-4" />
+            <BrandLogo href="/" width={200} className="inline-flex mb-4" />
             <p className="text-[#9E9080] text-sm leading-relaxed max-w-xs mt-1">
               Food delivered with care. Every review answered with AI-powered intelligence.
             </p>

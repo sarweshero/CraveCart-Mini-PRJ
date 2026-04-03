@@ -14,7 +14,7 @@ export function BrandLogo({
 
   return (
     <Link href={href} className={className}>
-      <Image src="/cravecart-logo.svg" alt="CraveCart" width={width} height={height} priority className="h-auto w-auto" />
+      <Image src="/cravecart-logo.svg" alt="CraveCart" width={width} height={height} priority className="h-auto" />
     </Link>
   );
 }
