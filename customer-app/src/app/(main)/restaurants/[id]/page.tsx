@@ -106,7 +106,7 @@ export default function RestaurantDetailPage() {
       </div>
 
       {/* ── Restaurant info ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-16 relative z-10">
+      <div className="page-shell -mt-16 relative z-10">
         <div className="bg-[#161410] border border-[#2A2620] rounded-2xl p-5 mb-6">
           <div className="flex items-start gap-4">
             <div className="relative w-16 h-16 rounded-xl overflow-hidden border border-[#2A2620] flex-shrink-0">
@@ -414,7 +414,7 @@ function LoadingSkeleton() {
   return (
     <div className="min-h-screen">
       <div className="skeleton h-72 w-full" />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-16 relative z-10">
+      <div className="page-shell -mt-16 relative z-10">
         <div className="skeleton h-40 rounded-2xl mb-6" />
         <div className="space-y-4">
           {[...Array(5)].map((_, i) => <div key={i} className="skeleton h-28 rounded-2xl" />)}

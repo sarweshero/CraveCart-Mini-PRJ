@@ -136,7 +136,7 @@ function RestaurantsContent() {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="page-shell py-8">
         <div className="mb-8">
           <h1 className="text-[#F5EDD8] font-display font-semibold text-2xl sm:text-3xl tracking-tight mb-1">Restaurants</h1>
           <p className="text-[#9E9080] text-sm">

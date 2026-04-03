@@ -87,7 +87,7 @@ export default function OrderDetailPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
+      <div className="page-shell py-8">
         {showPaymentBanner && paymentResult === "success" && (
           <div className="mb-5 bg-[#4ADE80]/10 border border-[#4ADE80]/25 rounded-2xl p-3.5 flex items-center justify-between gap-3">
             <p className="text-[#4ADE80] text-sm font-medium">Payment successful. Your order is confirmed.</p>
@@ -312,7 +312,7 @@ export default function OrderDetailPage() {
 
 function LoadingSkeleton() {
   return (
-    <div className="min-h-screen max-w-4xl mx-auto px-4 py-8 animate-pulse">
+    <div className="page-shell min-h-screen py-8 animate-pulse">
       <div className="h-12 bg-[#161410] rounded-2xl mb-6 w-48" />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">

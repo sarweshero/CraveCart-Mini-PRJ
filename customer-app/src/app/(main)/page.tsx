@@ -60,7 +60,7 @@ export default function HomePage() {
           <div className="absolute -top-28 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[#E8A830]/10 blur-[120px]" />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="page-shell relative">
           <motion.div
             initial="hidden"
             animate="visible"
@@ -144,7 +144,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Categories ── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14">
+      <section className="page-shell pb-14">
         <div className="flex items-center justify-between mb-7">
           <h2 className="text-[#F5EDD8] font-display font-semibold text-xl sm:text-2xl tracking-tight">
             What are you craving?
@@ -169,7 +169,7 @@ export default function HomePage() {
       </section>
 
       {/* ── Featured ── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-14">
+      <section className="page-shell pb-14">
         <div className="flex items-center justify-between mb-7">
           <h2 className="text-[#F5EDD8] font-display font-semibold text-xl sm:text-2xl tracking-tight">
             Featured today
@@ -190,7 +190,7 @@ export default function HomePage() {
       </section>
 
       {/* ── All Restaurants ── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-20">
+      <section className="page-shell pb-20">
         <div className="flex items-center justify-between mb-7">
           <h2 className="text-[#F5EDD8] font-display font-semibold text-xl sm:text-2xl tracking-tight">
             All Restaurants
@@ -211,7 +211,7 @@ export default function HomePage() {
       </section>
 
       {/* ── AI Feature Callout ── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-20">
+      <section className="page-shell pb-20">
         <div className="relative rounded-3xl overflow-hidden border border-[#2A2620] bg-[#161410]/88 p-8 md:p-12 lg:p-16">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(232,168,48,0.08),transparent_60%)] pointer-events-none" />
           <div className="relative max-w-2xl">

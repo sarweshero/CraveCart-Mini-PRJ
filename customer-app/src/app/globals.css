@@ -362,3 +362,9 @@ p {
   height: 1px;
   background: var(--border);
 }
+
+.page-shell {
+  width: min(100%, 1600px);
+  margin-inline: auto;
+  padding-inline: clamp(16px, 2vw, 32px);
+}

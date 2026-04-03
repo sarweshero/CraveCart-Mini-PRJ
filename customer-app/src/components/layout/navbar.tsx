@@ -57,7 +57,7 @@ export function Navbar() {
             : "bg-[#100f0d]/74 backdrop-blur-md border-b border-[#2A2620]/65"
         )}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
+        <div className="page-shell h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-4 md:gap-8 min-w-0">
             <BrandLogo href="/" width={130} className="inline-flex shrink-0" />
 

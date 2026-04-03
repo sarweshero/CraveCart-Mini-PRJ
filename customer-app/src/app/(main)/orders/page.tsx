@@ -16,7 +16,7 @@ export default function OrdersPage() {
   }, []);
 
   return (
-    <div className="min-h-screen max-w-3xl mx-auto px-4 sm:px-6 py-8">
+    <div className="page-shell min-h-screen py-8">
       <h1 className="text-[#F5EDD8] font-display font-semibold text-2xl sm:text-3xl tracking-tight mb-8">My Orders</h1>
       {loading ? (
         <div className="space-y-4">{[...Array(4)].map((_,i)=><div key={i} className="skeleton h-24 rounded-2xl"/>)}</div>

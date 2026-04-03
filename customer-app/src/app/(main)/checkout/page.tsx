@@ -272,7 +272,7 @@ export default function CheckoutPage() {
   return (
     <>
       <div className="min-h-screen">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      <div className="page-shell py-8">
         <div className="flex items-center gap-4 mb-8">
           <Link href="/restaurants" className="w-9 h-9 rounded-xl bg-[#161410] border border-[#2A2620] flex items-center justify-center text-[#BFB49A] hover:text-[#F5EDD8] hover:border-[#E8A830]/30 transition-all">
             <ArrowLeft size={18} />

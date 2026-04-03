@@ -4,8 +4,8 @@ import { BrandLogo } from "@/components/brand/brand-logo";
 
 export function Footer() {
   return (
-    <footer className="border-t border-[#1E1B16]/80 bg-[#100f0d]/82 backdrop-blur-xl py-14 px-4 sm:px-6">
-      <div className="max-w-7xl mx-auto">
+    <footer className="border-t border-[#1E1B16]/80 bg-[#100f0d]/82 backdrop-blur-xl py-14">
+      <div className="page-shell">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           <div className="col-span-2 md:col-span-1">
             <BrandLogo href="/" width={200} className="inline-flex mb-4" />

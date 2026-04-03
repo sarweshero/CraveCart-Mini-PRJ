@@ -209,7 +209,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+      <div className="page-shell py-8 space-y-6">
         <header>
           <h1 className="text-[#F5EDD8] font-display font-semibold text-2xl sm:text-3xl tracking-tight">My Profile</h1>
           <p className="text-[#9E9080] text-sm mt-1.5">Manage personal details and delivery addresses.</p>
