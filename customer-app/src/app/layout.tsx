@@ -18,6 +18,11 @@ export const metadata: Metadata = {
     title: "CraveCart — Food Delivered with Care",
     description: "Order from the best restaurants in your city.",
   },
+  icons: {
+    icon: "/cravecart-logo.svg",
+    shortcut: "/cravecart-logo.svg",
+    apple: "/cravecart-logo.svg",
+  },
 };
 
 export const viewport: Viewport = {

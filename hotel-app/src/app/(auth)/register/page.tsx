@@ -3,11 +3,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Building2, Clock, CreditCard, ArrowRight, ArrowLeft, Check, Eye, EyeOff, UtensilsCrossed, AlertCircle, Loader2 } from "lucide-react";
+import { User, Building2, Clock, CreditCard, ArrowRight, ArrowLeft, Check, Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
 import { BASE_URL } from "@/lib/api";
 import { useHotelAuthStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 
 
@@ -120,12 +121,7 @@ export default function HotelRegisterPage() {
       {/* Top bar */}
       <div className="border-b sticky top-0 z-10 backdrop-blur-md px-6 py-4 flex items-center justify-between" style={{ borderColor: "var(--border)", background: "var(--bg-card)" }}>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: "var(--accent)" }}>
-            <UtensilsCrossed className="w-4 h-4 text-white" />
-          </div>
-          <span className="font-[var(--font-fraunces)] text-lg font-semibold" style={{ color: "var(--text)" }}>
-            CraveCart <span style={{ color: "var(--accent)" }}>Hotels</span>
-          </span>
+          <BrandLogo href="/login" width={148} className="inline-flex" />
         </div>
         <Link href="/login" className="text-sm transition-colors" style={{ color: "var(--text-muted)" }}>
           Already registered? Sign in

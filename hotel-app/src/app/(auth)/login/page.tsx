@@ -2,12 +2,13 @@
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, UtensilsCrossed, Loader2, Store } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader2, Store } from "lucide-react";
 import { hotelAuthApi } from "@/lib/api";
 import { useHotelAuthStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 function HotelLoginContent() {
   const router = useRouter();
@@ -44,10 +45,7 @@ function HotelLoginContent() {
       <div className="hidden lg:flex lg:w-5/12 flex-col justify-between bg-[#1C1917] p-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(217,119,6,0.15),transparent_60%)]"/>
         <div className="relative">
-          <div className="flex items-center gap-2.5 mb-16">
-            <div className="w-10 h-10 rounded-xl bg-[#D97706] flex items-center justify-center"><UtensilsCrossed size={20} className="text-white" strokeWidth={2.5}/></div>
-            <span className="text-white font-display font-semibold text-2xl">Crave<span style={{color:"#D97706"}}>Cart</span></span>
-          </div>
+          <BrandLogo href="/login" width={170} className="inline-flex mb-16" />
           <h2 className="text-white font-display font-semibold text-4xl leading-tight tracking-tight">Restaurant<br/><span style={{color:"#D97706",fontStyle:"italic"}}>Partner Portal</span></h2>
           <p className="text-stone-400 mt-5 text-base leading-relaxed max-w-xs">Manage orders, update menus, and let AI craft personalized responses to every customer review.</p>
         </div>
@@ -64,10 +62,7 @@ function HotelLoginContent() {
       {/* Right panel */}
       <div className="flex-1 flex items-center justify-center px-6 py-12">
         <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} className="w-full max-w-sm">
-          <div className="lg:hidden flex items-center gap-2 mb-10">
-            <div className="w-8 h-8 rounded-lg bg-[#D97706] flex items-center justify-center"><UtensilsCrossed size={16} className="text-white" strokeWidth={2.5}/></div>
-            <span className="font-display font-semibold text-xl">CraveCart <span style={{color:"#D97706"}}>Hotel</span></span>
-          </div>
+          <BrandLogo href="/login" width={148} className="inline-flex mb-10 lg:hidden" />
           <div className="flex items-center gap-2.5 mb-2">
             <div className="w-8 h-8 rounded-lg" style={{background:"var(--accent-light)",display:"flex",alignItems:"center",justifyContent:"center"}}><Store size={16} style={{color:"var(--accent)"}}/></div>
             <span className="text-sm font-medium" style={{color:"var(--accent)"}}>Hotel Partner Login</span>

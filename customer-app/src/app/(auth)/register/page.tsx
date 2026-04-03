@@ -3,10 +3,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, UtensilsCrossed, Loader2, ShieldCheck } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader2, ShieldCheck } from "lucide-react";
 import { authApi } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -39,10 +40,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0C0B09] px-6 py-12">
       <motion.div initial={{opacity:0,y:24}} animate={{opacity:1,y:0}} transition={{duration:0.5}} className="w-full max-w-sm">
-        <Link href="/" className="flex items-center gap-2 mb-10">
-          <div className="w-8 h-8 rounded-lg bg-[#E8A830] flex items-center justify-center"><UtensilsCrossed size={16} className="text-[#0C0B09]" strokeWidth={2.5}/></div>
-          <span className="text-[#F5EDD8] font-display font-semibold text-xl">Crave<span className="text-[#E8A830]">Cart</span></span>
-        </Link>
+        <BrandLogo href="/" width={144} className="mb-10 inline-flex" />
         <h1 className="text-[#F5EDD8] font-display font-semibold text-3xl mb-2">Create account</h1>
         <p className="text-[#9E9080] text-sm mb-8">Join thousands of food lovers</p>
         <form onSubmit={handleSubmit} className="space-y-4">

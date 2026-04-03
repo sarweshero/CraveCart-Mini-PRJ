@@ -12,6 +12,7 @@ import { useHotelAuthStore } from "@/lib/store";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 type NavItem = {
   href: string;
@@ -73,6 +74,7 @@ export function Sidebar() {
       <div className="sticky top-0 flex h-screen flex-col p-5">
         {/* Header */}
         <div className="mb-6">
+          <BrandLogo href="/dashboard" width={156} className="inline-flex mb-4" />
           <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--text-faint)]">
             CraveCart Hotel
           </p>

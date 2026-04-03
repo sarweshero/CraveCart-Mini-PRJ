@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShoppingBag, Search, User, Menu, X, UtensilsCrossed, LogOut, Package, Heart } from "lucide-react";
+import { ShoppingBag, Search, User, Menu, X, LogOut, Package, Heart } from "lucide-react";
 import { useCartStore, useAuthStore, useUIStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { authApi } from "@/lib/api";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -58,16 +59,7 @@ export function Navbar() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 group">
-            <div className="w-8 h-8 rounded-lg bg-[#E8A830] flex items-center justify-center shadow-[0_0_20px_rgba(232,168,48,0.4)] group-hover:shadow-[0_0_30px_rgba(232,168,48,0.6)] transition-all group-hover:scale-105">
-              <UtensilsCrossed size={16} className="text-[#0C0B09]" strokeWidth={2.5} />
-            </div>
-            <span
-              className="text-[#F5EDD8] font-display font-semibold text-xl tracking-[-0.03em]"
-            >
-              Crave<span className="text-[#E8A830]">Cart</span>
-            </span>
-          </Link>
+          <BrandLogo href="/" width={128} className="flex-shrink-0" />
 
           {/* Desktop nav links */}
           <nav className="hidden md:flex items-center gap-1">

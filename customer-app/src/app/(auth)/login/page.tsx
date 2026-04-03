@@ -4,11 +4,12 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, UtensilsCrossed, Loader2, Chrome } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader2, Chrome } from "lucide-react";
 import { authApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -62,14 +63,7 @@ export default function LoginPage() {
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-[#0E0C09] to-transparent" />
         <div className="relative z-10 flex flex-col justify-end p-12 pb-16">
-          <div className="flex items-center gap-2.5 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-[#E8A830] flex items-center justify-center shadow-[0_0_25px_rgba(232,168,48,0.5)]">
-              <UtensilsCrossed size={20} className="text-[#0C0B09]" strokeWidth={2.5} />
-            </div>
-            <span className="text-[#F5EDD8] font-display font-semibold text-2xl">
-              Crave<span className="text-[#E8A830]">Cart</span>
-            </span>
-          </div>
+          <BrandLogo href="/" width={170} className="mb-8 inline-flex" />
           <h2 className="text-[#F5EDD8] font-display font-semibold text-4xl leading-tight">
             Great food,<br /><span className="text-[#E8A830] italic">delivered fast.</span>
           </h2>
@@ -81,14 +75,7 @@ export default function LoginPage() {
 
       <div className="flex-1 flex items-center justify-center px-6 py-12 bg-[#0C0B09]">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full max-w-sm">
-          <div className="lg:hidden flex items-center gap-2 mb-8">
-            <div className="w-8 h-8 rounded-lg bg-[#E8A830] flex items-center justify-center">
-              <UtensilsCrossed size={16} className="text-[#0C0B09]" strokeWidth={2.5} />
-            </div>
-            <span className="text-[#F5EDD8] font-display font-semibold text-xl">
-              Crave<span className="text-[#E8A830]">Cart</span>
-            </span>
-          </div>
+          <BrandLogo href="/" width={144} className="mb-8 inline-flex lg:hidden" />
           <h1 className="text-[#F5EDD8] font-display font-semibold text-3xl tracking-tight mb-2">Welcome back</h1>
           <p className="text-[#9E9080] text-sm mb-8">Sign in to continue ordering</p>
           <button onClick={() => authApi.googleOAuth()} className="w-full flex items-center justify-center gap-3 py-3.5 rounded-xl border border-[#2A2620] bg-[#161410] text-[#F5EDD8] text-sm font-medium hover:border-[#E8A830]/30 hover:bg-[#161410]/80 transition-all mb-5 active:scale-[0.98]">

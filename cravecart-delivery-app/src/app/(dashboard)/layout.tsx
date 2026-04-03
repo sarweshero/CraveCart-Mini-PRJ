@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { Home, TrendingUp, Clock, User, Wifi, WifiOff } from "lucide-react";
 import { useDeliveryStore } from "@/lib/store";
 import { getToken } from "@/lib/api";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 const NAV = [
   { href: "/home",     icon: Home,       label: "Home" },
@@ -27,8 +28,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen bg-bg flex flex-col max-w-md mx-auto relative">
       <header className="sticky top-0 z-50 bg-bg/95 backdrop-blur-md border-b border-bg-border px-4 py-3 flex items-center justify-between">
         <div>
-          <span className="font-display text-lg font-bold text-brand">CraveCart</span>
-          <span className="text-ink-muted text-sm ml-1.5">Delivery</span>
+          <BrandLogo href="/home" width={124} className="inline-flex" />
+          <div className="text-ink-muted text-xs mt-1">Delivery</div>
         </div>
         <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${isOnline ? "bg-success/15 text-success" : "bg-ink-faint/15 text-ink-muted"}`}>
           {isOnline ? <><Wifi className="w-3 h-3" /> Online</> : <><WifiOff className="w-3 h-3" /> Offline</>}

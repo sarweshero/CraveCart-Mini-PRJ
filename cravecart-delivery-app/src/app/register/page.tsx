@@ -3,10 +3,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Bike, FileText, ArrowRight, ArrowLeft, Check, Eye, EyeOff, Phone, MapPin } from "lucide-react";
+import { User, Bike, FileText, ArrowRight, ArrowLeft, Check, Eye, EyeOff } from "lucide-react";
 import toast from "react-hot-toast";
 import { deliveryAuthApi } from "@/lib/api";
 import { useDeliveryStore } from "@/lib/store";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 const STEPS = [{ id: 1, label: "Account", icon: User }, { id: 2, label: "Vehicle", icon: Bike }, { id: 3, label: "Verify", icon: FileText }];
 const VEHICLES = [{ value: "bike", label: "Motorcycle", emoji: "🏍️" }, { value: "scooter", label: "Scooter", emoji: "🛵" }, { value: "bicycle", label: "Bicycle", emoji: "🚲" }, { value: "foot", label: "On Foot", emoji: "🚶" }];
@@ -45,6 +46,7 @@ export default function RegisterPage() {
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-brand/8 blur-[120px] rounded-full pointer-events-none" />
       <div className="relative z-10 w-full max-w-sm mx-auto mt-8">
         <Link href="/login" className="inline-flex items-center gap-2 text-ink-muted hover:text-ink text-sm mb-8 transition-colors"><ArrowLeft className="w-4 h-4" /> Back to login</Link>
+        <BrandLogo href="/login" width={168} className="mb-5 inline-flex" />
         <h1 className="font-display text-2xl font-bold text-ink mb-1">Join as Delivery Partner</h1>
         <p className="text-ink-muted text-sm mb-8">Earn ₹500–₹1,500 per day on your schedule</p>
         <div className="flex items-center gap-2 mb-8">

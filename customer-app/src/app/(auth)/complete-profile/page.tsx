@@ -2,11 +2,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { User, Phone, MapPin, Loader2, UtensilsCrossed } from "lucide-react";
+import { User, Phone, MapPin, Loader2 } from "lucide-react";
 import { authApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import toast from "react-hot-toast";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 export default function CompleteProfilePage() {
   const router = useRouter();
@@ -105,10 +106,7 @@ export default function CompleteProfilePage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#0C0B09] px-6 py-12">
       <motion.div initial={{opacity:0,y:24}} animate={{opacity:1,y:0}} className="w-full max-w-sm">
-        <div className="flex items-center gap-2 mb-10">
-          <div className="w-8 h-8 rounded-lg bg-[#E8A830] flex items-center justify-center"><UtensilsCrossed size={16} className="text-[#0C0B09]" strokeWidth={2.5}/></div>
-          <span className="text-[#F5EDD8] font-display font-semibold text-xl">Crave<span className="text-[#E8A830]">Cart</span></span>
-        </div>
+        <BrandLogo href="/" width={144} className="mb-10 inline-flex" />
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2"><div className="flex gap-1">{[1,2].map(i=><div key={i} className="h-1 w-8 rounded-full" style={{background:i===1?"#E8A830":"#2A2620"}}/>)}</div><span className="text-[#9E9080] text-xs">Step 1 of 2</span></div>
           <h1 className="text-[#F5EDD8] font-display font-semibold text-3xl">Complete your profile</h1>

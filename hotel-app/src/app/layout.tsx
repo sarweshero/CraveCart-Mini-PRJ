@@ -11,6 +11,11 @@ const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 export const metadata: Metadata = {
   title: { default: "CraveCart Hotel Dashboard", template: "%s | CraveCart Hotel" },
   description: "Manage your restaurant orders, menu, and AI-powered review responses.",
+  icons: {
+    icon: "/cravecart-logo.svg",
+    shortcut: "/cravecart-logo.svg",
+    apple: "/cravecart-logo.svg",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

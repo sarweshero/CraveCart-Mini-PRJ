@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { UtensilsCrossed, Github, Twitter, Instagram } from "lucide-react";
+import { Github, Twitter, Instagram } from "lucide-react";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 export function Footer() {
   return (
@@ -7,14 +8,7 @@ export function Footer() {
       <div className="max-w-7xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
           <div className="col-span-2 md:col-span-1">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-[#E8A830] flex items-center justify-center">
-                <UtensilsCrossed size={15} className="text-[#0C0B09]" strokeWidth={2.5} />
-              </div>
-              <span className="text-[#F5EDD8] font-display font-semibold text-lg">
-                Crave<span className="text-[#E8A830]">Cart</span>
-              </span>
-            </div>
+            <BrandLogo href="/" width={132} className="inline-flex mb-3" />
             <p className="text-[#9E9080] text-sm leading-relaxed max-w-xs mt-1">
               Food delivered with care. Every review answered with AI-powered intelligence.
             </p>

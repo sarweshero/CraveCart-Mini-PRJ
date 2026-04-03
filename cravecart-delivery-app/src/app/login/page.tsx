@@ -3,10 +3,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Mail, Lock, Eye, EyeOff, Bike, ArrowRight, Zap } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import toast from "react-hot-toast";
 import { deliveryAuthApi } from "@/lib/api";
 import { useDeliveryStore } from "@/lib/store";
+import { BrandLogo } from "@/components/brand/brand-logo";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -34,15 +35,8 @@ export default function LoginPage() {
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-brand/8 blur-[120px] rounded-full pointer-events-none" />
       <div className="flex-1 flex flex-col items-center justify-center p-6 relative z-10">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center mb-10">
-          <div className="relative mb-4">
-            <div className="w-16 h-16 bg-brand/15 border border-brand/30 rounded-2xl flex items-center justify-center shadow-brand">
-              <Bike className="w-8 h-8 text-brand" />
-            </div>
-            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-success rounded-full flex items-center justify-center">
-              <Zap className="w-3 h-3 text-bg fill-current" />
-            </div>
-          </div>
-          <h1 className="font-display text-3xl font-bold text-ink">CraveCart <span className="text-brand">Delivery</span></h1>
+          <BrandLogo href="/login" width={176} className="mb-4 inline-flex" />
+          <h1 className="font-display text-3xl font-bold text-ink">Delivery</h1>
           <p className="text-ink-muted text-sm mt-1">Deliver food. Earn more.</p>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="w-full max-w-sm">
