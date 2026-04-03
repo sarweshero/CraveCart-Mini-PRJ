@@ -14,6 +14,7 @@ import { cn, formatCurrency, getSafeImageSrc, isRemoteImageUrl } from "@/lib/uti
 import { useAuthStore, useCartStore, useUIStore } from "@/lib/store";
 import toast from "react-hot-toast";
 import RestaurantMediaImage from "@/components/ui/RestaurantMediaImage";
+import { FoodIcon } from "@/components/ui/FoodIcon";
 
 export default function RestaurantDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -178,7 +179,7 @@ export default function RestaurantDetailPage() {
                       : "text-[#BFB49A] hover:text-[#F5EDD8] hover:bg-white/5"
                   )}
                 >
-                  <span>{cat.icon}</span>
+                  <FoodIcon label={cat.name} fallback={cat.icon} size={24} />
                   <span className="truncate">{cat.name}</span>
                 </button>
               ))}
@@ -220,7 +221,7 @@ export default function RestaurantDetailPage() {
                 ref={(el) => { categoryRefs.current[cat.id] = el; }}
               >
                 <h2 className="flex items-center gap-2 text-[#F5EDD8] font-display font-semibold text-xl mb-4">
-                  <span>{cat.icon}</span>
+                  <FoodIcon label={cat.name} fallback={cat.icon} size={26} />
                   {cat.name}
                 </h2>
 

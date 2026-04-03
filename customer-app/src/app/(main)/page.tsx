@@ -10,6 +10,7 @@ import type { Restaurant, FoodCategory } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { extractList, formatCurrency } from "@/lib/utils";
 import RestaurantMediaImage from "@/components/ui/RestaurantMediaImage";
+import { FoodIcon } from "@/components/ui/FoodIcon";
 
 const stagger = {
   visible: { transition: { staggerChildren: 0.07 } },
@@ -160,7 +161,12 @@ export default function HomePage() {
                 href={`/restaurants?cuisine=${encodeURIComponent(cat.name)}`}
                 className="group flex flex-col items-center gap-2 p-3 rounded-2xl bg-[#161410]/88 border border-[#2A2620] hover:border-[#E8A830]/40 transition-all duration-300 hover:shadow-[0_8px_18px_rgba(0,0,0,0.24)] active:scale-[0.98]"
               >
-                <span className="text-2xl group-hover:scale-110 transition-transform duration-300">{cat.icon}</span>
+                <FoodIcon
+                  label={cat.name}
+                  fallback={cat.icon}
+                  size={42}
+                  className="group-hover:scale-110 transition-transform duration-300"
+                />
                 <span className="text-[#BFB49A] text-[11px] sm:text-xs font-medium text-center leading-tight group-hover:text-[#F5EDD8] transition-colors">{cat.name}</span>
               </Link>
             )

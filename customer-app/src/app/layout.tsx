@@ -3,6 +3,7 @@ import "./globals.css";
 import { Toaster } from "react-hot-toast";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { SessionGuard } from "@/components/providers/session-guard";
+import { VantaBackground } from "@/components/layout/vanta-background";
 
 export const metadata: Metadata = {
   title: {
@@ -34,11 +35,14 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="antialiased">
+      <body className="antialiased relative">
         <QueryProvider>
-          <SessionGuard>
-          {children}
-          </SessionGuard>
+          <VantaBackground />
+          <div className="relative z-10">
+            <SessionGuard>
+            {children}
+            </SessionGuard>
+          </div>
           <Toaster
             position="bottom-right"
             toastOptions={{
