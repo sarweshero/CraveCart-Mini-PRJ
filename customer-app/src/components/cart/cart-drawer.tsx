@@ -2,13 +2,14 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight, Tag } from "lucide-react";
-import { useCartStore, useUIStore } from "@/lib/store";
+import { useAuthStore, useCartStore, useUIStore } from "@/lib/store";
 import { calculateTax, cn, formatCurrency } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
 
 export function CartDrawer() {
   const { isCartOpen, closeCart } = useUIStore();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const {
     items, restaurantName, appliedCoupon,
     updateQuantity, removeItem, removeCoupon,
@@ -198,7 +199,7 @@ export function CartDrawer() {
                 </div>
 
                 <Link
-                  href="/checkout"
+                  href={isAuthenticated ? "/checkout" : "/login?redirect=/checkout"}
                   onClick={closeCart}
                   className={cn(
                     "flex items-center justify-center gap-2 w-full py-3.5 rounded-xl",
@@ -207,7 +208,7 @@ export function CartDrawer() {
                     "shadow-[0_0_20px_rgba(232,168,48,0.25)] hover:shadow-[0_0_30px_rgba(232,168,48,0.35)]"
                   )}
                 >
-                  Proceed to Checkout
+                  {isAuthenticated ? "Proceed to Checkout" : "Sign In to Checkout"}
                   <ArrowRight size={16} />
                 </Link>
               </div>

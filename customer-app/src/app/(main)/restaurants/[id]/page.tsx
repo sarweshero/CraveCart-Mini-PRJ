@@ -11,7 +11,7 @@ import {
 import { restaurantApi, cartApi } from "@/lib/api";
 import type { RestaurantDetail, MenuItem } from "@/lib/types";
 import { cn, formatCurrency } from "@/lib/utils";
-import { useCartStore, useUIStore } from "@/lib/store";
+import { useAuthStore, useCartStore, useUIStore } from "@/lib/store";
 import toast from "react-hot-toast";
 import RestaurantMediaImage from "@/components/ui/RestaurantMediaImage";
 
@@ -26,6 +26,7 @@ export default function RestaurantDetailPage() {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const categoryRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const { addItem, getItemQuantity, updateQuantity, hasItem } = useCartStore();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const { openCart } = useUIStore();
 
   useEffect(() => {
@@ -59,11 +60,12 @@ export default function RestaurantDetailPage() {
     addItem(cartItem, restaurant.id, restaurant.name);
 
     // 2. Sync to backend cart so the order placement works
-    try {
-      await cartApi.addItem(String(item.id), 1);
-    } catch {
+    if (isAuthenticated) {
+      try {
+        await cartApi.addItem(String(item.id), 1);
+      } catch {
       // Backend sync failed — silently continue (cart will be re-synced at checkout)
-      // This can happen if user is not logged in or backend is briefly unavailable
+      }
     }
 
     toast.success(`${item.name} added to cart`, { icon: "🛒", duration: 1500 });
